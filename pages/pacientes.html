@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pacientes — Clínica LCR</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+<aside id="sidebar"></aside>
+
+<div id="main">
+  <header class="topbar">
+    <h1>Pacientes</h1>
+    <div class="topbar-actions">
+      <button class="btn btn-primary" onclick="openModal('modal-novo-paciente')">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Novo Paciente
+      </button>
+      <div class="avatar">LC</div>
+    </div>
+  </header>
+
+  <main class="page-content">
+
+    <!-- Filtros -->
+    <div class="card mb-6">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div class="search-bar" style="flex:1;min-width:220px">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" placeholder="Buscar por nome, CPF ou telefone…" id="busca-paciente" oninput="filtrarPacientes()">
+        </div>
+        <select class="form-control" style="width:auto;font-size:13px" onchange="filtrarPacientes()" id="filtro-status">
+          <option value="">Todos os status</option>
+          <option value="Ativo">Ativos</option>
+          <option value="Inativo">Inativos</option>
+        </select>
+        <select class="form-control" style="width:auto;font-size:13px">
+          <option>Todos os planos</option>
+          <option>Particular</option>
+          <option>Unimed</option>
+          <option>Bradesco Saúde</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Tabela -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Lista de Pacientes</span>
+        <span class="text-muted" id="total-pacientes">248 pacientes</span>
+      </div>
+      <div class="table-wrapper">
+        <table id="tabela-pacientes">
+          <thead>
+            <tr>
+              <th>Paciente</th>
+              <th>CPF</th>
+              <th>Telefone</th>
+              <th>Plano</th>
+              <th>Última Consulta</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-pacientes"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Modal Novo Paciente -->
+<div class="modal-overlay" id="modal-novo-paciente">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <span class="modal-title">Cadastro de Paciente</span>
+      <button class="modal-close" onclick="closeModal('modal-novo-paciente')">&times;</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Abas -->
+      <div class="tabs" id="cadastro-tabs">
+        <button class="tab-btn active" data-tab="dados">Dados Pessoais</button>
+        <button class="tab-btn" data-tab="contato">Contato</button>
+        <button class="tab-btn" data-tab="endereco">Endereço</button>
+      </div>
+
+      <!-- Aba Dados Pessoais -->
+      <div class="tab-panel active" id="tab-dados">
+        <div style="display:flex;align-items:flex-start;gap:24px;margin-bottom:20px;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+            <div style="width:88px;height:88px;border-radius:50%;border:2px dashed var(--primary);display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--primary-light)" onclick="document.getElementById('upload-foto').click()">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:32px;height:32px;color:var(--primary)"><path d="M12 5v14M5 12h14"/></svg>
+            </div>
+            <input type="file" id="upload-foto" accept="image/*" hidden>
+            <span style="font-size:11px;color:var(--text-muted)">Foto do paciente</span>
+          </div>
+          <div style="flex:1;min-width:200px">
+            <div class="form-row form-row-2">
+              <div class="form-group">
+                <label class="form-label">Nome Completo *</label>
+                <input type="text" class="form-control" placeholder="Nome completo">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Data de Nascimento</label>
+                <input type="date" class="form-control">
+              </div>
+            </div>
+            <div class="form-row form-row-3">
+              <div class="form-group">
+                <label class="form-label">CPF</label>
+                <input type="text" class="form-control" placeholder="000.000.000-00">
+              </div>
+              <div class="form-group">
+                <label class="form-label">RG</label>
+                <input type="text" class="form-control" placeholder="0000000">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Órgão Emissor</label>
+                <input type="text" class="form-control" placeholder="SSP/BA">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-row form-row-3">
+          <div class="form-group">
+            <label class="form-label">Sexo</label>
+            <select class="form-control">
+              <option value="">Selecionar</option>
+              <option>Masculino</option>
+              <option>Feminino</option>
+              <option>Outro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Estado Civil</label>
+            <select class="form-control">
+              <option value="">Selecionar</option>
+              <option>Solteiro(a)</option>
+              <option>Casado(a)</option>
+              <option>Divorciado(a)</option>
+              <option>Viúvo(a)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Situação Profissional</label>
+            <select class="form-control">
+              <option value="">Selecionar</option>
+              <option>Empregado(a)</option>
+              <option>Autônomo(a)</option>
+              <option>Desempregado(a)</option>
+              <option>Aposentado(a)</option>
+              <option>Estudante</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row form-row-3">
+          <div class="form-group">
+            <label class="form-label">Plano de Saúde</label>
+            <select class="form-control">
+              <option value="">Particular</option>
+              <option>Unimed</option>
+              <option>Bradesco Saúde</option>
+              <option>Amil</option>
+              <option>SulAmérica</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nº do Plano</label>
+            <input type="text" class="form-control" placeholder="Número do plano">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nº do Prontuário</label>
+            <input type="text" class="form-control" placeholder="Auto-gerado">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Referência / Como conheceu a clínica</label>
+          <input type="text" class="form-control" placeholder="Ex: Indicação, Instagram, Google…">
+        </div>
+      </div>
+
+      <!-- Aba Contato -->
+      <div class="tab-panel" id="tab-contato">
+        <p style="font-size:13px;font-weight:600;color:var(--primary);margin-bottom:14px">Contato Principal</p>
+        <div class="form-row form-row-3">
+          <div class="form-group">
+            <label class="form-label">Celular *</label>
+            <input type="tel" class="form-control" placeholder="(00) 00000-0000">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Telefone Fixo</label>
+            <input type="tel" class="form-control" placeholder="(00) 0000-0000">
+          </div>
+          <div class="form-group">
+            <label class="form-label">E-mail</label>
+            <input type="email" class="form-control" placeholder="email@exemplo.com">
+          </div>
+        </div>
+        <hr class="divider">
+        <p style="font-size:13px;font-weight:600;color:var(--primary);margin-bottom:14px">Contato Extra (responsável / emergência)</p>
+        <div class="form-row form-row-3">
+          <div class="form-group">
+            <label class="form-label">Nome</label>
+            <input type="text" class="form-control" placeholder="Nome do responsável">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Relação</label>
+            <select class="form-control">
+              <option value="">Selecionar</option>
+              <option>Cônjuge</option>
+              <option>Pai / Mãe</option>
+              <option>Filho(a)</option>
+              <option>Amigo(a)</option>
+              <option>Outro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Celular</label>
+            <input type="tel" class="form-control" placeholder="(00) 00000-0000">
+          </div>
+        </div>
+      </div>
+
+      <!-- Aba Endereço -->
+      <div class="tab-panel" id="tab-endereco">
+        <div class="form-row form-row-2">
+          <div class="form-group">
+            <label class="form-label">CEP</label>
+            <input type="text" class="form-control" placeholder="00000-000">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Logradouro</label>
+            <input type="text" class="form-control" placeholder="Rua, Av., Travessa…">
+          </div>
+        </div>
+        <div class="form-row form-row-3">
+          <div class="form-group">
+            <label class="form-label">Número</label>
+            <input type="text" class="form-control" placeholder="Nº">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Complemento</label>
+            <input type="text" class="form-control" placeholder="Apto, Bloco…">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Bairro</label>
+            <input type="text" class="form-control" placeholder="Bairro">
+          </div>
+        </div>
+        <div class="form-row form-row-3">
+          <div class="form-group">
+            <label class="form-label">Cidade</label>
+            <input type="text" class="form-control" placeholder="Irecê">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Estado</label>
+            <select class="form-control">
+              <option>BA</option><option>SP</option><option>RJ</option><option>MG</option>
+              <option>PE</option><option>CE</option><option>AM</option><option>RS</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">País</label>
+            <input type="text" class="form-control" value="Brasil" readonly>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-novo-paciente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-novo-paciente')">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M5 13l4 4L19 7"/></svg>
+        Salvar Paciente
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/sidebar.js"></script>
+<script>
+const PACIENTES = [
+  { id:1, nome:'Ana Beatriz Santos',   cpf:'012.345.678-90', tel:'(74) 99123-4567', plano:'Particular',     ultima:'10/04/2026', status:'Ativo'   },
+  { id:2, nome:'Bruno Alves',          cpf:'023.456.789-01', tel:'(74) 98234-5678', plano:'Unimed',         ultima:'08/04/2026', status:'Ativo'   },
+  { id:3, nome:'Carlos Mendes',        cpf:'034.567.890-12', tel:'(74) 97345-6789', plano:'Particular',     ultima:'15/04/2026', status:'Ativo'   },
+  { id:4, nome:'Daniela Ferreira',     cpf:'045.678.901-23', tel:'(74) 96456-7890', plano:'Bradesco Saúde', ultima:'02/04/2026', status:'Inativo' },
+  { id:5, nome:'Eduardo Souza',        cpf:'056.789.012-34', tel:'(74) 95567-8901', plano:'Particular',     ultima:'17/03/2026', status:'Ativo'   },
+  { id:6, nome:'Fernanda Lima',        cpf:'067.890.123-45', tel:'(74) 94678-9012', plano:'Amil',           ultima:'16/04/2026', status:'Ativo'   },
+  { id:7, nome:'Gabriel Nascimento',   cpf:'078.901.234-56', tel:'(74) 93789-0123', plano:'Particular',     ultima:'05/04/2026', status:'Ativo'   },
+  { id:8, nome:'Helena Carvalho',      cpf:'089.012.345-67', tel:'(74) 92890-1234', plano:'Unimed',         ultima:'01/04/2026', status:'Ativo'   },
+  { id:9, nome:'Igor Ribeiro',         cpf:'090.123.456-78', tel:'(74) 91901-2345', plano:'Particular',     ultima:'20/03/2026', status:'Inativo' },
+  { id:10, nome:'João Pereira',        cpf:'101.234.567-89', tel:'(74) 90012-3456', plano:'Particular',     ultima:'17/04/2026', status:'Ativo'   },
+  { id:11, nome:'Larissa Mota',        cpf:'112.345.678-90', tel:'(74) 99123-0001', plano:'SulAmérica',     ultima:'12/04/2026', status:'Ativo'   },
+  { id:12, nome:'Maria Silva',         cpf:'123.456.789-01', tel:'(74) 98234-0002', plano:'Particular',     ultima:'17/04/2026', status:'Ativo'   },
+  { id:13, nome:'Nathan Oliveira',     cpf:'134.567.890-12', tel:'(74) 97345-0003', plano:'Unimed',         ultima:'09/04/2026', status:'Ativo'   },
+  { id:14, nome:'Paulo César',         cpf:'145.678.901-23', tel:'(74) 96456-0004', plano:'Particular',     ultima:'14/04/2026', status:'Ativo'   },
+  { id:15, nome:'Roberta Nunes',       cpf:'156.789.012-34', tel:'(74) 95567-0005', plano:'Bradesco Saúde', ultima:'11/04/2026', status:'Ativo'   },
+];
+
+function iniciais(nome) {
+  const p = nome.trim().split(' ');
+  return p.length >= 2 ? p[0][0]+p[p.length-1][0] : p[0][0];
+}
+
+function renderTabela(lista) {
+  const tbody = document.getElementById('tbody-pacientes');
+  document.getElementById('total-pacientes').textContent = lista.length + ' pacientes';
+  tbody.innerHTML = lista.map(p => `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="patient-avatar">${iniciais(p.nome)}</div>
+          <a href="prontuario.html?id=${p.id}" style="font-weight:600;color:var(--primary-darker);text-decoration:none;font-size:13px">${p.nome}</a>
+        </div>
+      </td>
+      <td style="font-size:13px;color:var(--text-muted)">${p.cpf}</td>
+      <td style="font-size:13px">${p.tel}</td>
+      <td style="font-size:13px">${p.plano}</td>
+      <td style="font-size:13px;color:var(--text-muted)">${p.ultima}</td>
+      <td><span class="badge ${p.status==='Ativo'?'badge-success':'badge-danger'}">${p.status}</span></td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <a href="prontuario.html?id=${p.id}" class="btn btn-outline btn-sm">Prontuário</a>
+          <a href="agenda.html" class="btn btn-primary btn-sm">Agendar</a>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filtrarPacientes() {
+  const busca = document.getElementById('busca-paciente').value.toLowerCase();
+  const status = document.getElementById('filtro-status').value;
+  const filtrado = PACIENTES.filter(p =>
+    (!busca || p.nome.toLowerCase().includes(busca) || p.cpf.includes(busca) || p.tel.includes(busca)) &&
+    (!status || p.status === status)
+  );
+  renderTabela(filtrado);
+}
+
+function openModal(id) { document.getElementById(id)?.classList.add('open'); }
+function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+
+// Tabs no modal
+document.addEventListener('DOMContentLoaded', () => {
+  renderTabela(PACIENTES);
+
+  document.querySelectorAll('#cadastro-tabs .tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#cadastro-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab)?.classList.add('active');
+    });
+  });
+
+  document.querySelectorAll('.modal-overlay').forEach(ov => {
+    ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
+  });
+});
+</script>
+</body>
+</html>

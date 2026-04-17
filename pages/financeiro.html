@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Financeiro — Clínica LCR</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    .fin-card { background:#fff; border-radius:var(--radius-lg); box-shadow:var(--shadow); padding:18px 20px; border-left:4px solid; }
+    .fin-card-label { font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); margin-bottom:4px; }
+    .fin-card-val { font-size:26px; font-weight:700; }
+    .filter-pill { padding:7px 16px; border-radius:20px; border:1.5px solid var(--border); background:#fff; font-size:13px; font-weight:500; cursor:pointer; color:var(--text-muted); transition:all .15s; }
+    .filter-pill.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+  </style>
+</head>
+<body>
+
+<aside id="sidebar"></aside>
+
+<div id="main">
+  <header class="topbar">
+    <h1>Financeiro</h1>
+    <div class="topbar-actions">
+      <button class="btn btn-primary" onclick="openModal('modal-lancamento')">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Adicionar Lançamento
+      </button>
+      <div class="avatar">LC</div>
+    </div>
+  </header>
+
+  <main class="page-content">
+
+    <!-- Abas principais -->
+    <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap" id="filtro-tipo">
+      <button class="filter-pill active" data-tipo="">Todos</button>
+      <button class="filter-pill" data-tipo="receita">Recebimentos</button>
+      <button class="filter-pill" data-tipo="despesa">Despesas</button>
+    </div>
+
+    <!-- Cards de resumo -->
+    <div class="grid-3 mb-6">
+      <div class="fin-card" style="border-color:#22C55E">
+        <div class="fin-card-label">Total em Receita</div>
+        <div class="fin-card-val" style="color:#22C55E" id="total-receita">R$ 0,00</div>
+      </div>
+      <div class="fin-card" style="border-color:#EF4444">
+        <div class="fin-card-label">Total em Despesa</div>
+        <div class="fin-card-val" style="color:#EF4444" id="total-despesa">R$ 0,00</div>
+      </div>
+      <div class="fin-card" style="border-color:var(--primary)">
+        <div class="fin-card-label">Saldo</div>
+        <div class="fin-card-val" style="color:var(--primary)" id="total-saldo">R$ 0,00</div>
+      </div>
+    </div>
+
+    <!-- Filtros e busca -->
+    <div class="card mb-6">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div class="search-bar" style="flex:1;min-width:200px">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" placeholder="Buscar por descrição ou paciente…" id="busca-fin" oninput="filtrar()">
+        </div>
+        <input type="month" class="form-control" style="width:auto" value="2026-04" id="filtro-mes" onchange="filtrar()">
+        <select class="form-control" style="width:auto;font-size:13px" id="filtro-status-fin" onchange="filtrar()">
+          <option value="">Todos os status</option>
+          <option value="Pago">Pago</option>
+          <option value="A receber">A receber</option>
+          <option value="Atrasado">Atrasado</option>
+        </select>
+        <a href="#" style="font-size:13px;color:var(--primary);text-decoration:none;font-weight:500">↓ Exportar CSV</a>
+      </div>
+    </div>
+
+    <!-- Tabela -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Lançamentos</span>
+        <span class="text-muted" id="total-registros"></span>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Descrição</th>
+              <th>Paciente</th>
+              <th>Forma de Pagamento</th>
+              <th>Categoria</th>
+              <th>Valor</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-fin"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Modal Novo Lançamento -->
+<div class="modal-overlay" id="modal-lancamento">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Novo Lançamento</span>
+      <button class="modal-close" onclick="closeModal('modal-lancamento')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <button class="filter-pill active" id="tipo-receita-btn" onclick="setTipoLanc('receita')">Recebimento</button>
+        <button class="filter-pill" id="tipo-despesa-btn" onclick="setTipoLanc('despesa')">Despesa</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descrição *</label>
+        <input type="text" class="form-control" placeholder="Ex: Restauração — Dente 16">
+      </div>
+      <div class="form-row form-row-2">
+        <div class="form-group">
+          <label class="form-label">Paciente</label>
+          <select class="form-control">
+            <option value="">Selecionar paciente…</option>
+            <option>Ana Beatriz Santos</option>
+            <option>Bruno Alves</option>
+            <option>Carlos Mendes</option>
+            <option>Fernanda Lima</option>
+            <option>João Pereira</option>
+            <option>Maria Silva</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Categoria</label>
+          <select class="form-control">
+            <option>Procedimento Clínico</option>
+            <option>Consulta</option>
+            <option>Material</option>
+            <option>Equipamento</option>
+            <option>Aluguel</option>
+            <option>Salário</option>
+            <option>Outros</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row form-row-3">
+        <div class="form-group">
+          <label class="form-label">Valor (R$) *</label>
+          <input type="number" class="form-control" placeholder="0,00" min="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data *</label>
+          <input type="date" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-control">
+            <option>Pago</option>
+            <option>A receber</option>
+            <option>Atrasado</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Forma de Pagamento</label>
+        <select class="form-control">
+          <option>Dinheiro</option>
+          <option>PIX</option>
+          <option>Cartão de Crédito</option>
+          <option>Cartão de Débito</option>
+          <option>Boleto</option>
+          <option>Financiamento</option>
+          <option>Transferência</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observações</label>
+        <textarea class="form-control" rows="2" placeholder="Observações opcionais…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-lancamento')">Cancelar</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-lancamento')">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M5 13l4 4L19 7"/></svg>
+        Salvar Lançamento
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/sidebar.js"></script>
+<script>
+const LANCAMENTOS = [
+  { data:'17/04/2026', desc:'Consulta de retorno',       paciente:'Maria Silva',         forma:'PIX',               cat:'Consulta',    valor:150,   tipo:'receita', status:'Pago'      },
+  { data:'16/04/2026', desc:'Implante — Avaliação',      paciente:'Fernanda Lima',       forma:'Dinheiro',          cat:'Procedimento', valor:200,  tipo:'receita', status:'Pago'      },
+  { data:'15/04/2026', desc:'Aluguel consultório',       paciente:'—',                   forma:'Transferência',     cat:'Aluguel',     valor:1800,  tipo:'despesa', status:'Pago'      },
+  { data:'14/04/2026', desc:'Limpeza profilática',       paciente:'Paulo César',         forma:'Cartão de Débito',  cat:'Procedimento', valor:180,  tipo:'receita', status:'Pago'      },
+  { data:'12/04/2026', desc:'Material descartável',      paciente:'—',                   forma:'PIX',               cat:'Material',    valor:320,   tipo:'despesa', status:'Pago'      },
+  { data:'11/04/2026', desc:'Profilaxia',                paciente:'Roberta Nunes',       forma:'Dinheiro',          cat:'Procedimento', valor:180,  tipo:'receita', status:'Pago'      },
+  { data:'10/04/2026', desc:'Clareamento dental',        paciente:'Ana Beatriz Santos',  forma:'Cartão de Crédito', cat:'Procedimento', valor:550,  tipo:'receita', status:'Pago'      },
+  { data:'09/04/2026', desc:'Canal — Dente 36',          paciente:'Nathan Oliveira',     forma:'PIX',               cat:'Procedimento', valor:900,  tipo:'receita', status:'Pago'      },
+  { data:'08/04/2026', desc:'Prótese parcial',           paciente:'Bruno Alves',         forma:'Financiamento',     cat:'Procedimento', valor:2400, tipo:'receita', status:'A receber' },
+  { data:'05/04/2026', desc:'Material de laboratório',  paciente:'—',                   forma:'Boleto',            cat:'Material',    valor:680,   tipo:'despesa', status:'Pago'      },
+  { data:'03/04/2026', desc:'Restauração Classe II',     paciente:'Gabriel Nascimento',  forma:'PIX',               cat:'Procedimento', valor:380,  tipo:'receita', status:'Pago'      },
+  { data:'02/04/2026', desc:'Ortodontia — manutenção',  paciente:'Carlos Mendes',       forma:'Dinheiro',          cat:'Procedimento', valor:250,  tipo:'receita', status:'Pago'      },
+  { data:'01/04/2026', desc:'Salário assistente',        paciente:'—',                   forma:'Transferência',     cat:'Salário',     valor:1400,  tipo:'despesa', status:'Pago'      },
+  { data:'30/04/2026', desc:'Restauração — Dente 16',   paciente:'Maria Silva',         forma:'PIX',               cat:'Procedimento', valor:1200, tipo:'receita', status:'A receber' },
+];
+
+let filtroTipo = '';
+
+function fmt(v) { return 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:2}); }
+
+function filtrar() {
+  const busca   = document.getElementById('busca-fin').value.toLowerCase();
+  const statusF = document.getElementById('filtro-status-fin').value;
+  const lista = LANCAMENTOS.filter(l =>
+    (!filtroTipo || l.tipo === filtroTipo) &&
+    (!statusF || l.status === statusF) &&
+    (!busca || l.desc.toLowerCase().includes(busca) || l.paciente.toLowerCase().includes(busca))
+  );
+  renderTabela(lista);
+}
+
+function renderTabela(lista) {
+  const tbody = document.getElementById('tbody-fin');
+  const receita = lista.filter(l=>l.tipo==='receita').reduce((s,l)=>s+l.valor,0);
+  const despesa = lista.filter(l=>l.tipo==='despesa').reduce((s,l)=>s+l.valor,0);
+  document.getElementById('total-receita').textContent = fmt(receita);
+  document.getElementById('total-despesa').textContent = fmt(despesa);
+  document.getElementById('total-saldo').textContent = fmt(receita - despesa);
+  document.getElementById('total-registros').textContent = lista.length + ' registros';
+
+  tbody.innerHTML = lista.map(l => `
+    <tr>
+      <td style="font-size:13px;color:var(--text-muted);white-space:nowrap">${l.data}</td>
+      <td style="font-size:13px;font-weight:500">${l.desc}</td>
+      <td style="font-size:13px;color:var(--text-muted)">${l.paciente}</td>
+      <td style="font-size:13px">${l.forma}</td>
+      <td style="font-size:12px"><span class="badge badge-primary">${l.cat}</span></td>
+      <td style="font-size:13px;font-weight:700;color:${l.tipo==='receita'?'var(--success)':'var(--danger)'}">
+        ${l.tipo==='receita'?'+':'−'} ${fmt(l.valor)}
+      </td>
+      <td><span class="badge ${l.status==='Pago'?'badge-success':l.status==='Atrasado'?'badge-danger':'badge-warning'}">${l.status}</span></td>
+      <td>
+        <button class="btn btn-outline btn-sm">Ver</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function setTipoLanc(tipo) {
+  document.getElementById('tipo-receita-btn').classList.toggle('active', tipo==='receita');
+  document.getElementById('tipo-despesa-btn').classList.toggle('active', tipo==='despesa');
+}
+
+function openModal(id) { document.getElementById(id)?.classList.add('open'); }
+function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+
+document.addEventListener('DOMContentLoaded', () => {
+  filtrar();
+
+  document.querySelectorAll('#filtro-tipo .filter-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#filtro-tipo .filter-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filtroTipo = btn.dataset.tipo;
+      filtrar();
+    });
+  });
+
+  document.querySelectorAll('.modal-overlay').forEach(ov => {
+    ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
+  });
+});
+</script>
+</body>
+</html>

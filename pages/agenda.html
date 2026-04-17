@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agenda — Clínica LCR</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+<aside id="sidebar"></aside>
+
+<div id="main">
+  <header class="topbar">
+    <h1>Agenda</h1>
+    <div class="topbar-actions">
+      <button class="btn btn-primary" onclick="openModal('modal-novo-agendamento')">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M12 5v14M5 12h14"/></svg>
+        Nova Consulta
+      </button>
+      <div class="avatar">LC</div>
+    </div>
+  </header>
+
+  <main class="page-content">
+
+    <!-- Toolbar -->
+    <div class="card mb-6">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <!-- Navegação de semana -->
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn btn-outline btn-sm" id="btn-prev">&#8249;</button>
+          <span style="font-size:14px;font-weight:600;min-width:160px;text-align:center" id="semana-label"></span>
+          <button class="btn btn-outline btn-sm" id="btn-next">&#8250;</button>
+          <button class="btn btn-outline btn-sm" id="btn-hoje">Hoje</button>
+        </div>
+        <!-- Filtros -->
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <select class="form-control" style="width:auto;padding:7px 12px;font-size:13px">
+            <option>Todos os dentistas</option>
+            <option>Dra. Lara Camila</option>
+          </select>
+          <div style="display:flex;border:1.5px solid var(--border);border-radius:8px;overflow:hidden">
+            <button class="tab-view-btn active" data-view="semana" style="padding:7px 14px;background:none;border:none;font-size:13px;cursor:pointer;font-weight:500">Semana</button>
+            <button class="tab-view-btn" data-view="dia" style="padding:7px 14px;background:none;border:none;font-size:13px;cursor:pointer;font-weight:500;border-left:1px solid var(--border)">Dia</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grade Semanal -->
+    <div class="card agenda-grid" id="agenda-container"></div>
+
+    <!-- Legenda -->
+    <div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+        <span style="width:12px;height:12px;border-radius:3px;background:var(--primary-dark);display:inline-block"></span> Confirmado
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+        <span style="width:12px;height:12px;border-radius:3px;background:var(--warning);display:inline-block"></span> Pendente
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+        <span style="width:12px;height:12px;border-radius:3px;background:#CBD5E1;display:inline-block"></span> Bloqueado
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Modal Novo Agendamento -->
+<div class="modal-overlay" id="modal-novo-agendamento">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Nova Consulta</span>
+      <button class="modal-close" onclick="closeModal('modal-novo-agendamento')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row form-row-2">
+        <div class="form-group">
+          <label class="form-label">Paciente</label>
+          <select class="form-control">
+            <option value="">Selecionar paciente...</option>
+            <option>Maria Silva</option>
+            <option>João Pereira</option>
+            <option>Ana Beatriz Santos</option>
+            <option>Carlos Mendes</option>
+            <option>Fernanda Lima</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dentista</label>
+          <select class="form-control">
+            <option>Dra. Lara Camila</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Procedimento</label>
+        <select class="form-control">
+          <option value="">Selecionar procedimento...</option>
+          <option>Consulta de Avaliação</option>
+          <option>Consulta de Retorno</option>
+          <option>Extração</option>
+          <option>Clareamento</option>
+          <option>Ortodontia</option>
+          <option>Implante</option>
+          <option>Limpeza / Profilaxia</option>
+          <option>Canal (Endodontia)</option>
+          <option>Restauração</option>
+          <option>Prótese</option>
+        </select>
+      </div>
+      <div class="form-row form-row-3">
+        <div class="form-group">
+          <label class="form-label">Data</label>
+          <input type="date" class="form-control" id="input-data-ag">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Horário</label>
+          <select class="form-control">
+            <option>08:00</option><option>08:30</option><option>09:00</option>
+            <option>09:30</option><option>10:00</option><option>10:30</option>
+            <option>11:00</option><option>11:30</option><option>13:00</option>
+            <option>13:30</option><option>14:00</option><option>14:30</option>
+            <option>15:00</option><option>15:30</option><option>16:00</option>
+            <option>16:30</option><option>17:00</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Duração</label>
+          <select class="form-control">
+            <option>30 min</option>
+            <option>45 min</option>
+            <option>60 min</option>
+            <option>90 min</option>
+            <option>120 min</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-control">
+          <option value="confirmado">Confirmado</option>
+          <option value="pendente">Pendente de confirmação</option>
+          <option value="bloqueado">Bloqueio de horário</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observações</label>
+        <textarea class="form-control" rows="3" placeholder="Anotações sobre a consulta..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-novo-agendamento')">Cancelar</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-novo-agendamento')">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M5 13l4 4L19 7"/></svg>
+        Agendar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/sidebar.js"></script>
+<script src="../js/agenda.js"></script>
+</body>
+</html>
