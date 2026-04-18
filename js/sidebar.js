@@ -14,7 +14,7 @@ const SIDEBAR_HTML = `
   <ul class="sidebar-nav">
     <li class="nav-group-label">Atendimento</li>
     <li>
-      <a href="../index.html" data-page="dashboard">
+      <a href="../pages/dashboard.html" data-page="dashboard">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         Dashboard
       </a>

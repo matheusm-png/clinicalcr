@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Clínica LCR</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+  <aside id="sidebar"></aside>
+
+  <main id="main">
+    <header class="topbar">
+      <h1>Dashboard Administrativo</h1>
+      <div class="topbar-actions">
+        <div class="topbar-icon-btn"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg></div>
+        <div class="avatar">LC</div>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <!-- Cards de Métricas -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%);">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3z"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          </div>
+          <div>
+            <div class="stat-value">R$ 24.500</div>
+            <div class="stat-label">Faturamento Mensal</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+          </div>
+          <div>
+            <div class="stat-value">128</div>
+            <div class="stat-label">Pacientes Ativos</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          </div>
+          <div>
+            <div class="stat-value">12</div>
+            <div class="stat-label">Agendamentos hoje</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div>
+            <div class="stat-value">R$ 3.200</div>
+            <div class="stat-label">A Receber</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 2fr 1fr; gap:24px">
+        <!-- Próximos Pacientes -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Próximos Pacientes</h3>
+            <a href="agenda.html" class="btn btn-primary btn-sm">Ver Agenda Completa</a>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Horário</th>
+                  <th>Paciente</th>
+                  <th>Procedimento</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="lista-proximos-dashboard">
+                <!-- Injetar via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Ações Rápidas -->
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">Ações Rápidas</h3></div>
+          <div class="quick-grid">
+            <a href="pacientes.html" class="quick-btn">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 4v16m8-8H4"/></svg>
+              <span>Novo Paciente</span>
+            </a>
+            <a href="agenda.html" class="quick-btn">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              <span>Agendar</span>
+            </a>
+            <a href="financeiro.html" class="quick-btn">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3z"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+              <span>Lançar Pagto</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/db.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      renderProximosDashboard();
+    });
+
+    function renderProximosDashboard() {
+      const tbody = document.getElementById('lista-proximos-dashboard');
+      const appts = FakeDB.agendamentos.list()
+        .filter(a => a.status === 'confirmado')
+        .slice(0, 5);
+      
+      if (appts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted)">Nenhum agendamento para hoje.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = appts.map(a => `
+        <tr>
+          <td><span class="badge badge-info">${a.horario}</span></td>
+          <td><strong>${a.paciente}</strong></td>
+          <td>Limpeza / Avaliação</td>
+          <td><span class="badge badge-success">Confirmado</span></td>
+        </tr>
+      `).join('');
+    }
+  </script>
+</body>
+</html>
