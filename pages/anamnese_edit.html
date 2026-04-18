@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preencher Anamnese — Clínica LCR</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    .anamnese-form { max-width: 800px; margin: 0 auto; }
+    .q-group { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .q-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: block; }
+    .options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+    .option-check { display: flex; align-items:center; gap: 8px; font-size: 13px; cursor: pointer; padding: 10px; border: 1.5px solid var(--border); border-radius: 8px; transition: all .15s; }
+    .option-check:hover { background: var(--bg2); }
+    .option-check input { width: 16px; height: 16px; border-radius: 4px; }
+    .option-check.selected { border-color: var(--primary); background: var(--primary-light); color: var(--primary-darker); }
+  </style>
+</head>
+<body>
+
+<aside id="sidebar"></aside>
+
+<div id="main">
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <a href="prontuario.html" id="back-link" style="color:var(--text-muted);text-decoration:none;font-size:13px">← Voltar</a>
+      <span style="color:var(--border)">/</span>
+      <h1>Anamnese Odontológica</h1>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-primary" onclick="salvarAnamnese()">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M5 13l4 4L19 7"/></svg>
+        Salvar Anamnese
+      </button>
+      <div class="avatar">LC</div>
+    </div>
+  </header>
+
+  <main class="page-content">
+    <div class="card anamnese-form">
+      <div style="text-align:center;margin-bottom:30px">
+        <h2 style="font-size:22px;margin-bottom:8px" id="paciente-nome">Paciente</h2>
+        <p style="color:var(--text-muted);font-size:14px">Por favor, responda com sinceridade todas as questões abaixo.</p>
+      </div>
+
+      <form id="form-anamnese">
+        <!-- Histórico de Saúde -->
+        <div class="q-group">
+          <span class="q-title">1. Você está sob tratamento médico atualmente?</span>
+          <div class="form-row form-row-2">
+            <select class="form-control" name="sob_tratamento">
+              <option value="não">Não</option>
+              <option value="sim">Sim</option>
+            </select>
+            <input type="text" class="form-control" name="tratamento_desc" placeholder="Se sim, qual?">
+          </div>
+        </div>
+
+        <div class="q-group">
+          <span class="q-title">2. Está fazendo uso de alguma medicação?</span>
+          <textarea class="form-control" name="medicacoes" rows="2" placeholder="Liste os medicamentos que utiliza..."></textarea>
+        </div>
+
+        <div class="q-group">
+          <span class="q-title">3. Possui alguma alergia?</span>
+          <div class="options-grid">
+            <label class="option-check"><input type="checkbox" name="alergia" value="Penicilina"> Penicilina</label>
+            <label class="option-check"><input type="checkbox" name="alergia" value="Anestésicos"> Anestésicos</label>
+            <label class="option-check"><input type="checkbox" name="alergia" value="Látex"> Látex</label>
+            <label class="option-check"><input type="checkbox" name="alergia" value="Iodo"> Iodo</label>
+            <label class="option-check"><input type="checkbox" name="alergia" value="Outros"> Outros</label>
+          </div>
+        </div>
+
+        <div class="q-group">
+          <span class="q-title">4. Você possui ou já possuiu alguma destas condições?</span>
+          <div class="options-grid">
+            <label class="option-check"><input type="checkbox" name="condicao" value="Diabetes"> Diabetes</label>
+            <label class="option-check"><input type="checkbox" name="condicao" value="Hipertensão"> Hipertensão</label>
+            <label class="option-check"><input type="checkbox" name="condicao" value="Problemas Cardíacos"> Problemas Cardíacos</label>
+            <label class="option-check"><input type="checkbox" name="condicao" value="Asma/Bronquite"> Asma/Bronquite</label>
+            <label class="option-check"><input type="checkbox" name="condicao" value="Hepatite"> Hepatite</label>
+            <label class="option-check"><input type="checkbox" name="condicao" value="Anemia"> Anemia</label>
+            <label class="option-check"><input type="checkbox" name="condicao" value="Gastrite/Úlcera"> Gastrite/Úlcera</label>
+            <label class="option-check"><input type="checkbox" name="condicao" value="Epilepsia"> Epilepsia</label>
+          </div>
+        </div>
+
+        <div class="q-group">
+          <span class="q-title">5. Já teve alguma complicação em tratamentos dentários anteriores?</span>
+          <div class="form-row form-row-2">
+            <select class="form-control" name="complicacao">
+              <option value="não">Não</option>
+              <option value="sim">Sim</option>
+            </select>
+            <input type="text" class="form-control" name="complicacao_desc" placeholder="Se sim, qual?">
+          </div>
+        </div>
+
+        <div class="q-group">
+          <span class="q-title">6. Observações Adicionais</span>
+          <textarea class="form-control" name="observacoes" rows="3" placeholder="Algo mais que o dentista deva saber?"></textarea>
+        </div>
+
+        <!-- Assinatura (Simulação) -->
+        <div style="background:var(--bg2);padding:20px;border-radius:12px;margin-top:40px;text-align:center">
+          <label style="display:flex;align-items:center;justify-content:center;gap:10px;font-weight:600;cursor:pointer">
+            <input type="checkbox" required> Eu declaro que as informações acima são verdadeiras.
+          </label>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+
+<script src="../js/sidebar.js"></script>
+<script src="../js/db.js"></script>
+<script>
+let PACIENTE_ATUAL = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  if (!id) { window.location.href = 'pacientes.html'; return; }
+
+  PACIENTE_ATUAL = FakeDB.pacientes.get(id);
+  if (!PACIENTE_ATUAL) { window.location.href = 'pacientes.html'; return; }
+
+  document.getElementById('paciente-nome').textContent = PACIENTE_ATUAL.nome;
+  document.getElementById('back-link').href = `prontuario.html?id=${id}`;
+
+  // Estilo visual para as checkboxes
+  document.querySelectorAll('.option-check input').forEach(input => {
+    input.addEventListener('change', () => {
+      input.closest('.option-check').classList.toggle('selected', input.checked);
+    });
+  });
+});
+
+function salvarAnamnese() {
+  const form = document.getElementById('form-anamnese');
+  
+  if (!form.checkValidity()) {
+    alert('Por favor, aceite a declaração de verdade das informações.');
+    return;
+  }
+
+  const formData = new FormData(form);
+  const data = {};
+  formData.forEach((value, key) => {
+    if (!data[key]) {
+      data[key] = value;
+    } else {
+      if (!Array.isArray(data[key])) data[key] = [data[key]];
+      data[key].push(value);
+    }
+  });
+
+  FakeDB.anamneses.save({
+    pacienteId: PACIENTE_ATUAL.id,
+    respostas: data
+  });
+
+  alert('Anamnese salva com sucesso!');
+  window.location.href = `prontuario.html?id=${PACIENTE_ATUAL.id}`;
+}
+</script>
+</body>
+</html>

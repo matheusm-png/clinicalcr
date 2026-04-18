@@ -21,6 +21,77 @@
     .odonto-legend { display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; font-size:11px; align-items:center; }
     .odonto-legend-dot { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
     .proc-table-wrap { margin-top:16px; }
+
+    /* Drag Selection */
+    #odontograma { 
+      position: relative; 
+      user-select: none; 
+      -webkit-user-select: none;
+      padding: 30px;
+      background: var(--bg2);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+    }
+    .selection-marquee {
+      position: absolute;
+      border: 1.5px solid var(--primary);
+      background: rgba(61, 189, 189, 0.2);
+      border-radius: 2px;
+      pointer-events: none;
+      z-index: 1000;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.5);
+    }
+    .dente-wrap { 
+      transition: all 0.2s; 
+      padding: 12px 8px; 
+      border-radius: 12px; 
+      border: 2px solid transparent; 
+      user-select: none;
+    }
+    .dente-wrap:hover {
+      background: var(--bg);
+    }
+    .dente-wrap.selected {
+      background: var(--primary-light);
+      border-color: var(--primary-mid);
+      transform: translateY(-4px);
+      box-shadow: 0 4px 12px rgba(61,189,189,0.15);
+    }
+    .dente-wrap.selected .dente-num { color: var(--primary-darker); font-weight: 700; transform: scale(1.1); }
+    .odonto-row { gap: 8px !important; }
+    /* Bulk Selection Toolbar */
+    .bulk-toolbar {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--card);
+      border: 1px solid var(--primary-mid);
+      border-radius: 50px;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      z-index: 1500;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .bulk-toolbar.open {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      pointer-events: all;
+    }
+    .bulk-count {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary-darker);
+      padding-right: 12px;
+      border-right: 1px solid var(--border);
+      margin-right: 4px;
+    }
+    .bulk-btn-group { display: flex; gap: 6px; }
   </style>
 </head>
 <body>
@@ -119,7 +190,8 @@
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
           <span style="font-size:14px;font-weight:600">Odontograma</span>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-primary btn-sm" onclick="openModal('modal-procedimento')">+ Novo Procedimento</button>
+            <button class="btn btn-outline btn-sm" id="btn-bulk-edit-top" onclick="abrirEdicaoMassa()" style="display:none">Editar Selecionados</button>
+            <button class="btn btn-primary btn-sm" onclick="openNovoProcedimentoMulti()">+ Novo Procedimento</button>
           </div>
         </div>
 
@@ -353,6 +425,18 @@
       </div>
 
     </div><!-- /card -->
+
+    <!-- Barra de Ações em Massa -->
+    <div id="bulk-toolbar" class="bulk-toolbar">
+      <span class="bulk-count"><span id="bulk-n-dentes">0</span> Selecionados</span>
+      <div class="bulk-btn-group">
+        <button class="btn btn-sm btn-outline" onclick="aplicarStatusMassa('realizado')" style="color:var(--success); border-color:rgba(34,197,94,0.3)">Realizado</button>
+        <button class="btn btn-sm btn-outline" onclick="aplicarStatusMassa('a-realizar')" style="color:var(--info); border-color:rgba(59,130,246,0.3)">A Realizar</button>
+        <button class="btn btn-sm btn-outline" onclick="aplicarStatusMassa('pre-existente')" style="color:var(--warning); border-color:rgba(245,158,11,0.3)">Pendente</button>
+        <button class="btn btn-primary btn-sm" onclick="openNovoProcedimentoMulti()">+ Procedimento</button>
+      </div>
+      <button class="modal-close" onclick="SELECTED_DENTES.clear(); renderOdontograma(); toggleBulkToolbar();" style="width:24px; height:24px; font-size:14px">&times;</button>
+    </div>
   </main>
 </div>
 
@@ -458,6 +542,22 @@
   </div>
 </div>
 
+<!-- Modal Ficha do Dente (Lista procs de um dente) -->
+<div class="modal-overlay" id="modal-ficha-dente">
+  <div class="modal" style="max-width:450px">
+    <div class="modal-header">
+      <span class="modal-title">Dente <span id="num-dente-ficha">--</span> — Histórico</span>
+      <button class="modal-close" onclick="closeModal('modal-ficha-dente')">&times;</button>
+    </div>
+    <div class="modal-body" style="background:var(--bg2); padding:16px">
+      <div id="lista-procs-dente" style="display:flex; flex-direction:column; gap:10px">
+        <!-- Injetado via JS -->
+      </div>
+      <button class="btn btn-primary btn-full" style="margin-top:16px" id="btn-novo-neste-dente">+ Novo Procedimento</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Novo Débito -->
 <div class="modal-overlay" id="modal-debito">
   <div class="modal">
@@ -493,12 +593,24 @@
 </div>
 
 <script src="../js/sidebar.js"></script>
+<script src="../js/db.js"></script>
 <script>
-function openModal(id) { document.getElementById(id)?.classList.add('open'); }
-function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+let PACIENTE_ATUAL = null;
+let PROCEDIMENTOS_ATUAIS = [];
 
 // Tabs
 document.addEventListener('DOMContentLoaded', () => {
+  // Pegar ID do paciente da URL
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id') || 1;
+  
+  PACIENTE_ATUAL = FakeDB.pacientes.get(id);
+  
+  if (PACIENTE_ATUAL) {
+    updatePacienteUI();
+    loadProcedimentos();
+  }
+
   document.querySelectorAll('#main-tabs .tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('#main-tabs .tab-btn').forEach(b => b.classList.remove('active'));
@@ -515,84 +627,644 @@ document.addEventListener('DOMContentLoaded', () => {
   renderOdontograma();
 });
 
+function updatePacienteUI() {
+  document.querySelector('.patient-name').textContent = PACIENTE_ATUAL.nome;
+  document.querySelector('.patient-big-avatar').textContent = PACIENTE_ATUAL.nome.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
+  document.querySelectorAll('.patient-meta span')[0].innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> ${PACIENTE_ATUAL.nascimento} (Ref)`;
+  document.querySelectorAll('.patient-meta span')[1].innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.38 2 2 0 0 1 3.6 1.21h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.36a16 16 0 0 0 6 6l.94-.94a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16z"/></svg> ${PACIENTE_ATUAL.tel}`;
+  document.querySelectorAll('.patient-meta span')[2].innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> CPF: ${PACIENTE_ATUAL.cpf}`;
+}
+
+function loadProcedimentos() {
+  PROCEDIMENTOS_ATUAIS = FakeDB.procedimentos.list(PACIENTE_ATUAL.id);
+  renderProcedimentosTable();
+  renderOdontograma();
+  updateFinanceiroResumo();
+  loadAnamneses();
+}
+
+function loadAnamneses() {
+  const list = FakeDB.anamneses.list(PACIENTE_ATUAL.id);
+  const banner = document.querySelector('.alert-banner');
+  const context = document.getElementById('tab-anamnese');
+
+  if (list.length > 0) {
+    if (banner) banner.style.display = 'none';
+    
+    let html = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <span style="font-size:14px;font-weight:600">Histórico de Anamneses</span>
+        <button class="btn btn-primary btn-sm" onclick="window.location.href='anamnese_edit.html?id=${PACIENTE_ATUAL.id}'">+ Nova Anamnese</button>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Data</th><th>Modelo</th><th>Dentista</th><th>Ações</th></tr></thead>
+          <tbody>
+    `;
+    
+    list.sort((a,b) => b.id - a.id).forEach(a => {
+      html += `
+        <tr>
+          <td>${a.data.split('-').reverse().join('/')}</td>
+          <td>Anamnese Odontológica Padrão</td>
+          <td>Dra. Lara Camila</td>
+          <td>
+            <button class="btn btn-outline btn-sm" onclick="alert('Visualização em PDF disponível na versão final')">Ver Respostas</button>
+          </td>
+        </tr>
+      `;
+    });
+    
+    html += `</tbody></table></div>`;
+    context.innerHTML = html;
+  } else {
+    if (banner) banner.style.display = 'flex';
+    context.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <span style="font-size:14px;font-weight:600">Histórico de Anamneses</span>
+        <button class="btn btn-primary btn-sm" onclick="window.location.href='anamnese_edit.html?id=${PACIENTE_ATUAL.id}'">+ Nova Anamnese</button>
+      </div>
+      <div style="text-align:center;padding:40px 20px;color:var(--text-muted)">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;margin:0 auto 12px;display:block;color:var(--border)"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>
+        Nenhuma anamnese realizada para este paciente. Solicite via link ou preencha agora.
+      </div>
+    `;
+  }
+}
+
+// Configurar botão do banner
+const bannerBtn = document.querySelector('.alert-banner .btn');
+if (bannerBtn) bannerBtn.onclick = () => window.location.href = `anamnese_edit.html?id=${PACIENTE_ATUAL.id}`;
+
+function renderProcedimentosTable() {
+  const tbody = document.querySelector('#tab-ficha table tbody');
+  if (PROCEDIMENTOS_ATUAIS.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted)">Nenhum procedimento registrado.</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = PROCEDIMENTOS_ATUAIS.map(p => `
+    <tr>
+      <td>${p.nome}</td>
+      <td>${p.dente || '—'}</td>
+      <td><span class="badge badge-${p.estado === 'realizado' ? 'success' : p.estado === 'a-realizar' ? 'info' : 'warning'}">${p.estado}</span></td>
+      <td>${p.data || '—'}</td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick="removeProcedimento(${p.id})">Remover</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function updateFinanceiroResumo() {
+  // Simulação de cálculo financeiro baseado nos procedimentos (poderia vir do FakeDB.financeiro)
+  // Por agora mantemos estático ou estimamos
+}
+
+function removeProcedimento(id) {
+  if (confirm('Deseja remover este procedimento?')) {
+    FakeDB.procedimentos.remove(id);
+    loadProcedimentos();
+  }
+}
+
+function openModal(id, options = {}) {
+  const modal = document.getElementById(id);
+  if (modal) {
+    modal.classList.add('open');
+    if (options.dente) {
+      modal.querySelector('input[placeholder="Ex: 16, 21, 45…"]').value = options.dente;
+    }
+  }
+}
+
+function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+
+function salvarProcedimento() {
+  const modal = document.getElementById('modal-procedimento');
+  const nome = modal.querySelector('select').value;
+  const dente = modal.querySelector('input[placeholder="Ex: 16, 21, 45…"]').value;
+  const estado = modal.querySelector('select:last-of-type').value.toLowerCase().replace(' ', '-');
+  const obs = modal.querySelector('textarea').value;
+
+  if (!nome) { alert('Selecione um procedimento'); return; }
+
+  FakeDB.procedimentos.save({
+    pacienteId: PACIENTE_ATUAL.id,
+    nome,
+    dente,
+    estado: estado === 'a-realizar' ? 'a-realizar' : estado === 'realizado' ? 'realizado' : 'pre-existente',
+    data: estado === 'realizado' ? new Date().toLocaleDateString('pt-BR') : '—',
+    obs
+  });
+
+  closeModal('modal-procedimento');
+  loadProcedimentos();
+}
+
+// Configurar botão de salvar do modal de procedimento
+document.querySelector('#modal-procedimento .btn-primary').onclick = salvarProcedimento;
+
 // Odontograma
 const DENTES_SUPERIOR = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
 const DENTES_INFERIOR = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
-const PROC_DENTES = { 16: 'a-realizar', 11: 'realizado', 26: 'pre-existente' };
-
-// Dentes anteriores: incisivos e caninos
 const ANTERIORES = new Set([13,12,11,21,22,23,43,42,41,31,32,33]);
 
-const STATE = {
+const STATE_COLORS = {
   'a-realizar':    { fill:'#3B82F6', stroke:'#2563EB' },
   'realizado':     { fill:'#22C55E', stroke:'#16A34A' },
   'pre-existente': { fill:'#F59E0B', stroke:'#D97706' },
+  'normal':        { fill:'none',    stroke:'var(--text-muted)' }
 };
 
-function denteSVG(num, tipo) {
-  const s = STATE[tipo];
-  const fillColor   = s ? s.fill   : 'none';
-  const fillOpacity = s ? '0.2'    : '0';
-  const strokeColor = s ? s.stroke : 'var(--text-muted)';
-  const strokeW = '1.6';
+let SELECTED_DENTES = new Set();
+let IS_DRAGGING = false;
+let HAS_MOVED = false;
+let DRAG_START = { x: 0, y: 0 };
+let MARQUEE_EL = null;
 
-  if (ANTERIORES.has(num)) {
-    // Anterior — incisivo/canino: forma slim, raiz afilada, borda suave
-    return `<div class="dente-wrap" title="Dente ${num}" onclick="openModal('modal-procedimento')">
-      <div class="dente-num">${num}</div>
-      <svg class="dente-svg" width="22" height="34" viewBox="0 0 22 34">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M11,2.5
-             C8.5,2.5 6,4 5.5,7.5
-             C5,11 5.5,17 7,22.5
-             C8,26.5 9.5,30 11,33
-             C12.5,30 14,26.5 15,22.5
-             C16.5,17 17,11 16.5,7.5
-             C16,4 13.5,2.5 11,2.5Z"
-          fill="${fillColor}" fill-opacity="${fillOpacity}"
-          stroke="${strokeColor}" stroke-width="${strokeW}"/>
-      </svg>
-    </div>`;
+function initSelection() {
+  const wrap = document.getElementById('odontograma');
+  if (!wrap) return;
+
+  wrap.addEventListener('mousedown', e => {
+    // Se não for o botão esquerdo, ignora
+    if (e.button !== 0) return;
+
+    const isDente = e.target.closest('.dente-wrap');
+    
+    // Se não estiver apertando Shift/Ctrl, e não clicou em um dente, limpa a seleção
+    if (!e.shiftKey && !e.ctrlKey && !e.metaKey && !isDente) {
+      SELECTED_DENTES.clear();
+      renderOdontograma();
+    }
+
+    IS_DRAGGING = true;
+    HAS_MOVED = false;
+    const rect = wrap.getBoundingClientRect();
+    DRAG_START = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+
+    if (!MARQUEE_EL || !wrap.contains(MARQUEE_EL)) {
+      MARQUEE_EL = document.createElement('div');
+      MARQUEE_EL.className = 'selection-marquee';
+      wrap.appendChild(MARQUEE_EL);
+    }
+  });
+
+  window.addEventListener('mousemove', e => {
+    if (!IS_DRAGGING) return;
+    
+    const wrap = document.getElementById('odontograma');
+    const rect = wrap.getBoundingClientRect();
+    const curX = e.clientX - rect.left;
+    const curY = e.clientY - rect.top;
+
+    const width = Math.abs(curX - DRAG_START.x);
+    const height = Math.abs(curY - DRAG_START.y);
+
+    // Só considera arraste se mover mais de 5 pixels
+    if (width > 5 || height > 5) {
+      HAS_MOVED = true;
+      MARQUEE_EL.style.display = 'block';
+      const left = Math.min(DRAG_START.x, curX);
+      const top = Math.min(DRAG_START.y, curY);
+
+      MARQUEE_EL.style.left = `${left}px`;
+      MARQUEE_EL.style.top = `${top}px`;
+      MARQUEE_EL.style.width = `${width}px`;
+      MARQUEE_EL.style.height = `${height}px`;
+
+      // Detecção de colisão
+      const marqueeRect = MARQUEE_EL.getBoundingClientRect();
+      const denteWraps = wrap.querySelectorAll('.dente-wrap');
+      
+      denteWraps.forEach(el => {
+        const denteRect = el.getBoundingClientRect();
+        const isOverlapping = !(marqueeRect.right < denteRect.left || 
+                               marqueeRect.left > denteRect.right || 
+                               marqueeRect.bottom < denteRect.top || 
+                               marqueeRect.top > denteRect.bottom);
+        
+        const num = el.dataset.num;
+        if (isOverlapping) {
+          el.classList.add('selected');
+          SELECTED_DENTES.add(num.toString());
+        } else if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
+          el.classList.remove('selected');
+          SELECTED_DENTES.delete(num.toString());
+        }
+      });
+    }
+  });
+
+  window.addEventListener('mouseup', () => {
+    IS_DRAGGING = false;
+    if (MARQUEE_EL) MARQUEE_EL.style.display = 'none';
+  });
+}
+
+function toggleSelectDente(num, event) {
+  // Se houve movimento significativo durante o mousedown/mouseup, ignora o clique
+  if (HAS_MOVED) return;
+
+  if (event.ctrlKey || event.metaKey || event.shiftKey) {
+    if (SELECTED_DENTES.has(num.toString())) {
+      SELECTED_DENTES.delete(num.toString());
+    } else {
+      SELECTED_DENTES.add(num.toString());
+    }
+    renderOdontograma();
   } else {
-    // Posterior — pré-molar/molar: mais largo, dois cúspides no topo
-    return `<div class="dente-wrap" title="Dente ${num}" onclick="openModal('modal-procedimento')">
-      <div class="dente-num">${num}</div>
-      <svg class="dente-svg" width="28" height="34" viewBox="0 0 28 34">
-        <!-- Corpo do dente -->
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M4.5,11
-             C4.5,7.5 6.5,4.5 9.5,4
-             C10,3.5 10.5,3 11.2,3
-             C11.6,2.4 12,2.4 12.5,2.5
-             C13,2.4 13.4,2.4 13.8,3
-             C14.5,3 15,3.5 15.5,4
-             C18.5,4.5 20.5,7.5 20.5,11
-             C21,17.5 19.5,24.5 18,28.5
-             C17,31 15.5,33 14.5,33.5
-             L10.5,33.5
-             C9.5,33 8,31 7,28.5
-             C5.5,24.5 4,17.5 4.5,11Z"
-          fill="${fillColor}" fill-opacity="${fillOpacity}"
-          stroke="${strokeColor}" stroke-width="${strokeW}"/>
-        <!-- Detalhe dos dois cúspides -->
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M9.5,4 C10.5,2 11.2,1.5 12.5,1.5 C13.8,1.5 14.5,2 15.5,4"
-          fill="none" stroke="${strokeColor}" stroke-width="1.2" opacity="0.6"/>
-      </svg>
-    </div>`;
+    // Clique simples: verifica se o dente tem procedimentos
+    const procsDente = PROCEDIMENTOS_ATUAIS.filter(p => {
+      const dentes = p.dente.toString().split(',').map(d => d.trim());
+      return dentes.includes(num.toString());
+    });
+
+    if (procsDente.length > 0) {
+      abrirFichaDente(num, procsDente);
+    } else {
+      // Se estiver vazio, abre o modal de novo procedimento direto
+      SELECTED_DENTES.clear();
+      SELECTED_DENTES.add(num.toString());
+      renderOdontograma();
+      
+      const denteInput = document.querySelector('input[placeholder="Ex: 16, 21, 45…"]');
+      if (denteInput) denteInput.value = num;
+      // Resetar form de novo proc
+      document.querySelector('#modal-procedimento select').value = '';
+      document.querySelector('#modal-procedimento textarea').value = '';
+      openModal('modal-procedimento');
+    }
   }
+}
+
+function abrirFichaDente(num, procs) {
+  const modal = document.getElementById('modal-ficha-dente');
+  document.getElementById('num-dente-ficha').textContent = num;
+  const listCont = document.getElementById('lista-procs-dente');
+  
+  listCont.innerHTML = procs.map(p => `
+    <div class="card" style="padding:12px; border:1px solid var(--border); background:var(--bg2)">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px">
+        <div>
+          <div style="font-weight:600; font-size:14px; color:var(--text-dark)">${p.nome}</div>
+          <div style="font-size:11px; color:var(--text-muted)">${p.data || 'Sem data'}</div>
+        </div>
+        <span class="badge badge-${p.estado === 'realizado' ? 'success' : p.estado === 'a-realizar' ? 'info' : 'warning'}">${p.estado}</span>
+      </div>
+      <div style="display:flex; gap:8px">
+        <button class="btn btn-outline btn-sm" style="flex:1" onclick="editarProcedimentoSingle(${p.id})">Editar</button>
+        <button class="btn btn-outline btn-sm" style="flex:1; color:var(--danger); border-color:rgba(239,68,68,0.2)" onclick="removeProcedimento(${p.id})">Excluir</button>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('btn-novo-neste-dente').onclick = () => {
+    closeModal('modal-ficha-dente');
+    const denteInput = document.querySelector('input[placeholder="Ex: 16, 21, 45…"]');
+    if (denteInput) denteInput.value = num;
+    openModal('modal-procedimento');
+  };
+
+  openModal('modal-ficha-dente');
+}
+
+let EDITANDO_PROC_ID = null;
+
+function editarProcedimentoSingle(id) {
+  const p = FakeDB.procedimentos.get(id);
+  if (!p) return;
+  
+  EDITANDO_PROC_ID = id;
+  closeModal('modal-ficha-dente');
+  
+  const modal = document.getElementById('modal-procedimento');
+  modal.querySelector('.modal-title').textContent = 'Editar Procedimento';
+  modal.querySelector('select').value = p.nome;
+  modal.querySelector('input[placeholder="Ex: 16, 21, 45…"]').value = p.dente;
+  
+  // Mapear estado interno para o select (Texto amigável)
+  const estadoMap = { 'realizado': 'Realizado', 'a-realizar': 'A realizar', 'pre-existente': 'Pré-existente' };
+  modal.querySelector('select:last-of-type').value = estadoMap[p.estado] || 'A realizar';
+  modal.querySelector('textarea').value = p.obs || '';
+  
+  openModal('modal-procedimento');
+}
+
+// Sobrescrever salvarProcedimento para lidar com edição
+const originalSalvarProc = salvarProcedimento;
+salvarProcedimento = function() {
+  const modal = document.getElementById('modal-procedimento');
+  const nome = modal.querySelector('select').value;
+  const dente = modal.querySelector('input[placeholder="Ex: 16, 21, 45…"]').value;
+  const estadoLabel = modal.querySelector('select:last-of-type').value;
+  const estado = estadoLabel === 'A realizar' ? 'a-realizar' : estadoLabel === 'Realizado' ? 'realizado' : 'pre-existente';
+  const obs = modal.querySelector('textarea').value;
+
+  if (!nome) { alert('Selecione um procedimento'); return; }
+
+  const data = {
+    pacienteId: PACIENTE_ATUAL.id,
+    nome,
+    dente,
+    estado,
+    data: estado === 'realizado' ? new Date().toLocaleDateString('pt-BR') : '—',
+    obs
+  };
+
+  if (EDITANDO_PROC_ID) {
+    const p = FakeDB.procedimentos.get(EDITANDO_PROC_ID);
+    if(p) {
+        Object.assign(p, data);
+        FakeDB.procedimentos.save(p);
+    }
+    EDITANDO_PROC_ID = null;
+    modal.querySelector('.modal-title').textContent = 'Novo Procedimento';
+  } else {
+    FakeDB.procedimentos.save(data);
+  }
+
+  closeModal('modal-procedimento');
+  loadProcedimentos();
+};
+
+const PROC_VISUALS = {
+  'Restauração': { color: '#3B82F6', icon: 'restauracao' },
+  'Extração':    { color: '#EF4444', icon: 'extracao' },
+  'Canal':       { color: '#F59E0B', icon: 'canal' },
+  'Implante':    { color: '#475569', icon: 'implante' },
+  'Ortodontia':  { color: '#8B5CF6', icon: 'orto' },
+  'Prótese':     { color: '#10B981', icon: 'protese' },
+  'Clareamento': { color: '#6ee7b7', icon: 'highlight' }
+};
+
+function denteSVG(num, procs = []) {
+  const isSelected = SELECTED_DENTES.has(num.toString());
+  
+  // Determinar cor base pelo estado do último procedimento ou padrão
+  let baseColor = 'var(--text-muted)';
+  let fillOpacity = '0';
+  let strokeW = '1.6';
+  let isProtese = procs.some(p => p.nome === 'Prótese');
+
+  if (procs.length > 0) {
+    const last = procs[procs.length - 1];
+    const s = STATE_COLORS[last.estado] || STATE_COLORS['normal'];
+    baseColor = s.stroke;
+    fillOpacity = '0.1';
+  }
+
+  // Se for prótese, preenchemos mais o dente
+  if (isProtese) fillOpacity = '0.5';
+
+  let overlays = '';
+  procs.forEach(p => {
+    const theme = PROC_VISUALS[p.nome] || { color: baseColor };
+    const color = (STATE_COLORS[p.estado] || {}).stroke || theme.color;
+
+    if (p.nome === 'Extração') {
+      overlays += `<path d="M5,5 L20,30 M20,5 L5,30" stroke="${color}" stroke-width="3" stroke-linecap="round" />`;
+    } else if (p.nome === 'Ortodontia') {
+      overlays += `<rect x="8" y="12" width="12" height="8" rx="1" fill="${color}" fill-opacity="0.8" />`;
+      overlays += `<line x1="0" y1="16" x2="28" y2="16" stroke="${color}" stroke-width="1.5" opacity="0.6" />`;
+    } else if (p.nome === 'Implante') {
+      overlays += `<path d="M12,22 L16,22 L14,32 Z M10,24 L18,24 M11,27 L17,27 M12,30 L16,30" stroke="${color}" fill="${color}" stroke-width="1" />`;
+    } else if (p.nome === 'Canal') {
+      overlays += `<path d="M14,15 L14,30" stroke="${color}" stroke-width="2.5" stroke-linecap="round" opacity="0.8" />`;
+    } else if (p.nome === 'Restauração') {
+      overlays += `<circle cx="14" cy="14" r="5" fill="${color}" fill-opacity="0.6" stroke="${color}" stroke-width="1" />`;
+    }
+  });
+
+  const svgBase = ANTERIORES.has(num) ? `
+    <svg class="dente-svg" width="22" height="34" viewBox="0 0 22 34">
+      <path stroke-linecap="round" stroke-linejoin="round"
+        d="M11,2.5 C8.5,2.5 6,4 5.5,7.5 C5,11 5.5,17 7,22.5 C8,26.5 9.5,30 11,33 C12.5,30 14,26.5 15,22.5 C16.5,17 17,11 16.5,7.5 C16,4 13.5,2.5 11,2.5Z"
+        fill="${baseColor}" fill-opacity="${fillOpacity}" stroke="${baseColor}" stroke-width="${strokeW}"/>
+      <g class="overlays" transform="translate(-3,0)">${overlays}</g>
+    </svg>` : `
+    <svg class="dente-svg" width="28" height="34" viewBox="0 0 28 34">
+      <path stroke-linecap="round" stroke-linejoin="round"
+        d="M4.5,11 C4.5,7.5 6.5,4.5 9.5,4 C10,3.5 10.5,3 11.2,3 C11.6,2.4 12,2.4 12.5,2.5 C13,2.4 13.4,2.4 13.8,3 C14.5,3 15,3.5 15.5,4 C18.5,4.5 20.5,7.5 20.5,11 C21,17.5 19.5,24.5 18,28.5 C17,31 15.5,33 14.5,33.5 L10.5,33.5 C9.5,33 8,31 7,28.5 C5.5,24.5 4,17.5 4.5,11Z"
+        fill="${baseColor}" fill-opacity="${fillOpacity}" stroke="${baseColor}" stroke-width="${strokeW}"/>
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9.5,4 C10.5,2 11.2,1.5 12.5,1.5 C13.8,1.5 14.5,2 15.5,4" fill="none" stroke="${baseColor}" stroke-width="1.2" opacity="0.6"/>
+      <g class="overlays">${overlays}</g>
+    </svg>`;
+
+  return `
+    <div class="dente-wrap ${isSelected ? 'selected' : ''}" data-num="${num}" title="Dente ${num}" onclick="toggleSelectDente('${num}', event)">
+      <div class="dente-num">${num}</div>
+      ${svgBase}
+    </div>`;
 }
 
 function renderOdontograma() {
   const wrap = document.getElementById('odontograma');
   if (!wrap) return;
+  
+  const denteProcs = {};
+  PROCEDIMENTOS_ATUAIS.forEach(p => {
+    if (p.dente) {
+      const dentes = p.dente.toString().split(',').map(d => d.trim());
+      dentes.forEach(d => {
+        if (!denteProcs[d]) denteProcs[d] = [];
+        denteProcs[d].push(p);
+      });
+    }
+  });
+
   let html = '<div class="odonto-row">';
-  DENTES_SUPERIOR.forEach(n => { html += denteSVG(n, PROC_DENTES[n] || 'normal'); });
-  html += '</div><div class="odonto-row bottom" style="margin-top:10px">';
-  DENTES_INFERIOR.forEach(n => { html += denteSVG(n, PROC_DENTES[n] || 'normal'); });
+  DENTES_SUPERIOR.forEach(n => { html += denteSVG(n, denteProcs[n] || []); });
+  html += '</div><div class="odonto-row bottom" style="margin-top:20px">';
+  DENTES_INFERIOR.forEach(n => { html += denteSVG(n, denteProcs[n] || []); });
   html += '</div>';
   wrap.innerHTML = html;
 }
+
+function openNovoProcedimentoMulti() {
+  const denteInput = document.querySelector('input[placeholder="Ex: 16, 21, 45…"]');
+  if (denteInput) {
+    if (SELECTED_DENTES.size > 0) {
+      denteInput.value = Array.from(SELECTED_DENTES).sort((a,b) => a-b).join(', ');
+    } else {
+      denteInput.value = '';
+    }
+  }
+  openModal('modal-procedimento');
+}
+
+function toggleBulkToolbar() {
+  const bar = document.getElementById('bulk-toolbar');
+  const countSpan = document.getElementById('bulk-n-dentes');
+  if (!bar) return;
+  
+  if (SELECTED_DENTES.size > 0) {
+    countSpan.textContent = SELECTED_DENTES.size;
+    bar.classList.add('open');
+  } else {
+    bar.classList.remove('open');
+  }
+}
+
+function aplicarStatusMassa(novoEstado) {
+  if (SELECTED_DENTES.size === 0) return;
+  
+  const dentesArray = Array.from(SELECTED_DENTES);
+  
+  // Para cada dente selecionado, vamos atualizar seus procedimentos atuais
+  // Ou se não tiver nenhum, podemos sugerir criar um? 
+  // No contexto de odontograma, "Ação em massa" geralmente altera o status
+  
+  let alterados = 0;
+  PROCEDIMENTOS_ATUAIS.forEach(p => {
+    const dentesDoProc = p.dente.toString().split(',').map(d => d.trim());
+    const intersec = dentesDoProc.filter(d => SELECTED_DENTES.has(d));
+    
+    if (intersec.length > 0) {
+      p.estado = novoEstado;
+      FakeDB.procedimentos.save(p);
+      alterados++;
+    }
+  });
+
+  if (alterados === 0) {
+    alert("Nenhum procedimento existente encontrado nesses dentes. Crie um novo primeiro.");
+    return;
+  }
+
+  SELECTED_DENTES.clear();
+  loadProcedimentos();
+  toggleBulkToolbar();
+}
+
+// Atualizar toggleBulkToolbar nos eventos de seleção
+// Inserir no final do mouseup e click
+const originalMouseUp = window.onmouseup;
+window.addEventListener('mouseup', () => {
+  // Já tinha um listener, mas adicionei no final do renderOdontograma
+  // Para garantir, chamo aqui
+  setTimeout(toggleBulkToolbar, 10);
+});
+
+// Sobrescrever toggleSelectDente para chamar a toolbar
+const oldToggleSelectDente = toggleSelectDente;
+toggleSelectDente = function(num, event) {
+  oldToggleSelectDente(num, event);
+  toggleBulkToolbar();
+};
+
+// Sobrescrever initSelection para limpar a seleção corretamente
+const oldInitSelection = initSelection;
+initSelection = function() {
+  oldInitSelection();
+  // Adicionar toggle à limpeza
+  document.getElementById('odontograma').addEventListener('mousedown', e => {
+     if (!e.shiftKey && !e.ctrlKey && !e.metaKey && !e.target.closest('.dente-wrap')) {
+       toggleBulkToolbar();
+     }
+    });
+  };
+
+function abrirEdicaoMassa() {
+  if (SELECTED_DENTES.size === 0) return;
+  
+  EDITANDO_PROC_ID = 'MASSA'; // Flag para indicar edição em massa
+  const dentesStr = Array.from(SELECTED_DENTES).sort((a,b) => a-b).join(', ');
+  
+  const modal = document.getElementById('modal-procedimento');
+  modal.querySelector('.modal-title').textContent = 'Edição em Massa — ' + SELECTED_DENTES.size + ' dentes';
+  modal.querySelector('select').value = '';
+  modal.querySelector('input[placeholder="Ex: 16, 21, 45…"]').value = dentesStr;
+  modal.querySelector('select:last-of-type').value = 'A realizar';
+  modal.querySelector('textarea').value = '';
+  
+  openModal('modal-procedimento');
+}
+
+// Atualizar toggleBulkToolbar para mostrar o botão do topo também
+const oldToggleBulkToolbar = toggleBulkToolbar;
+toggleBulkToolbar = function() {
+  oldToggleBulkToolbar();
+  const btnTop = document.getElementById('btn-bulk-edit-top');
+  if (btnTop) {
+    btnTop.style.display = SELECTED_DENTES.size > 0 ? 'inline-flex' : 'none';
+  }
+};
+
+// Modificar salvarProcedimento para lidar com o flag 'MASSA'
+const secondSalvarOverload = salvarProcedimento;
+salvarProcedimento = function() {
+  const modal = document.getElementById('modal-procedimento');
+  const nome = modal.querySelector('select').value;
+  const denteStr = modal.querySelector('input[placeholder="Ex: 16, 21, 45…"]').value;
+  const estadoLabel = modal.querySelector('select:last-of-type').value;
+  const estado = estadoLabel === 'A realizar' ? 'a-realizar' : estadoLabel === 'Realizado' ? 'realizado' : 'pre-existente';
+  const obs = modal.querySelector('textarea').value;
+
+  if (!nome) { alert('Selecione um procedimento'); return; }
+
+  if (EDITANDO_PROC_ID === 'MASSA') {
+    // Aplicar a todos os procedimentos existentes nos dentes selecionados
+    const dentesSels = denteStr.split(',').map(d => d.trim());
+    let alterados = 0;
+    
+    PROCEDIMENTOS_ATUAIS.forEach(p => {
+      const dentesDoP = p.dente.toString().split(',').map(d => d.trim());
+      const temIntersec = dentesDoP.some(d => dentesSels.includes(d));
+      
+      if (temIntersec) {
+        if (nome) p.nome = nome;
+        p.estado = estado;
+        p.obs = obs;
+        p.data = estado === 'realizado' ? new Date().toLocaleDateString('pt-BR') : '—';
+        FakeDB.procedimentos.save(p);
+        alterados++;
+      }
+    });
+    
+    // Se não tinha nenhum, criar um novo para o dente
+    if (alterados === 0) {
+       FakeDB.procedimentos.save({
+          pacienteId: PACIENTE_ATUAL.id,
+          nome, dente: denteStr, estado, obs,
+          data: estado === 'realizado' ? new Date().toLocaleDateString('pt-BR') : '—'
+       });
+    }
+    
+    EDITANDO_PROC_ID = null;
+    modal.querySelector('.modal-title').textContent = 'Novo Procedimento';
+  } else if (EDITANDO_PROC_ID) {
+    // Lógica já existente de edição individual
+    const p = FakeDB.procedimentos.get(EDITANDO_PROC_ID);
+    if(p) {
+        p.nome = nome; p.dente = denteStr; p.estado = estado; p.obs = obs;
+        p.data = estado === 'realizado' ? new Date().toLocaleDateString('pt-BR') : '—';
+        FakeDB.procedimentos.save(p);
+    }
+    EDITANDO_PROC_ID = null;
+    modal.querySelector('.modal-title').textContent = 'Novo Procedimento';
+  } else {
+    FakeDB.procedimentos.save({
+      pacienteId: PACIENTE_ATUAL.id,
+      nome, dente: denteStr, estado, obs,
+      data: estado === 'realizado' ? new Date().toLocaleDateString('pt-BR') : '—'
+    });
+  }
+
+  closeModal('modal-procedimento');
+  loadProcedimentos();
+  SELECTED_DENTES.clear();
+  renderOdontograma();
+  toggleBulkToolbar();
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  initSelection();
+});
 </script>
 </body>
 </html>

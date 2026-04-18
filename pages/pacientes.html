@@ -282,25 +282,8 @@
 </div>
 
 <script src="../js/sidebar.js"></script>
+<script src="../js/db.js"></script>
 <script>
-const PACIENTES = [
-  { id:1, nome:'Ana Beatriz Santos',   cpf:'012.345.678-90', tel:'(74) 99123-4567', plano:'Particular',     ultima:'10/04/2026', status:'Ativo'   },
-  { id:2, nome:'Bruno Alves',          cpf:'023.456.789-01', tel:'(74) 98234-5678', plano:'Unimed',         ultima:'08/04/2026', status:'Ativo'   },
-  { id:3, nome:'Carlos Mendes',        cpf:'034.567.890-12', tel:'(74) 97345-6789', plano:'Particular',     ultima:'15/04/2026', status:'Ativo'   },
-  { id:4, nome:'Daniela Ferreira',     cpf:'045.678.901-23', tel:'(74) 96456-7890', plano:'Bradesco Saúde', ultima:'02/04/2026', status:'Inativo' },
-  { id:5, nome:'Eduardo Souza',        cpf:'056.789.012-34', tel:'(74) 95567-8901', plano:'Particular',     ultima:'17/03/2026', status:'Ativo'   },
-  { id:6, nome:'Fernanda Lima',        cpf:'067.890.123-45', tel:'(74) 94678-9012', plano:'Amil',           ultima:'16/04/2026', status:'Ativo'   },
-  { id:7, nome:'Gabriel Nascimento',   cpf:'078.901.234-56', tel:'(74) 93789-0123', plano:'Particular',     ultima:'05/04/2026', status:'Ativo'   },
-  { id:8, nome:'Helena Carvalho',      cpf:'089.012.345-67', tel:'(74) 92890-1234', plano:'Unimed',         ultima:'01/04/2026', status:'Ativo'   },
-  { id:9, nome:'Igor Ribeiro',         cpf:'090.123.456-78', tel:'(74) 91901-2345', plano:'Particular',     ultima:'20/03/2026', status:'Inativo' },
-  { id:10, nome:'João Pereira',        cpf:'101.234.567-89', tel:'(74) 90012-3456', plano:'Particular',     ultima:'17/04/2026', status:'Ativo'   },
-  { id:11, nome:'Larissa Mota',        cpf:'112.345.678-90', tel:'(74) 99123-0001', plano:'SulAmérica',     ultima:'12/04/2026', status:'Ativo'   },
-  { id:12, nome:'Maria Silva',         cpf:'123.456.789-01', tel:'(74) 98234-0002', plano:'Particular',     ultima:'17/04/2026', status:'Ativo'   },
-  { id:13, nome:'Nathan Oliveira',     cpf:'134.567.890-12', tel:'(74) 97345-0003', plano:'Unimed',         ultima:'09/04/2026', status:'Ativo'   },
-  { id:14, nome:'Paulo César',         cpf:'145.678.901-23', tel:'(74) 96456-0004', plano:'Particular',     ultima:'14/04/2026', status:'Ativo'   },
-  { id:15, nome:'Roberta Nunes',       cpf:'156.789.012-34', tel:'(74) 95567-0005', plano:'Bradesco Saúde', ultima:'11/04/2026', status:'Ativo'   },
-];
-
 function iniciais(nome) {
   const p = nome.trim().split(' ');
   return p.length >= 2 ? p[0][0]+p[p.length-1][0] : p[0][0];
@@ -309,6 +292,12 @@ function iniciais(nome) {
 function renderTabela(lista) {
   const tbody = document.getElementById('tbody-pacientes');
   document.getElementById('total-pacientes').textContent = lista.length + ' pacientes';
+  
+  if (lista.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-muted)">Nenhum paciente cadastrado.</td></tr>';
+    return;
+  }
+
   tbody.innerHTML = lista.map(p => `
     <tr>
       <td>
@@ -320,7 +309,7 @@ function renderTabela(lista) {
       <td style="font-size:13px;color:var(--text-muted)">${p.cpf}</td>
       <td style="font-size:13px">${p.tel}</td>
       <td style="font-size:13px">${p.plano}</td>
-      <td style="font-size:13px;color:var(--text-muted)">${p.ultima}</td>
+      <td style="font-size:13px;color:var(--text-muted)">—</td>
       <td><span class="badge ${p.status==='Ativo'?'badge-success':'badge-danger'}">${p.status}</span></td>
       <td>
         <div style="display:flex;gap:6px">
@@ -335,6 +324,7 @@ function renderTabela(lista) {
 function filtrarPacientes() {
   const busca = document.getElementById('busca-paciente').value.toLowerCase();
   const status = document.getElementById('filtro-status').value;
+  const PACIENTES = FakeDB.pacientes.list();
   const filtrado = PACIENTES.filter(p =>
     (!busca || p.nome.toLowerCase().includes(busca) || p.cpf.includes(busca) || p.tel.includes(busca)) &&
     (!status || p.status === status)
@@ -342,12 +332,37 @@ function filtrarPacientes() {
   renderTabela(filtrado);
 }
 
+function salvarPaciente() {
+  const modal = document.getElementById('modal-novo-paciente');
+  const nome = modal.querySelector('input[placeholder="Nome completo"]').value;
+  const nascimento = modal.querySelector('input[type="date"]').value;
+  const cpf = modal.querySelector('input[placeholder="000.000.000-00"]').value;
+  const tel = modal.querySelector('input[type="tel"]').value;
+  const plano = modal.querySelector('select').value || 'Particular';
+
+  if (!nome || !tel) { alert('Preencha os campos obrigatórios'); return; }
+
+  const list = FakeDB.get('pacientes', []);
+  const novo = {
+    id: Date.now(),
+    nome, nascimento, cpf, tel, plano, status: 'Ativo'
+  };
+  list.push(novo);
+  FakeDB.save('pacientes', list);
+
+  closeModal('modal-novo-paciente');
+  filtrarPacientes();
+}
+
+// Configurar salvar
+document.querySelector('#modal-novo-paciente .btn-primary').onclick = salvarPaciente;
+
 function openModal(id) { document.getElementById(id)?.classList.add('open'); }
 function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
 
 // Tabs no modal
 document.addEventListener('DOMContentLoaded', () => {
-  renderTabela(PACIENTES);
+  filtrarPacientes();
 
   document.querySelectorAll('#cadastro-tabs .tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
