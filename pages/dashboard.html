@@ -115,6 +115,7 @@
 
     function renderProximosDashboard() {
       const tbody = document.getElementById('lista-proximos-dashboard');
+      // No FakeDB os agendamentos usam 'horario' ou 'hora', vamos garantir a compatibilidade
       const appts = FakeDB.agendamentos.list()
         .filter(a => a.status === 'confirmado')
         .slice(0, 5);
@@ -125,13 +126,23 @@
       }
 
       tbody.innerHTML = appts.map(a => `
-        <tr>
-          <td><span class="badge badge-info">${a.horario}</span></td>
+        <tr onclick="abrirProntuario(${a.pacienteId})" style="cursor:pointer">
+          <td><span class="badge badge-info">${a.horario || a.hora || '--:--'}</span></td>
           <td><strong>${a.paciente}</strong></td>
           <td>Limpeza / Avaliação</td>
           <td><span class="badge badge-success">Confirmado</span></td>
         </tr>
       `).join('');
+    }
+
+    function abrirProntuario(id) {
+      if (!id) return;
+      // Salvar o ID do paciente selecionado para ser usado pelas outras telas
+      const paciente = FakeDB.pacientes.get(id);
+      if (paciente) {
+        localStorage.setItem('lcr-selected-paciente', JSON.stringify(paciente));
+        window.location.href = 'prontuario.html';
+      }
     }
   </script>
 </body>
