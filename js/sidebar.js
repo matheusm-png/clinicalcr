@@ -50,6 +50,12 @@ const SIDEBAR_HTML = `
         Anamnese
       </a>
     </li>
+    <li>
+      <a href="../pages/estoque.html" data-page="estoque">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        Estoque
+      </a>
+    </li>
   </ul>
 </nav>
 <div class="sidebar-footer">

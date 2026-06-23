@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estoque — Clínica LCR</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    /* ── Category tabs ──────────────────────────────────── */
+    .cat-tabs { display:flex; gap:8px; flex-wrap:wrap; }
+    .cat-tab {
+      padding:6px 16px; border-radius:20px; font-size:13px; font-weight:600;
+      border:1.5px solid var(--border-solid); background:transparent;
+      color:var(--text-muted); cursor:pointer; transition:all .15s;
+    }
+    .cat-tab:hover { border-color:var(--primary); color:var(--primary-darker); }
+    .cat-tab.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+    .cat-tab.tab-limpeza.active   { background:#6366F1; border-color:#6366F1; }
+    .cat-tab.tab-odonto.active    { background:var(--primary); border-color:var(--primary); }
+    .cat-tab.tab-baixo.active     { background:var(--warning); border-color:var(--warning); }
+
+    /* ── Status badge inline ────────────────────────────── */
+    .stock-dot {
+      width:8px; height:8px; border-radius:50%; display:inline-block; flex-shrink:0;
+    }
+    .dot-ok      { background:var(--success); }
+    .dot-low     { background:var(--warning); }
+    .dot-empty   { background:var(--danger); }
+
+    /* ── Stat cards ─────────────────────────────────────── */
+    .estoque-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+    @media(max-width:700px) { .estoque-stats { grid-template-columns:1fr 1fr; } }
+    .est-stat {
+      background:var(--card); border-radius:var(--radius-lg);
+      border:1.5px solid var(--border); padding:16px 18px;
+      display:flex; align-items:center; gap:12px;
+    }
+    .est-stat-icon {
+      width:40px; height:40px; border-radius:10px; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .est-stat-icon svg { width:20px; height:20px; }
+    .est-stat-val  { font-size:22px; font-weight:800; line-height:1; }
+    .est-stat-lbl  { font-size:11px; color:var(--text-muted); font-weight:500; margin-top:3px; }
+
+    /* ── Table row actions ──────────────────────────────── */
+    .row-actions { display:flex; gap:6px; justify-content:flex-end; }
+    .icon-btn {
+      width:30px; height:30px; border-radius:7px; border:none;
+      background:transparent; cursor:pointer; display:flex;
+      align-items:center; justify-content:center; color:var(--text-muted);
+      transition:all .15s;
+    }
+    .icon-btn:hover { background:var(--bg2); color:var(--text); }
+    .icon-btn svg { width:15px; height:15px; }
+    .icon-btn.danger:hover { background:#FEF2F2; color:var(--danger); }
+
+    /* ── Qty control ─────────────────────────────────────── */
+    .qty-control {
+      display:inline-flex; align-items:center; gap:8px;
+      background:var(--bg2); border-radius:8px; padding:4px 10px;
+      font-size:13px; font-weight:600;
+    }
+    .qty-btn {
+      width:22px; height:22px; border-radius:5px; border:none;
+      background:var(--card); cursor:pointer; font-size:14px; font-weight:700;
+      color:var(--text); box-shadow:0 1px 3px rgba(0,0,0,.1);
+      display:flex; align-items:center; justify-content:center;
+      transition:all .12s;
+    }
+    .qty-btn:hover { background:var(--primary); color:#fff; }
+
+    /* ── Category pill ───────────────────────────────────── */
+    .cat-pill {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600;
+    }
+    .cat-limpeza { background:#EEF2FF; color:#4338CA; }
+    .cat-odonto  { background:var(--primary-light); color:var(--primary-darker); }
+
+    /* ── Low stock row highlight ──────────────────────────── */
+    tr.row-low  td:first-child { border-left:3px solid var(--warning); }
+    tr.row-empty td:first-child { border-left:3px solid var(--danger); }
+
+    /* ── Empty state ─────────────────────────────────────── */
+    .empty-state { text-align:center; padding:60px 20px; }
+    .empty-state svg { width:52px; height:52px; color:var(--border-solid); margin:0 auto 12px; display:block; }
+
+    /* ── Modal movimentação ──────────────────────────────── */
+    .mov-type-tabs { display:flex; gap:8px; margin-bottom:16px; }
+    .mov-tab {
+      flex:1; padding:10px; border-radius:8px; border:1.5px solid var(--border-solid);
+      background:transparent; font-size:13px; font-weight:600;
+      cursor:pointer; transition:all .15s; color:var(--text-muted);
+    }
+    .mov-tab.active-entrada { background:#DCFCE7; border-color:var(--success); color:#166534; }
+    .mov-tab.active-saida   { background:#FEF2F2; border-color:var(--danger); color:#991B1B; }
+  </style>
+</head>
+<body>
+
+<aside id="sidebar"></aside>
+
+<div id="main">
+  <header class="topbar">
+    <h1>Controle de Estoque</h1>
+    <div class="topbar-actions">
+      <button class="btn btn-primary" onclick="abrirModalItem()">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Novo Item
+      </button>
+      <div class="avatar">LC</div>
+    </div>
+  </header>
+
+  <main class="page-content">
+
+    <!-- Stats -->
+    <div class="estoque-stats" id="stats-grid"></div>
+
+    <!-- Filtros -->
+    <div class="card mb-6">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div class="search-bar" style="flex:1;min-width:200px">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" placeholder="Buscar item…" id="busca-estoque" oninput="renderTabela()">
+        </div>
+        <div class="cat-tabs" id="cat-tabs">
+          <button class="cat-tab active" data-cat="">Todos</button>
+          <button class="cat-tab tab-odonto" data-cat="odontologico">Odontológico</button>
+          <button class="cat-tab tab-limpeza" data-cat="limpeza">Limpeza</button>
+          <button class="cat-tab tab-baixo" data-cat="baixo">⚠ Estoque baixo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabela -->
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="table-wrapper">
+        <table id="tabela-estoque">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Categoria</th>
+              <th>Quantidade</th>
+              <th>Mín.</th>
+              <th>Unidade</th>
+              <th>Fornecedor</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tbody-estoque"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="empty-state" style="display:none">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px">Nenhum item encontrado.</p>
+        <button class="btn btn-primary" onclick="abrirModalItem()">+ Novo Item</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══════════ Modal: Novo/Editar Item ══════════ -->
+<div class="modal-overlay" id="modal-item">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-item-titulo">Novo Item</span>
+      <button class="modal-close" onclick="fecharModal('modal-item')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="item-id">
+
+      <div class="form-row form-row-2">
+        <div class="form-group" style="grid-column:span 2">
+          <label class="form-label">Nome do item *</label>
+          <input type="text" class="form-control" id="item-nome" placeholder="Ex: Luva de procedimento">
+        </div>
+      </div>
+
+      <div class="form-row form-row-2">
+        <div class="form-group">
+          <label class="form-label">Categoria *</label>
+          <select class="form-control" id="item-categoria">
+            <option value="">Selecione…</option>
+            <option value="odontologico">Odontológico</option>
+            <option value="limpeza">Limpeza</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Unidade *</label>
+          <select class="form-control" id="item-unidade">
+            <option value="un">Unidade (un)</option>
+            <option value="cx">Caixa (cx)</option>
+            <option value="frasco">Frasco</option>
+            <option value="pct">Pacote (pct)</option>
+            <option value="rolo">Rolo</option>
+            <option value="par">Par</option>
+            <option value="ml">mL</option>
+            <option value="L">Litro (L)</option>
+            <option value="kg">Kg</option>
+            <option value="g">Grama (g)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row form-row-2">
+        <div class="form-group">
+          <label class="form-label">Quantidade atual *</label>
+          <input type="number" class="form-control" id="item-quantidade" min="0" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estoque mínimo *</label>
+          <input type="number" class="form-control" id="item-minimo" min="0" placeholder="0"
+            title="Abaixo desse valor, o item aparece como estoque baixo">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Fornecedor</label>
+        <input type="text" class="form-control" id="item-fornecedor" placeholder="Nome do fornecedor (opcional)">
+      </div>
+
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Observações</label>
+        <textarea class="form-control" id="item-obs" rows="2" placeholder="Informações adicionais…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="fecharModal('modal-item')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarItem()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ Modal: Movimentação ══════════ -->
+<div class="modal-overlay" id="modal-mov">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-mov-titulo">Movimentação</span>
+      <button class="modal-close" onclick="fecharModal('modal-mov')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="mov-item-id">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">
+        Item: <strong id="mov-item-nome"></strong> — Atual: <strong id="mov-item-atual"></strong>
+      </p>
+
+      <div class="mov-type-tabs">
+        <button class="mov-tab" id="tab-entrada" onclick="setMovTipo('entrada')">
+          ↑ Entrada (recebimento)
+        </button>
+        <button class="mov-tab" id="tab-saida" onclick="setMovTipo('saida')">
+          ↓ Saída (uso / descarte)
+        </button>
+      </div>
+
+      <div class="form-row form-row-2">
+        <div class="form-group">
+          <label class="form-label">Quantidade *</label>
+          <input type="number" class="form-control" id="mov-quantidade" min="1" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data</label>
+          <input type="date" class="form-control" id="mov-data">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Motivo / Observação</label>
+        <input type="text" class="form-control" id="mov-motivo" placeholder="Ex: Compra mensal, Uso em procedimento…">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="fecharModal('modal-mov')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-confirmar-mov" onclick="confirmarMov()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ Modal: Confirmar exclusão ══════════ -->
+<div class="modal-overlay" id="modal-del">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <span class="modal-title">Excluir item</span>
+      <button class="modal-close" onclick="fecharModal('modal-del')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:14px">Tem certeza que deseja excluir <strong id="del-nome"></strong>?<br>
+      <span style="font-size:12px;color:var(--text-muted)">O histórico de movimentações também será removido.</span></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="fecharModal('modal-del')">Cancelar</button>
+      <button class="btn btn-danger" onclick="confirmarDelete()">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/sidebar.js"></script>
+<script src="../js/db.js"></script>
+<script>
+/* ─── State ───────────────────────────── */
+let filtroCategoria = '';
+let movTipo = 'entrada';
+let deleteId = null;
+
+/* ─── Init ────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('mov-data').value = hoje();
+  initCatTabs();
+  renderStats();
+  renderTabela();
+
+  document.querySelectorAll('.modal-overlay').forEach(ov => {
+    ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
+  });
+});
+
+function hoje() {
+  return new Date().toISOString().split('T')[0];
+}
+
+/* ─── Category tabs ───────────────────── */
+function initCatTabs() {
+  document.querySelectorAll('.cat-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filtroCategoria = btn.dataset.cat;
+      renderTabela();
+    });
+  });
+}
+
+/* ─── Helpers ─────────────────────────── */
+function statusItem(item) {
+  if (item.quantidade === 0)            return { label:'Sem estoque', cls:'badge-danger',   dot:'dot-empty' };
+  if (item.quantidade <= item.minimo)   return { label:'Estoque baixo', cls:'badge-warning', dot:'dot-low'   };
+  return                                       { label:'Normal',       cls:'badge-success', dot:'dot-ok'    };
+}
+
+function catPill(cat) {
+  if (cat === 'limpeza')      return `<span class="cat-pill cat-limpeza">🧹 Limpeza</span>`;
+  if (cat === 'odontologico') return `<span class="cat-pill cat-odonto">🦷 Odontológico</span>`;
+  return cat;
+}
+
+/* ─── Render stats ────────────────────── */
+function renderStats() {
+  const itens = FakeDB.estoque.list();
+  const total  = itens.length;
+  const normal = itens.filter(i => i.quantidade > i.minimo).length;
+  const baixo  = itens.filter(i => i.quantidade > 0 && i.quantidade <= i.minimo).length;
+  const zerado = itens.filter(i => i.quantidade === 0).length;
+
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="est-stat">
+      <div class="est-stat-icon" style="background:var(--primary-light)">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="color:var(--primary-darker)"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      </div>
+      <div><div class="est-stat-val">${total}</div><div class="est-stat-lbl">Total de itens</div></div>
+    </div>
+    <div class="est-stat">
+      <div class="est-stat-icon" style="background:#DCFCE7">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="color:#16A34A"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <div><div class="est-stat-val" style="color:#16A34A">${normal}</div><div class="est-stat-lbl">Em estoque normal</div></div>
+    </div>
+    <div class="est-stat">
+      <div class="est-stat-icon" style="background:#FEF3C7">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="color:#D97706"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+      </div>
+      <div><div class="est-stat-val" style="color:#D97706">${baixo}</div><div class="est-stat-lbl">Estoque baixo</div></div>
+    </div>
+    <div class="est-stat">
+      <div class="est-stat-icon" style="background:#FEE2E2">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="color:#DC2626"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+      </div>
+      <div><div class="est-stat-val" style="color:#DC2626">${zerado}</div><div class="est-stat-lbl">Sem estoque</div></div>
+    </div>
+  `;
+}
+
+/* ─── Render table ────────────────────── */
+function renderTabela() {
+  const busca = document.getElementById('busca-estoque').value.toLowerCase();
+  let itens = FakeDB.estoque.list();
+
+  if (filtroCategoria === 'baixo') {
+    itens = itens.filter(i => i.quantidade <= i.minimo);
+  } else if (filtroCategoria) {
+    itens = itens.filter(i => i.categoria === filtroCategoria);
+  }
+  if (busca) itens = itens.filter(i => i.nome.toLowerCase().includes(busca));
+
+  const tbody = document.getElementById('tbody-estoque');
+  const empty = document.getElementById('empty-state');
+
+  if (!itens.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = itens.map(item => {
+    const st = statusItem(item);
+    const rowCls = item.quantidade === 0 ? 'row-empty' : item.quantidade <= item.minimo ? 'row-low' : '';
+    return `
+      <tr class="${rowCls}">
+        <td>
+          <div style="font-weight:600;font-size:13px">${item.nome}</div>
+          ${item.obs ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">${item.obs}</div>` : ''}
+        </td>
+        <td>${catPill(item.categoria)}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="stock-dot ${st.dot}"></span>
+            <span style="font-weight:700;font-size:14px">${item.quantidade}</span>
+            <span style="font-size:11px;color:var(--text-muted)">${item.unidade}</span>
+          </div>
+        </td>
+        <td style="color:var(--text-muted);font-size:13px">${item.minimo} ${item.unidade}</td>
+        <td style="font-size:12px;color:var(--text-muted)">${item.unidade}</td>
+        <td style="font-size:12px;color:var(--text-muted)">${item.fornecedor || '—'}</td>
+        <td><span class="badge ${st.cls}">${st.label}</span></td>
+        <td>
+          <div class="row-actions">
+            <button class="icon-btn" title="Movimentação" onclick="abrirModalMov(${item.id})">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+            </button>
+            <button class="icon-btn" title="Editar" onclick="abrirModalItem(${item.id})">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            </button>
+            <button class="icon-btn danger" title="Excluir" onclick="pedirDelete(${item.id}, '${item.nome.replace(/'/g,"\\'")}')">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+/* ─── Modal Item ──────────────────────── */
+function abrirModalItem(id) {
+  document.getElementById('item-id').value = '';
+  document.getElementById('item-nome').value = '';
+  document.getElementById('item-categoria').value = '';
+  document.getElementById('item-unidade').value = 'un';
+  document.getElementById('item-quantidade').value = '';
+  document.getElementById('item-minimo').value = '';
+  document.getElementById('item-fornecedor').value = '';
+  document.getElementById('item-obs').value = '';
+  document.getElementById('modal-item-titulo').textContent = 'Novo Item';
+
+  if (id) {
+    const item = FakeDB.estoque.get(id);
+    if (!item) return;
+    document.getElementById('modal-item-titulo').textContent = 'Editar Item';
+    document.getElementById('item-id').value = item.id;
+    document.getElementById('item-nome').value = item.nome;
+    document.getElementById('item-categoria').value = item.categoria;
+    document.getElementById('item-unidade').value = item.unidade;
+    document.getElementById('item-quantidade').value = item.quantidade;
+    document.getElementById('item-minimo').value = item.minimo;
+    document.getElementById('item-fornecedor').value = item.fornecedor || '';
+    document.getElementById('item-obs').value = item.obs || '';
+  }
+  document.getElementById('modal-item').classList.add('open');
+}
+
+function salvarItem() {
+  const nome      = document.getElementById('item-nome').value.trim();
+  const categoria = document.getElementById('item-categoria').value;
+  const unidade   = document.getElementById('item-unidade').value;
+  const quantidade = parseInt(document.getElementById('item-quantidade').value) || 0;
+  const minimo    = parseInt(document.getElementById('item-minimo').value) || 0;
+
+  if (!nome || !categoria) { alert('Preencha nome e categoria.'); return; }
+
+  const id = document.getElementById('item-id').value;
+  FakeDB.estoque.save({
+    id: id ? parseInt(id) : null,
+    nome, categoria, unidade, quantidade, minimo,
+    fornecedor: document.getElementById('item-fornecedor').value.trim(),
+    obs:        document.getElementById('item-obs').value.trim(),
+  });
+
+  fecharModal('modal-item');
+  renderStats();
+  renderTabela();
+}
+
+/* ─── Modal Movimentação ──────────────── */
+function abrirModalMov(id) {
+  const item = FakeDB.estoque.get(id);
+  if (!item) return;
+  document.getElementById('mov-item-id').value = id;
+  document.getElementById('mov-item-nome').textContent = item.nome;
+  document.getElementById('mov-item-atual').textContent = `${item.quantidade} ${item.unidade}`;
+  document.getElementById('mov-quantidade').value = '';
+  document.getElementById('mov-motivo').value = '';
+  document.getElementById('mov-data').value = hoje();
+  setMovTipo('entrada');
+  document.getElementById('modal-mov').classList.add('open');
+}
+
+function setMovTipo(tipo) {
+  movTipo = tipo;
+  const te = document.getElementById('tab-entrada');
+  const ts = document.getElementById('tab-saida');
+  te.classList.remove('active-entrada','active-saida');
+  ts.classList.remove('active-entrada','active-saida');
+  if (tipo === 'entrada') te.classList.add('active-entrada');
+  else                    ts.classList.add('active-saida');
+  document.getElementById('btn-confirmar-mov').textContent =
+    tipo === 'entrada' ? 'Confirmar Entrada' : 'Confirmar Saída';
+}
+
+function confirmarMov() {
+  const id  = parseInt(document.getElementById('mov-item-id').value);
+  const qty = parseInt(document.getElementById('mov-quantidade').value);
+  if (!qty || qty <= 0) { alert('Informe uma quantidade válida.'); return; }
+
+  const item = FakeDB.estoque.get(id);
+  if (!item) return;
+
+  const nova = movTipo === 'entrada'
+    ? item.quantidade + qty
+    : Math.max(0, item.quantidade - qty);
+
+  FakeDB.estoque.save({ ...item, quantidade: nova });
+  fecharModal('modal-mov');
+  renderStats();
+  renderTabela();
+}
+
+/* ─── Delete ──────────────────────────── */
+function pedirDelete(id, nome) {
+  deleteId = id;
+  document.getElementById('del-nome').textContent = nome;
+  document.getElementById('modal-del').classList.add('open');
+}
+
+function confirmarDelete() {
+  if (deleteId) FakeDB.estoque.remove(deleteId);
+  deleteId = null;
+  fecharModal('modal-del');
+  renderStats();
+  renderTabela();
+}
+
+/* ─── Helpers modal ───────────────────── */
+function fecharModal(id) { document.getElementById(id)?.classList.remove('open'); }
+</script>
+</body>
+</html>

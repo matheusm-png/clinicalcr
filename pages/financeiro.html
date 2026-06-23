@@ -6,11 +6,66 @@
   <title>Financeiro — Clínica LCR</title>
   <link rel="stylesheet" href="../css/styles.css">
   <style>
-    .fin-card { background:#fff; border-radius:var(--radius-lg); box-shadow:var(--shadow); padding:18px 20px; border-left:4px solid; }
+    /* ── Summary cards ──────────────────────────── */
+    .fin-summary { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px; }
+    @media(max-width:640px){ .fin-summary{ grid-template-columns:1fr; } }
+    .fin-card {
+      background:var(--card); border-radius:var(--radius-lg);
+      padding:16px 20px; border-left:4px solid; box-shadow:var(--shadow);
+    }
     .fin-card-label { font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); margin-bottom:4px; }
-    .fin-card-val { font-size:26px; font-weight:700; }
-    .filter-pill { padding:7px 16px; border-radius:20px; border:1.5px solid var(--border); background:#fff; font-size:13px; font-weight:500; cursor:pointer; color:var(--text-muted); transition:all .15s; }
+    .fin-card-val   { font-size:24px; font-weight:800; }
+
+    /* ── Type toggle inside modal ───────────────── */
+    .type-toggle { display:flex; gap:0; border-radius:10px; overflow:hidden; border:1.5px solid var(--border-solid); margin-bottom:20px; }
+    .type-btn {
+      flex:1; padding:10px 0; font-size:13px; font-weight:700; border:none;
+      background:transparent; cursor:pointer; color:var(--text-muted); transition:all .15s;
+    }
+    .type-btn.active-rec  { background:#DCFCE7; color:#15803D; }
+    .type-btn.active-desp { background:#FEE2E2; color:#B91C1C; }
+    .type-btn + .type-btn { border-left:1.5px solid var(--border-solid); }
+
+    /* ── Category grid (despesa) ────────────────── */
+    .cat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:16px; }
+    @media(max-width:500px){ .cat-grid{ grid-template-columns:repeat(2,1fr); } }
+    .cat-card {
+      padding:12px 8px; border-radius:10px; border:1.5px solid var(--border-solid);
+      text-align:center; cursor:pointer; transition:all .15s; font-size:12px;
+      font-weight:600; color:var(--text-muted); background:var(--bg2);
+    }
+    .cat-card:hover { border-color:var(--primary); color:var(--primary-darker); background:var(--primary-light); }
+    .cat-card.selected { border-color:var(--danger); background:#FEF2F2; color:#B91C1C; }
+    .cat-card-icon { font-size:20px; margin-bottom:4px; }
+
+    /* ── Specific form panels ───────────────────── */
+    .spec-panel { display:none; animation:fadeIn .2s ease; }
+    .spec-panel.visible { display:block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ── Payment method extras ──────────────────── */
+    .pagto-extra { display:none; animation:fadeIn .15s ease; }
+    .pagto-extra.visible { display:grid; }
+
+    /* ── Filter pills ───────────────────────────── */
+    .filter-pill { padding:6px 16px; border-radius:20px; border:1.5px solid var(--border-solid); background:transparent; font-size:13px; font-weight:600; cursor:pointer; color:var(--text-muted); transition:all .15s; }
+    .filter-pill:hover { border-color:var(--primary); color:var(--primary-darker); }
     .filter-pill.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+
+    /* ── Table actions ──────────────────────────── */
+    .icon-btn { width:28px;height:28px;border-radius:6px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:all .15s; }
+    .icon-btn:hover { background:var(--bg2); color:var(--text); }
+    .icon-btn svg { width:14px;height:14px; }
+
+    /* ── Section divider inside modal ──────────────── */
+    .modal-section-title {
+      font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.8px;
+      color:var(--text-muted); margin:16px 0 10px; padding-bottom:6px;
+      border-bottom:1px solid var(--border);
+    }
+
+    /* ── Large modal ────────────────────────────── */
+    .modal-xl { max-width:640px; }
   </style>
 </head>
 <body>
@@ -21,9 +76,9 @@
   <header class="topbar">
     <h1>Financeiro</h1>
     <div class="topbar-actions">
-      <button class="btn btn-primary" onclick="openModal('modal-lancamento')">
+      <button class="btn btn-primary" onclick="abrirModal()">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-        Adicionar Lançamento
+        Novo Lançamento
       </button>
       <div class="avatar">LC</div>
     </div>
@@ -31,52 +86,49 @@
 
   <main class="page-content">
 
-    <!-- Abas principais -->
-    <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap" id="filtro-tipo">
-      <button class="filter-pill active" data-tipo="">Todos</button>
-      <button class="filter-pill" data-tipo="receita">Recebimentos</button>
-      <button class="filter-pill" data-tipo="despesa">Despesas</button>
-    </div>
-
-    <!-- Cards de resumo -->
-    <div class="grid-3 mb-6">
-      <div class="fin-card" style="border-color:#22C55E">
-        <div class="fin-card-label">Total em Receita</div>
-        <div class="fin-card-val" style="color:#22C55E" id="total-receita">R$ 0,00</div>
+    <!-- Resumo -->
+    <div class="fin-summary">
+      <div class="fin-card" style="border-color:var(--success)">
+        <div class="fin-card-label">Total Recebimentos</div>
+        <div class="fin-card-val" style="color:var(--success)" id="total-receita">R$ 0,00</div>
       </div>
-      <div class="fin-card" style="border-color:#EF4444">
-        <div class="fin-card-label">Total em Despesa</div>
-        <div class="fin-card-val" style="color:#EF4444" id="total-despesa">R$ 0,00</div>
+      <div class="fin-card" style="border-color:var(--danger)">
+        <div class="fin-card-label">Total Despesas</div>
+        <div class="fin-card-val" style="color:var(--danger)" id="total-despesa">R$ 0,00</div>
       </div>
       <div class="fin-card" style="border-color:var(--primary)">
-        <div class="fin-card-label">Saldo</div>
+        <div class="fin-card-label">Saldo do período</div>
         <div class="fin-card-val" style="color:var(--primary)" id="total-saldo">R$ 0,00</div>
       </div>
     </div>
 
-    <!-- Filtros e busca -->
+    <!-- Filtros -->
     <div class="card mb-6">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <div class="search-bar" style="flex:1;min-width:200px">
+        <div class="search-bar" style="flex:1;min-width:180px">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input type="text" placeholder="Buscar por descrição ou paciente…" id="busca-fin" oninput="filtrar()">
+          <input type="text" placeholder="Buscar…" id="busca-fin" oninput="filtrar()">
         </div>
-        <input type="month" class="form-control" style="width:auto" value="2026-04" id="filtro-mes" onchange="filtrar()">
-        <select class="form-control" style="width:auto;font-size:13px" id="filtro-status-fin" onchange="filtrar()">
-          <option value="">Todos os status</option>
-          <option value="Pago">Pago</option>
-          <option value="A receber">A receber</option>
-          <option value="Atrasado">Atrasado</option>
+        <div style="display:flex;gap:8px;flex-wrap:wrap" id="pills-tipo">
+          <button class="filter-pill active" data-tipo="">Todos</button>
+          <button class="filter-pill" data-tipo="receita">Recebimentos</button>
+          <button class="filter-pill" data-tipo="despesa">Despesas</button>
+        </div>
+        <input type="month" class="form-control" style="width:auto" id="filtro-mes" onchange="filtrar()">
+        <select class="form-control" style="width:auto;font-size:13px" id="filtro-status" onchange="filtrar()">
+          <option value="">Todos status</option>
+          <option>Pago</option>
+          <option>A receber</option>
+          <option>Atrasado</option>
         </select>
-        <a href="#" style="font-size:13px;color:var(--primary);text-decoration:none;font-weight:500">↓ Exportar CSV</a>
       </div>
     </div>
 
     <!-- Tabela -->
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title">Lançamentos</span>
-        <span class="text-muted" id="total-registros"></span>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)">
+        <span style="font-size:14px;font-weight:700">Lançamentos</span>
+        <span style="font-size:12px;color:var(--text-muted)" id="qtd-registros"></span>
       </div>
       <div class="table-wrapper">
         <table>
@@ -84,104 +136,627 @@
             <tr>
               <th>Data</th>
               <th>Descrição</th>
-              <th>Paciente</th>
-              <th>Forma de Pagamento</th>
               <th>Categoria</th>
+              <th>Referência</th>
+              <th>Forma Pagto.</th>
               <th>Valor</th>
               <th>Status</th>
-              <th>Ações</th>
+              <th></th>
             </tr>
           </thead>
           <tbody id="tbody-fin"></tbody>
         </table>
+      </div>
+      <div id="empty-fin" style="display:none;text-align:center;padding:50px 20px;color:var(--text-muted);font-size:14px">
+        Nenhum lançamento encontrado.
       </div>
     </div>
 
   </main>
 </div>
 
-<!-- Modal Novo Lançamento -->
+<!-- ══════════════════════════════════════════
+     MODAL NOVO LANÇAMENTO
+══════════════════════════════════════════ -->
 <div class="modal-overlay" id="modal-lancamento">
-  <div class="modal">
+  <div class="modal modal-xl">
     <div class="modal-header">
-      <span class="modal-title">Novo Lançamento</span>
-      <button class="modal-close" onclick="closeModal('modal-lancamento')">&times;</button>
+      <span class="modal-title" id="modal-titulo">Novo Lançamento</span>
+      <button class="modal-close" onclick="fecharModal()">&times;</button>
     </div>
     <div class="modal-body">
-      <div style="display:flex;gap:8px;margin-bottom:16px">
-        <button class="filter-pill active" id="tipo-receita-btn" onclick="setTipoLanc('receita')">Recebimento</button>
-        <button class="filter-pill" id="tipo-despesa-btn" onclick="setTipoLanc('despesa')">Despesa</button>
+
+      <!-- Tipo: Recebimento / Despesa -->
+      <div class="type-toggle">
+        <button class="type-btn" id="btn-rec"  onclick="setTipo('receita')">↑ Recebimento</button>
+        <button class="type-btn" id="btn-desp" onclick="setTipo('despesa')">↓ Despesa</button>
       </div>
-      <div class="form-group">
-        <label class="form-label">Descrição *</label>
-        <input type="text" class="form-control" placeholder="Ex: Restauração — Dente 16">
-      </div>
-      <div class="form-row form-row-2">
+
+      <!-- ─── RECEBIMENTO ─────────────────────────── -->
+      <div class="spec-panel" id="panel-receita">
+        <div class="modal-section-title">Dados do Recebimento</div>
+
         <div class="form-group">
-          <label class="form-label">Paciente</label>
-          <select class="form-control">
-            <option value="">Selecionar paciente…</option>
-            <option>Ana Beatriz Santos</option>
-            <option>Bruno Alves</option>
-            <option>Carlos Mendes</option>
-            <option>Fernanda Lima</option>
-            <option>João Pereira</option>
-            <option>Maria Silva</option>
-          </select>
+          <label class="form-label">Paciente *</label>
+          <select class="form-control" id="rec-paciente"></select>
         </div>
+
         <div class="form-group">
-          <label class="form-label">Categoria</label>
-          <select class="form-control">
-            <option>Procedimento Clínico</option>
-            <option>Consulta</option>
-            <option>Material</option>
-            <option>Equipamento</option>
-            <option>Aluguel</option>
-            <option>Salário</option>
-            <option>Outros</option>
-          </select>
+          <label class="form-label">Procedimento / Serviço *</label>
+          <input type="text" class="form-control" id="rec-desc" placeholder="Ex: Restauração dente 16, Clareamento, Consulta de retorno…">
+        </div>
+
+        <div class="form-row form-row-2">
+          <div class="form-group">
+            <label class="form-label">Dente(s) envolvido(s)</label>
+            <input type="text" class="form-control" id="rec-dentes" placeholder="Ex: 16, 17 (opcional)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Plano odontológico</label>
+            <select class="form-control" id="rec-plano" onchange="togglePlano()">
+              <option value="">Particular (sem plano)</option>
+              <option value="unimed">Unimed Odonto</option>
+              <option value="amil">Amil Dental</option>
+              <option value="bradesco">Bradesco Dental</option>
+              <option value="sulamerica">SulAmérica Odonto</option>
+              <option value="outro">Outro plano</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pagto-extra" id="plano-extra" style="grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Nome do plano</label>
+            <input type="text" class="form-control" id="rec-plano-nome" placeholder="Nome do convênio">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Nº autorização / guia</label>
+            <input type="text" class="form-control" id="rec-plano-guia" placeholder="Número da guia">
+          </div>
+        </div>
+
+        <div class="modal-section-title">Pagamento</div>
+
+        <div class="form-row form-row-2">
+          <div class="form-group">
+            <label class="form-label">Valor total (R$) *</label>
+            <input type="number" class="form-control" id="rec-valor" min="0" step="0.01" placeholder="0,00">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Forma de pagamento *</label>
+            <select class="form-control" id="rec-forma" onchange="togglePagtoExtras('rec')">
+              <option value="">Selecione…</option>
+              <option value="dinheiro">Dinheiro</option>
+              <option value="pix">PIX</option>
+              <option value="debito">Cartão de Débito</option>
+              <option value="credito">Cartão de Crédito</option>
+              <option value="parcelado">Parcelamento próprio</option>
+              <option value="boleto">Boleto</option>
+              <option value="transferencia">Transferência bancária</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Extra: cartão de crédito -->
+        <div class="pagto-extra" id="rec-extra-credito" style="grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Nº de parcelas</label>
+            <select class="form-control" id="rec-parcelas-cred">
+              <option>1× (à vista)</option>
+              <option>2×</option><option>3×</option><option>4×</option>
+              <option>5×</option><option>6×</option><option>8×</option>
+              <option>10×</option><option>12×</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Taxa da operadora (%)</label>
+            <input type="number" class="form-control" id="rec-taxa" min="0" max="30" step="0.01" placeholder="Ex: 2,5">
+          </div>
+        </div>
+
+        <!-- Extra: parcelamento próprio -->
+        <div class="pagto-extra" id="rec-extra-parcelado" style="grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Total de parcelas</label>
+            <input type="number" class="form-control" id="rec-parc-total" min="2" max="60" placeholder="Ex: 12">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Parcela atual</label>
+            <input type="number" class="form-control" id="rec-parc-atual" min="1" placeholder="Ex: 1">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Valor da parcela (R$)</label>
+            <input type="number" class="form-control" id="rec-parc-valor" min="0" step="0.01" placeholder="0,00">
+          </div>
+        </div>
+
+        <div class="form-row form-row-2">
+          <div class="form-group">
+            <label class="form-label">Data de vencimento *</label>
+            <input type="date" class="form-control" id="rec-vencimento">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status *</label>
+            <select class="form-control" id="rec-status" onchange="toggleDataPagto('rec')">
+              <option value="A receber">A receber</option>
+              <option value="Pago">Pago</option>
+              <option value="Atrasado">Atrasado</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group pagto-extra" id="rec-data-pagto-wrap" style="display:none">
+          <label class="form-label">Data do pagamento efetivo</label>
+          <input type="date" class="form-control" id="rec-data-pagto">
+        </div>
+
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Observações</label>
+          <textarea class="form-control" id="rec-obs" rows="2" placeholder="Informações adicionais…"></textarea>
         </div>
       </div>
-      <div class="form-row form-row-3">
-        <div class="form-group">
-          <label class="form-label">Valor (R$) *</label>
-          <input type="number" class="form-control" placeholder="0,00" min="0" step="0.01">
+
+      <!-- ─── DESPESA ─────────────────────────────── -->
+      <div class="spec-panel" id="panel-despesa">
+
+        <!-- Escolher categoria -->
+        <div id="step-cat">
+          <div class="modal-section-title">Selecione a categoria da despesa</div>
+          <div class="cat-grid">
+            <div class="cat-card" data-cat="salario"    onclick="selecionarCat('salario')">
+              <div class="cat-card-icon">👤</div>Salário / Folha
+            </div>
+            <div class="cat-card" data-cat="material"   onclick="selecionarCat('material')">
+              <div class="cat-card-icon">📦</div>Material / Insumo
+            </div>
+            <div class="cat-card" data-cat="equipamento" onclick="selecionarCat('equipamento')">
+              <div class="cat-card-icon">🦷</div>Equipamento
+            </div>
+            <div class="cat-card" data-cat="aluguel"    onclick="selecionarCat('aluguel')">
+              <div class="cat-card-icon">🏢</div>Aluguel
+            </div>
+            <div class="cat-card" data-cat="consumo"    onclick="selecionarCat('consumo')">
+              <div class="cat-card-icon">⚡</div>Conta de Consumo
+            </div>
+            <div class="cat-card" data-cat="imposto"    onclick="selecionarCat('imposto')">
+              <div class="cat-card-icon">📋</div>Imposto / Taxa
+            </div>
+            <div class="cat-card" data-cat="manutencao" onclick="selecionarCat('manutencao')">
+              <div class="cat-card-icon">🔧</div>Manutenção
+            </div>
+            <div class="cat-card" data-cat="outros"     onclick="selecionarCat('outros')">
+              <div class="cat-card-icon">📝</div>Outros
+            </div>
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Data *</label>
-          <input type="date" class="form-control">
+
+        <!-- Formulários específicos por categoria -->
+
+        <!-- Salário -->
+        <div class="spec-panel" id="desp-salario">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+            <button type="button" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-muted)" onclick="voltarCat()">← voltar</button>
+            <span style="font-size:13px;font-weight:700">👤 Salário / Folha de Pagamento</span>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Colaborador *</label>
+              <input type="text" class="form-control" id="sal-colaborador" placeholder="Nome completo">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Cargo</label>
+              <input type="text" class="form-control" id="sal-cargo" placeholder="Ex: Auxiliar de consultório">
+            </div>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Mês de referência *</label>
+              <input type="month" class="form-control" id="sal-mes">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Data do pagamento *</label>
+              <input type="date" class="form-control" id="sal-data">
+            </div>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Salário bruto (R$) *</label>
+              <input type="number" class="form-control" id="sal-bruto" min="0" step="0.01" placeholder="0,00" oninput="calcSalLiq()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Descontos (INSS, IR…) (R$)</label>
+              <input type="number" class="form-control" id="sal-descontos" min="0" step="0.01" placeholder="0,00" oninput="calcSalLiq()">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Salário líquido (R$)</label>
+            <input type="number" class="form-control" id="sal-liquido" min="0" step="0.01" placeholder="0,00" style="background:var(--bg2)" readonly>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Forma de pagamento</label>
+              <select class="form-control" id="sal-forma">
+                <option>PIX</option><option>Transferência bancária</option>
+                <option>Dinheiro</option><option>Depósito</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select class="form-control" id="sal-status">
+                <option>Pago</option><option>A pagar</option><option>Atrasado</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Observações</label>
+            <textarea class="form-control" id="sal-obs" rows="2" placeholder="Horas extras, adiantamentos, 13º…"></textarea>
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Status</label>
-          <select class="form-control">
-            <option>Pago</option>
-            <option>A receber</option>
-            <option>Atrasado</option>
-          </select>
+
+        <!-- Material -->
+        <div class="spec-panel" id="desp-material">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+            <button type="button" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-muted)" onclick="voltarCat()">← voltar</button>
+            <span style="font-size:13px;font-weight:700">📦 Material / Insumo</span>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Fornecedor *</label>
+              <input type="text" class="form-control" id="mat-fornecedor" placeholder="Nome do fornecedor">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nº Nota Fiscal / Pedido</label>
+              <input type="text" class="form-control" id="mat-nf" placeholder="Ex: NF 00123">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Itens comprados</label>
+            <textarea class="form-control" id="mat-itens" rows="2" placeholder="Ex: 3cx Luva M, 2cx Máscara, 1frasco Resina A2…"></textarea>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Valor total (R$) *</label>
+              <input type="number" class="form-control" id="mat-valor" min="0" step="0.01" placeholder="0,00">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Data de vencimento *</label>
+              <input type="date" class="form-control" id="mat-vencimento">
+            </div>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Forma de pagamento</label>
+              <select class="form-control" id="mat-forma">
+                <option>Boleto</option><option>PIX</option><option>Cartão de Crédito</option>
+                <option>Transferência</option><option>Dinheiro</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select class="form-control" id="mat-status">
+                <option>A pagar</option><option>Pago</option><option>Atrasado</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Observações</label>
+            <textarea class="form-control" id="mat-obs" rows="2" placeholder="Condições, frete, desconto…"></textarea>
+          </div>
         </div>
+
+        <!-- Equipamento -->
+        <div class="spec-panel" id="desp-equipamento">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+            <button type="button" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-muted)" onclick="voltarCat()">← voltar</button>
+            <span style="font-size:13px;font-weight:700">🦷 Equipamento</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nome do equipamento *</label>
+            <input type="text" class="form-control" id="equip-nome" placeholder="Ex: Aparelho de raio-X periapical">
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Fornecedor *</label>
+              <input type="text" class="form-control" id="equip-fornecedor" placeholder="Nome do fornecedor">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nº Série / NF</label>
+              <input type="text" class="form-control" id="equip-nf" placeholder="Nº série ou nota fiscal">
+            </div>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Garantia até</label>
+              <input type="date" class="form-control" id="equip-garantia">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Data da compra *</label>
+              <input type="date" class="form-control" id="equip-data">
+            </div>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Valor (R$) *</label>
+              <input type="number" class="form-control" id="equip-valor" min="0" step="0.01" placeholder="0,00">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Forma de pagamento</label>
+              <select class="form-control" id="equip-forma">
+                <option>Boleto</option><option>Cartão de Crédito</option>
+                <option>Financiamento</option><option>PIX</option>
+                <option>Transferência</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Observações</label>
+            <textarea class="form-control" id="equip-obs" rows="2" placeholder="Instalação, manutenção inclusa, parcelas…"></textarea>
+          </div>
+        </div>
+
+        <!-- Aluguel -->
+        <div class="spec-panel" id="desp-aluguel">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+            <button type="button" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-muted)" onclick="voltarCat()">← voltar</button>
+            <span style="font-size:13px;font-weight:700">🏢 Aluguel</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Endereço / Identificação do imóvel</label>
+            <input type="text" class="form-control" id="alug-endereco" placeholder="Ex: Rua das Acácias, 200 — Sala 05">
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Locador (proprietário)</label>
+              <input type="text" class="form-control" id="alug-locador" placeholder="Nome do proprietário">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Dia de vencimento mensal</label>
+              <input type="number" class="form-control" id="alug-dia" min="1" max="31" placeholder="Ex: 5">
+            </div>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Mês de referência *</label>
+              <input type="month" class="form-control" id="alug-mes">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Valor (R$) *</label>
+              <input type="number" class="form-control" id="alug-valor" min="0" step="0.01" placeholder="0,00">
+            </div>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Forma de pagamento</label>
+              <select class="form-control" id="alug-forma">
+                <option>PIX</option><option>Transferência bancária</option>
+                <option>Boleto</option><option>Dinheiro</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select class="form-control" id="alug-status">
+                <option>A pagar</option><option>Pago</option><option>Atrasado</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Observações</label>
+            <textarea class="form-control" id="alug-obs" rows="2" placeholder="IPTU incluso, reajuste, condomínio…"></textarea>
+          </div>
+        </div>
+
+        <!-- Consumo -->
+        <div class="spec-panel" id="desp-consumo">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+            <button type="button" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-muted)" onclick="voltarCat()">← voltar</button>
+            <span style="font-size:13px;font-weight:700">⚡ Conta de Consumo</span>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Tipo de conta *</label>
+              <select class="form-control" id="cons-tipo">
+                <option value="">Selecione…</option>
+                <option>Energia elétrica</option>
+                <option>Água / Saneamento</option>
+                <option>Internet</option>
+                <option>Telefone</option>
+                <option>Gás</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mês de referência *</label>
+              <input type="month" class="form-control" id="cons-mes">
+            </div>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Data de vencimento *</label>
+              <input type="date" class="form-control" id="cons-vencimento">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Valor (R$) *</label>
+              <input type="number" class="form-control" id="cons-valor" min="0" step="0.01" placeholder="0,00">
+            </div>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Código de barras / Nº conta</label>
+              <input type="text" class="form-control" id="cons-codigo" placeholder="Opcional">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select class="form-control" id="cons-status">
+                <option>A pagar</option><option>Pago</option><option>Atrasado</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Observações</label>
+            <textarea class="form-control" id="cons-obs" rows="2" placeholder="Leitura, consumo em kWh/m³…"></textarea>
+          </div>
+        </div>
+
+        <!-- Imposto -->
+        <div class="spec-panel" id="desp-imposto">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+            <button type="button" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-muted)" onclick="voltarCat()">← voltar</button>
+            <span style="font-size:13px;font-weight:700">📋 Imposto / Taxa</span>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Tipo *</label>
+              <select class="form-control" id="imp-tipo">
+                <option value="">Selecione…</option>
+                <option>ISSQN</option>
+                <option>Simples Nacional (DAS)</option>
+                <option>IRPF (autônomo)</option>
+                <option>Anuidade CRO</option>
+                <option>Alvará / Vigilância Sanitária</option>
+                <option>Contabilidade</option>
+                <option>Outro</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Período de referência</label>
+              <input type="month" class="form-control" id="imp-periodo">
+            </div>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Data de vencimento *</label>
+              <input type="date" class="form-control" id="imp-vencimento">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Valor (R$) *</label>
+              <input type="number" class="form-control" id="imp-valor" min="0" step="0.01" placeholder="0,00">
+            </div>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Código de barras / DARF</label>
+              <input type="text" class="form-control" id="imp-codigo" placeholder="Opcional">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select class="form-control" id="imp-status">
+                <option>A pagar</option><option>Pago</option><option>Atrasado</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Observações</label>
+            <textarea class="form-control" id="imp-obs" rows="2" placeholder="Juros, multa, parcelamento…"></textarea>
+          </div>
+        </div>
+
+        <!-- Manutenção -->
+        <div class="spec-panel" id="desp-manutencao">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+            <button type="button" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-muted)" onclick="voltarCat()">← voltar</button>
+            <span style="font-size:13px;font-weight:700">🔧 Manutenção</span>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Equipamento / Área *</label>
+              <input type="text" class="form-control" id="manu-equip" placeholder="Ex: Cadeira odontológica, Ar-condicionado">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Prestador de serviço</label>
+              <input type="text" class="form-control" id="manu-prestador" placeholder="Nome da empresa / técnico">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Descrição do serviço</label>
+            <textarea class="form-control" id="manu-desc" rows="2" placeholder="Ex: Troca de mangueiras e revisão geral da cadeira…"></textarea>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Data *</label>
+              <input type="date" class="form-control" id="manu-data">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Valor (R$) *</label>
+              <input type="number" class="form-control" id="manu-valor" min="0" step="0.01" placeholder="0,00">
+            </div>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Nº Ordem de Serviço / NF</label>
+              <input type="text" class="form-control" id="manu-os" placeholder="Opcional">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select class="form-control" id="manu-status">
+                <option>Pago</option><option>A pagar</option><option>Atrasado</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Observações</label>
+            <textarea class="form-control" id="manu-obs" rows="2" placeholder="Garantia do serviço, peças substituídas…"></textarea>
+          </div>
+        </div>
+
+        <!-- Outros -->
+        <div class="spec-panel" id="desp-outros">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+            <button type="button" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-muted)" onclick="voltarCat()">← voltar</button>
+            <span style="font-size:13px;font-weight:700">📝 Outros</span>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Beneficiário / Fornecedor *</label>
+              <input type="text" class="form-control" id="out-beneficiario" placeholder="Para quem foi pago">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nº NF / Recibo</label>
+              <input type="text" class="form-control" id="out-nf" placeholder="Opcional">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Descrição *</label>
+            <textarea class="form-control" id="out-desc" rows="2" placeholder="Descreva a despesa…"></textarea>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Data *</label>
+              <input type="date" class="form-control" id="out-data">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Valor (R$) *</label>
+              <input type="number" class="form-control" id="out-valor" min="0" step="0.01" placeholder="0,00">
+            </div>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">Forma de pagamento</label>
+              <select class="form-control" id="out-forma">
+                <option>PIX</option><option>Dinheiro</option><option>Transferência</option>
+                <option>Cartão de Crédito</option><option>Boleto</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select class="form-control" id="out-status">
+                <option>Pago</option><option>A pagar</option><option>Atrasado</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Observações</label>
+            <textarea class="form-control" id="out-obs" rows="2"></textarea>
+          </div>
+        </div>
+
       </div>
-      <div class="form-group">
-        <label class="form-label">Forma de Pagamento</label>
-        <select class="form-control">
-          <option>Dinheiro</option>
-          <option>PIX</option>
-          <option>Cartão de Crédito</option>
-          <option>Cartão de Débito</option>
-          <option>Boleto</option>
-          <option>Financiamento</option>
-          <option>Transferência</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Observações</label>
-        <textarea class="form-control" rows="2" placeholder="Observações opcionais…"></textarea>
-      </div>
+      <!-- /panel-despesa -->
+
     </div>
     <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal('modal-lancamento')">Cancelar</button>
-      <button class="btn btn-primary" onclick="closeModal('modal-lancamento')">
+      <button class="btn btn-outline" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-primary" id="btn-salvar" onclick="salvar()" style="display:none">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M5 13l4 4L19 7"/></svg>
-        Salvar Lançamento
+        Salvar
       </button>
     </div>
   </div>
@@ -190,126 +765,283 @@
 <script src="../js/sidebar.js"></script>
 <script src="../js/db.js"></script>
 <script>
-let FILTRO_TIPO = '';
+/* ─── State ───────────────────────────────────── */
+let tipoAtual  = '';
+let catAtual   = '';
+let filtroTipo = '';
 
-function fmt(v) { return 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:2}); }
+/* ─── Helpers ─────────────────────────────────── */
+const fmt = v => 'R$ ' + (+v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+const hoje = () => new Date().toISOString().split('T')[0];
+const mesAtual = () => new Date().toISOString().slice(0, 7);
 
-function filtrar() {
-  const busca   = document.getElementById('busca-fin').value.toLowerCase();
-  const statusF = document.getElementById('filtro-status-fin').value;
-  const mesF    = document.getElementById('filtro-mes').value; // YYYY-MM
-  
-  let lista = FakeDB.financeiro.list();
-  
-  // Filtro por mês
-  if (mesF) {
-    lista = lista.filter(l => l.data.startsWith(mesF));
-  }
-
-  lista = lista.filter(l =>
-    (!FILTRO_TIPO || l.tipo === FILTRO_TIPO) &&
-    (!statusF || l.status === statusF) &&
-    (!busca || l.desc.toLowerCase().includes(busca) || (l.paciente && l.paciente.toLowerCase().includes(busca)))
-  );
-  
-  renderTabela(lista);
-}
-
-function renderTabela(lista) {
-  const tbody = document.getElementById('tbody-fin');
-  const receita = lista.filter(l=>l.tipo==='receita').reduce((s,l)=>s+l.valor,0);
-  const despesa = lista.filter(l=>l.tipo==='despesa').reduce((s,l)=>s+l.valor,0);
-  
-  document.getElementById('total-receita').textContent = fmt(receita);
-  document.getElementById('total-despesa').textContent = fmt(despesa);
-  document.getElementById('total-saldo').textContent = fmt(receita - despesa);
-  document.getElementById('total-registros').textContent = lista.length + ' registros';
-
-  if (lista.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-muted)">Nenhum lançamento encontrado.</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = lista.sort((a,b) => b.data.localeCompare(a.data)).map(l => {
-    const p = l.pacienteId ? FakeDB.pacientes.get(l.pacienteId) : null;
-    const nomePaciente = p ? p.nome : (l.paciente || '—');
-    
-    return `
-      <tr>
-        <td style="font-size:13px;color:var(--text-muted);white-space:nowrap">${l.data.split('-').reverse().join('/')}</td>
-        <td style="font-size:13px;font-weight:500">${l.desc}</td>
-        <td style="font-size:13px;color:var(--text-muted)">${nomePaciente}</td>
-        <td style="font-size:13px">${l.forma}</td>
-        <td style="font-size:12px"><span class="badge badge-primary">${l.cat}</span></td>
-        <td style="font-size:13px;font-weight:700;color:${l.tipo==='receita'?'var(--success)':'var(--danger)'}">
-          ${l.tipo==='receita'?'+':'−'} ${fmt(l.valor)}
-        </td>
-        <td><span class="badge ${l.status==='Pago'?'badge-success':l.status==='Atrasado'?'badge-danger':'badge-warning'}">${l.status}</span></td>
-        <td>
-          <button class="btn btn-outline btn-sm">Ver</button>
-        </td>
-      </tr>
-    `;
-  }).join('');
-}
-
-let currentTipoModal = 'receita';
-function setTipoLanc(tipo) {
-  currentTipoModal = tipo;
-  document.getElementById('tipo-receita-btn').classList.toggle('active', tipo==='receita');
-  document.getElementById('tipo-despesa-btn').classList.toggle('active', tipo==='despesa');
-}
-
-function salvarLancamento() {
-  const modal = document.getElementById('modal-lancamento');
-  const desc = modal.querySelector('input[type="text"]').value;
-  const pacienteId = modal.querySelector('select').value;
-  const cat = modal.querySelectorAll('select')[1].value;
-  const valor = parseFloat(modal.querySelector('input[type="number"]').value);
-  const data = modal.querySelector('input[type="date"]').value;
-  const status = modal.querySelectorAll('select')[2].value;
-  const forma = modal.querySelectorAll('select')[3].value;
-  const obs = modal.querySelector('textarea').value;
-
-  if (!desc || !valor || !data) { alert('Preencha os campos obrigatórios'); return; }
-
-  FakeDB.financeiro.add({
-    desc, pacienteId, cat, valor, data, status, forma, obs, tipo: currentTipoModal
-  });
-
-  closeModal('modal-lancamento');
-  filtrar();
-}
-
-// Configurar salvar do modal
-document.querySelector('#modal-lancamento .btn-primary').onclick = salvarLancamento;
-
-function openModal(id) { document.getElementById(id)?.classList.add('open'); }
-function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
-
+/* ─── Init ────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
-  // Configurar pacientes no select do modal
-  const pacSelect = document.querySelector('#modal-lancamento select');
-  pacSelect.innerHTML = '<option value="">Selecionar paciente…</option>' + 
-    FakeDB.pacientes.list().map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+  document.getElementById('filtro-mes').value = mesAtual();
+
+  const pacs = FakeDB.pacientes.list();
+  const sel  = document.getElementById('rec-paciente');
+  sel.innerHTML = '<option value="">Selecionar paciente…</option>' +
+    pacs.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
 
   filtrar();
 
-  document.querySelectorAll('#filtro-tipo .filter-pill').forEach(btn => {
+  document.querySelectorAll('#pills-tipo .filter-pill').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('#filtro-tipo .filter-pill').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#pills-tipo .filter-pill').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      FILTRO_TIPO = btn.dataset.tipo;
+      filtroTipo = btn.dataset.tipo;
       filtrar();
     });
   });
 
   document.querySelectorAll('.modal-overlay').forEach(ov => {
-    ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
+    ov.addEventListener('click', e => { if (e.target === ov) fecharModal(); });
   });
 });
+
+/* ─── Filtrar / Renderizar ──────────────────── */
+function filtrar() {
+  const busca  = document.getElementById('busca-fin').value.toLowerCase();
+  const status = document.getElementById('filtro-status').value;
+  const mes    = document.getElementById('filtro-mes').value;
+
+  let lista = FakeDB.financeiro.list();
+  if (mes)       lista = lista.filter(l => (l.data || '').startsWith(mes));
+  if (filtroTipo) lista = lista.filter(l => l.tipo === filtroTipo);
+  if (status)    lista = lista.filter(l => l.status === status);
+  if (busca)     lista = lista.filter(l =>
+    (l.desc || '').toLowerCase().includes(busca) ||
+    (l.referencia || '').toLowerCase().includes(busca)
+  );
+
+  const rec  = lista.filter(l => l.tipo === 'receita').reduce((s, l) => s + (+l.valor || 0), 0);
+  const desp = lista.filter(l => l.tipo === 'despesa').reduce((s, l) => s + (+l.valor || 0), 0);
+  document.getElementById('total-receita').textContent = fmt(rec);
+  document.getElementById('total-despesa').textContent = fmt(desp);
+  document.getElementById('total-saldo').textContent   = fmt(rec - desp);
+  document.getElementById('qtd-registros').textContent = lista.length + ' registros';
+
+  const tbody = document.getElementById('tbody-fin');
+  const empty = document.getElementById('empty-fin');
+
+  if (!lista.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = lista.sort((a, b) => (b.data || '').localeCompare(a.data || '')).map(l => {
+    const isRec = l.tipo === 'receita';
+    const stMap = { 'Pago': 'badge-success', 'A receber': 'badge-warning', 'A pagar': 'badge-warning', 'Atrasado': 'badge-danger' };
+    return `
+      <tr>
+        <td style="font-size:13px;white-space:nowrap;color:var(--text-muted)">${(l.data||'').split('-').reverse().join('/')}</td>
+        <td>
+          <div style="font-size:13px;font-weight:600">${l.desc}</div>
+          ${l.obs ? `<div style="font-size:11px;color:var(--text-muted)">${l.obs.slice(0,60)}</div>` : ''}
+        </td>
+        <td><span style="font-size:11px;background:var(--bg2);padding:3px 8px;border-radius:20px;font-weight:600">${l.cat || '—'}</span></td>
+        <td style="font-size:12px;color:var(--text-muted)">${l.referencia || '—'}</td>
+        <td style="font-size:12px">${l.forma || '—'}</td>
+        <td style="font-size:13px;font-weight:700;color:${isRec ? 'var(--success)' : 'var(--danger)'}">
+          ${isRec ? '+' : '−'} ${fmt(l.valor)}
+        </td>
+        <td><span class="badge ${stMap[l.status] || 'badge-info'}">${l.status || '—'}</span></td>
+        <td>
+          <div style="display:flex;gap:4px;justify-content:flex-end">
+            <button class="icon-btn" title="Excluir" onclick="removerLancamento(${l.id})">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            </button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function removerLancamento(id) {
+  if (!confirm('Remover este lançamento?')) return;
+  const all = FakeDB.financeiro.list().filter(l => l.id != id);
+  FakeDB.save('financeiro', all);
+  filtrar();
+}
+
+/* ─── Modal ───────────────────────────────── */
+function abrirModal() {
+  tipoAtual = '';
+  catAtual  = '';
+  document.getElementById('btn-salvar').style.display = 'none';
+  document.getElementById('panel-receita').classList.remove('visible');
+  document.getElementById('panel-despesa').classList.remove('visible');
+  document.querySelectorAll('.spec-panel[id^="desp-"]').forEach(p => p.classList.remove('visible'));
+  document.getElementById('step-cat').style.display = '';
+  document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('btn-rec').classList.remove('active-rec', 'active-desp');
+  document.getElementById('btn-desp').classList.remove('active-rec', 'active-desp');
+
+  // defaults
+  document.getElementById('rec-vencimento').value  = hoje();
+  document.getElementById('rec-data-pagto').value  = hoje();
+
+  document.getElementById('modal-lancamento').classList.add('open');
+}
+
+function fecharModal() {
+  document.getElementById('modal-lancamento').classList.remove('open');
+}
+
+function setTipo(tipo) {
+  tipoAtual = tipo;
+  catAtual  = '';
+  document.getElementById('btn-rec').className  = 'type-btn' + (tipo === 'receita' ? ' active-rec'  : '');
+  document.getElementById('btn-desp').className = 'type-btn' + (tipo === 'despesa' ? ' active-desp' : '');
+  document.getElementById('panel-receita').classList.toggle('visible', tipo === 'receita');
+  document.getElementById('panel-despesa').classList.toggle('visible', tipo === 'despesa');
+  document.querySelectorAll('.spec-panel[id^="desp-"]').forEach(p => p.classList.remove('visible'));
+  document.getElementById('step-cat').style.display = tipo === 'despesa' ? '' : 'none';
+  document.getElementById('btn-salvar').style.display = tipo === 'receita' ? '' : 'none';
+}
+
+function selecionarCat(cat) {
+  catAtual = cat;
+  document.querySelectorAll('.cat-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.cat === cat);
+  });
+  document.getElementById('step-cat').style.display = 'none';
+  document.querySelectorAll('.spec-panel[id^="desp-"]').forEach(p => p.classList.remove('visible'));
+  document.getElementById(`desp-${cat}`)?.classList.add('visible');
+  document.getElementById('btn-salvar').style.display = '';
+
+  // Default dates
+  const map = { salario: ['sal-mes','sal-data'], material: ['mat-vencimento'], equipamento: ['equip-data'], aluguel: ['alug-mes'], consumo: ['cons-mes','cons-vencimento'], imposto: ['imp-periodo','imp-vencimento'], manutencao: ['manu-data'], outros: ['out-data'] };
+  (map[cat] || []).forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.type === 'month') el.value = mesAtual();
+    if (el.type === 'date')  el.value = hoje();
+  });
+}
+
+function voltarCat() {
+  catAtual = '';
+  document.querySelectorAll('.spec-panel[id^="desp-"]').forEach(p => p.classList.remove('visible'));
+  document.getElementById('step-cat').style.display = '';
+  document.getElementById('btn-salvar').style.display = 'none';
+  document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
+}
+
+/* ─── Dynamic extras ────────────────────── */
+function togglePagtoExtras(prefixo) {
+  const forma = document.getElementById(`${prefixo}-forma`).value;
+  document.getElementById(`${prefixo}-extra-credito`)?.classList.toggle('visible', forma === 'credito');
+  document.getElementById(`${prefixo}-extra-parcelado`)?.classList.toggle('visible', forma === 'parcelado');
+}
+
+function toggleDataPagto(prefixo) {
+  const status = document.getElementById(`${prefixo}-status`).value;
+  const wrap   = document.getElementById(`${prefixo}-data-pagto-wrap`);
+  if (wrap) wrap.style.display = status === 'Pago' ? 'block' : 'none';
+}
+
+function togglePlano() {
+  const val = document.getElementById('rec-plano').value;
+  document.getElementById('plano-extra').classList.toggle('visible', !!val);
+}
+
+function calcSalLiq() {
+  const bruto    = parseFloat(document.getElementById('sal-bruto').value)    || 0;
+  const desc     = parseFloat(document.getElementById('sal-descontos').value) || 0;
+  document.getElementById('sal-liquido').value = (bruto - desc).toFixed(2);
+}
+
+/* ─── Salvar ────────────────────────────── */
+function salvar() {
+  if (!tipoAtual) { alert('Selecione o tipo de lançamento.'); return; }
+
+  let lancamento = null;
+
+  if (tipoAtual === 'receita') {
+    const pac  = document.getElementById('rec-paciente');
+    const desc = document.getElementById('rec-desc').value.trim();
+    const val  = parseFloat(document.getElementById('rec-valor').value);
+    const forma = document.getElementById('rec-forma').value;
+    const status = document.getElementById('rec-status').value;
+    const venc = document.getElementById('rec-vencimento').value;
+
+    if (!desc || !val || !forma || !venc) { alert('Preencha os campos obrigatórios.'); return; }
+
+    const pacienteNome = pac.options[pac.selectedIndex]?.text || '';
+    const dentes = document.getElementById('rec-dentes').value.trim();
+    const plano  = document.getElementById('rec-plano').value;
+    const obs    = document.getElementById('rec-obs').value.trim();
+
+    let detalhes = { dentes, plano };
+    if (plano) {
+      detalhes.planoNome = document.getElementById('rec-plano-nome').value;
+      detalhes.planoGuia = document.getElementById('rec-plano-guia').value;
+    }
+    if (forma === 'credito') {
+      detalhes.parcelas = document.getElementById('rec-parcelas-cred').value;
+      detalhes.taxa     = document.getElementById('rec-taxa').value;
+    }
+    if (forma === 'parcelado') {
+      detalhes.parcTotal = document.getElementById('rec-parc-total').value;
+      detalhes.parcAtual = document.getElementById('rec-parc-atual').value;
+      detalhes.parcValor = document.getElementById('rec-parc-valor').value;
+    }
+
+    lancamento = {
+      tipo: 'receita', cat: 'Procedimento',
+      desc: desc + (dentes ? ` (dente(s) ${dentes})` : ''),
+      referencia: pacienteNome || '—',
+      valor: val, forma: forma || '—', status, data: venc,
+      obs, detalhes
+    };
+  } else {
+    if (!catAtual) { alert('Selecione a categoria da despesa.'); return; }
+
+    const catLabel = { salario:'Salário', material:'Material', equipamento:'Equipamento', aluguel:'Aluguel', consumo:'Consumo', imposto:'Imposto/Taxa', manutencao:'Manutenção', outros:'Outros' };
+
+    const coleta = (ids) => {
+      const obj = {};
+      ids.forEach(id => { const el = document.getElementById(id); if (el) obj[id] = el.value; });
+      return obj;
+    };
+
+    const configs = {
+      salario:     { valId:'sal-liquido',  dataId:'sal-data',        formaId:'sal-forma',   statusId:'sal-status',   obsId:'sal-obs',   refId:'sal-colaborador', descFn: d => `Salário — ${d['sal-colaborador']||''}` },
+      material:    { valId:'mat-valor',    dataId:'mat-vencimento',  formaId:'mat-forma',   statusId:'mat-status',   obsId:'mat-obs',   refId:'mat-fornecedor',  descFn: d => `Material — ${d['mat-fornecedor']||''}` },
+      equipamento: { valId:'equip-valor',  dataId:'equip-data',      formaId:'equip-forma', statusId:null,           obsId:'equip-obs', refId:'equip-nome',      descFn: d => `Equipamento — ${d['equip-nome']||''}` },
+      aluguel:     { valId:'alug-valor',   dataId:null,              formaId:'alug-forma',  statusId:'alug-status',  obsId:'alug-obs',  refId:'alug-locador',    descFn: d => `Aluguel ${d['alug-mes']||''}` },
+      consumo:     { valId:'cons-valor',   dataId:'cons-vencimento', formaId:null,          statusId:'cons-status',  obsId:'cons-obs',  refId:'cons-tipo',       descFn: d => `${d['cons-tipo']||'Consumo'} ${d['cons-mes']||''}` },
+      imposto:     { valId:'imp-valor',    dataId:'imp-vencimento',  formaId:null,          statusId:'imp-status',   obsId:'imp-obs',   refId:'imp-tipo',        descFn: d => `${d['imp-tipo']||'Imposto'} ${d['imp-periodo']||''}` },
+      manutencao:  { valId:'manu-valor',   dataId:'manu-data',       formaId:null,          statusId:'manu-status',  obsId:'manu-obs',  refId:'manu-prestador',  descFn: d => `Manutenção — ${d['manu-equip']||''}` },
+      outros:      { valId:'out-valor',    dataId:'out-data',        formaId:'out-forma',   statusId:'out-status',   obsId:'out-obs',   refId:'out-beneficiario',descFn: d => d['out-desc']||'Outros' },
+    };
+
+    const cfg = configs[catAtual];
+    const val = parseFloat(document.getElementById(cfg.valId)?.value);
+    if (!val) { alert('Informe o valor.'); return; }
+
+    const allIds = Object.values(configs[catAtual]).filter(v => typeof v === 'string');
+    const detalhes = coleta(allIds);
+    const data = cfg.dataId ? document.getElementById(cfg.dataId)?.value : hoje();
+
+    lancamento = {
+      tipo: 'despesa',
+      cat: catLabel[catAtual],
+      desc: cfg.descFn(detalhes),
+      referencia: document.getElementById(cfg.refId)?.value || '—',
+      valor: val,
+      forma: cfg.formaId ? document.getElementById(cfg.formaId)?.value : '—',
+      status: cfg.statusId ? document.getElementById(cfg.statusId)?.value : 'A pagar',
+      data: data || hoje(),
+      obs: document.getElementById(cfg.obsId)?.value || '',
+      detalhes
+    };
+  }
+
+  FakeDB.financeiro.add(lancamento);
+  fecharModal();
+  filtrar();
+}
 </script>
-</body>
-</html>
 </body>
 </html>

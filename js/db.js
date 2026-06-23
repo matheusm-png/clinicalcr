@@ -1,133 +1,161 @@
 /**
- * FakeDB - Camada de persistência em LocalStorage para o protótipo.
- * Preparado para ser substituído por chamadas de API do Supabase.
+ * DB — Persistência em localStorage para a Clínica LCR.
+ *
+ * Dados sobrevivem a recarregamentos e fechamentos de aba no mesmo navegador.
+ * Para migrar ao Supabase: substitua cada método por chamadas à sua API REST,
+ * mantendo a mesma assinatura — o restante do sistema não precisará mudar.
+ *
+ * Schema v3 — zera automaticamente dados de versões anteriores (mocks).
  */
 
-const FakeDB = {
-  get(key, defaultVal = []) {
-    const data = localStorage.getItem('lcr_' + key);
-    return data ? JSON.parse(data) : defaultVal;
-  },
-  save(key, val) {
-    localStorage.setItem('lcr_' + key, JSON.stringify(val));
-    return val;
-  },
+const _SCHEMA = '3';
 
-  // PACIENTES
+/* ── Limpa dados de versões antigas (inclui todos os mocks) ── */
+(function () {
+  if (localStorage.getItem('lcr_version') !== _SCHEMA) {
+    Object.keys(localStorage)
+      .filter(k => k.startsWith('lcr_'))
+      .forEach(k => localStorage.removeItem(k));
+    localStorage.setItem('lcr_version', _SCHEMA);
+  }
+})();
+
+/* ── Primitivos ────────────────────────────────────────────── */
+function _get(key, def = []) {
+  try {
+    const v = localStorage.getItem('lcr_' + key);
+    return v !== null ? JSON.parse(v) : def;
+  } catch { return def; }
+}
+
+function _set(key, val) {
+  localStorage.setItem('lcr_' + key, JSON.stringify(val));
+  return val;
+}
+
+function _nextId(entity) {
+  const n = (parseInt(localStorage.getItem('lcr_id_' + entity) || '0')) + 1;
+  localStorage.setItem('lcr_id_' + entity, String(n));
+  return n;
+}
+
+function _saveEntity(entity, item) {
+  const all = _get(entity, []);
+  if (item.id) {
+    const i = all.findIndex(x => String(x.id) === String(item.id));
+    if (i >= 0) all[i] = item; else all.push(item);
+  } else {
+    item.id = _nextId(entity);
+    item.criadoEm = new Date().toISOString();
+    all.push(item);
+  }
+  _set(entity, all);
+  return item;
+}
+
+function _removeEntity(entity, id) {
+  _set(entity, _get(entity, []).filter(x => String(x.id) !== String(id)));
+}
+
+/* ── DB object ─────────────────────────────────────────────── */
+const DB = {
+
+  /* ─ Acesso genérico (compatibilidade com código legado) ─── */
+  get:  (key, def) => _get(key, def),
+  save: (key, val) => _set(key, val),
+
+  /* ─ PACIENTES ─────────────────────────────────────────────── */
   pacientes: {
-    list() {
-      let list = FakeDB.get('pacientes', []);
-      if (list.length === 0) {
-        // Dados iniciais se estiver vazio
-        list = [
-          { id: 1, nome: 'Maria Silva', cpf: '012.345.678-90', tel: '(74) 99123-4567', plano: 'Particular', nascimento: '1991-05-12', status: 'Ativo' },
-          { id: 2, nome: 'João Pereira', cpf: '101.234.567-89', tel: '(74) 90012-3456', plano: 'Particular', nascimento: '1997-08-20', status: 'Ativo' },
-          { id: 3, nome: 'Ana Beatriz Santos', cpf: '112.345.678-90', tel: '(74) 99123-0001', plano: 'Unimed', nascimento: '1985-03-15', status: 'Ativo' },
-        ];
-        FakeDB.save('pacientes', list);
-      }
-      return list;
-    },
-    get(id) {
-      return this.list().find(p => p.id == id);
-    }
+    list()       { return _get('pacientes', []); },
+    get(id)      { return this.list().find(p => String(p.id) === String(id)) ?? null; },
+    save(p)      { return _saveEntity('pacientes', p); },
+    remove(id)   { _removeEntity('pacientes', id); },
   },
 
-  // PROCEDIMENTOS (Odontograma)
+  /* ─ PROCEDIMENTOS (Odontograma) ───────────────────────────── */
   procedimentos: {
     list(pacienteId) {
-      const all = FakeDB.get('procedimentos', []);
-      return all.filter(p => p.pacienteId == pacienteId);
+      const all = _get('procedimentos', []);
+      return pacienteId != null
+        ? all.filter(p => String(p.pacienteId) === String(pacienteId))
+        : all;
     },
-    save(proc) {
-      const all = FakeDB.get('procedimentos', []);
-      if (proc.id) {
-        const idx = all.findIndex(p => p.id === proc.id);
-        all[idx] = proc;
-      } else {
-        proc.id = Date.now();
-        all.push(proc);
-      }
-      FakeDB.save('procedimentos', all);
-      return proc;
-    },
-    remove(id) {
-      const all = FakeDB.get('procedimentos', []);
-      const filtered = all.filter(p => p.id !== id);
-      FakeDB.save('procedimentos', filtered);
-    }
+    get(id)      { return _get('procedimentos', []).find(p => String(p.id) === String(id)) ?? null; },
+    save(p)      { return _saveEntity('procedimentos', p); },
+    remove(id)   { _removeEntity('procedimentos', id); },
   },
 
-  // ANAMNESES
+  /* ─ ANAMNESES ─────────────────────────────────────────────── */
   anamneses: {
     list(pacienteId) {
-      const all = FakeDB.get('anamneses', []);
-      return all.filter(a => a.pacienteId == pacienteId);
+      const all = _get('anamneses', []);
+      return pacienteId != null
+        ? all.filter(a => String(a.pacienteId) === String(pacienteId))
+        : all;
     },
-    save(anamnese) {
-      const all = FakeDB.get('anamneses', []);
-      anamnese.id = Date.now();
-      anamnese.data = new Date().toISOString().split('T')[0];
-      all.push(anamnese);
-      FakeDB.save('anamneses', all);
-      return anamnese;
-    }
+    save(a) {
+      const all = _get('anamneses', []);
+      a.id = _nextId('anamneses');
+      a.criadoEm = new Date().toISOString();
+      all.push(a);
+      _set('anamneses', all);
+      return a;
+    },
+    remove(id)   { _removeEntity('anamneses', id); },
   },
 
-  // FINANCEIRO
+  /* ─ FINANCEIRO ────────────────────────────────────────────── */
   financeiro: {
-    list() {
-      return FakeDB.get('financeiro', [
-        { id: 1, data: '2026-04-17', desc: 'Consulta de retorno', pacienteId: 1, forma: 'PIX', cat: 'Consulta', valor: 150, tipo: 'receita', status: 'Pago' },
-        { id: 2, data: '2026-04-16', desc: 'Sessão clareamento', pacienteId: 3, forma: 'Cartão de Crédito', cat: 'Procedimento', valor: 550, tipo: 'receita', status: 'Pago' },
-      ]);
-    },
-    add(item) {
-      const all = this.list();
-      item.id = Date.now();
-      all.push(item);
-      FakeDB.save('financeiro', all);
-      return item;
-    }
+    list()       { return _get('financeiro', []); },
+    get(id)      { return this.list().find(l => String(l.id) === String(id)) ?? null; },
+    add(l)       { return _saveEntity('financeiro', l); },
+    update(l)    { return _saveEntity('financeiro', l); },
+    remove(id)   { _removeEntity('financeiro', id); },
   },
 
-  // AGENDAMENTOS
+  /* ─ AGENDAMENTOS ──────────────────────────────────────────── */
   agendamentos: {
-    list() {
-      let list = FakeDB.get('agendamentos', []);
-      if (list.length === 0) {
-        list = [
-          { id: 1, dia: 0, hora: 8,  min: 0,  dur: 30, paciente: 'Maria Silva',        proc: 'Retorno',        status: 'confirmado' },
-          { id: 2, dia: 0, hora: 9,  min: 0,  dur: 45, paciente: 'João Pereira',       proc: 'Extração',       status: 'pendente'   },
-          { id: 3, dia: 0, hora: 10, min: 30, dur: 60, paciente: 'Ana Beatriz Santos', proc: 'Clareamento',    status: 'confirmado' },
-          { id: 4, dia: 0, hora: 14, min: 0,  dur: 30, paciente: 'Carlos Mendes',      proc: 'Ortodontia',     status: 'confirmado' },
-          { id: 5, dia: 0, hora: 15, min: 30, dur: 60, paciente: 'Fernanda Lima',      proc: 'Implante — Aval.', status: 'pendente' },
-          { id: 6, dia: 2, hora: 9,  min: 0,  dur: 30, paciente: 'Roberta Nunes',      proc: 'Limpeza',        status: 'confirmado' },
-          { id: 7, dia: 2, hora: 11, min: 0,  dur: 45, paciente: 'Paulo César',        proc: 'Canal',          status: 'confirmado' },
-          { id: 8, dia: 3, hora: 10, min: 0,  dur: 30, paciente: 'Larissa Mota',       proc: 'Restauração',    status: 'pendente'   },
-          { id: 9, dia: 4, hora: 8,  min: 30, dur: 60, paciente: 'Bruno Alves',        proc: 'Prótese',        status: 'confirmado' },
-        ];
-        FakeDB.save('agendamentos', list);
-      }
-      return list;
-    },
-    get(id) {
-      return this.list().find(a => a.id == id);
-    },
-    save(appt) {
-      const all = this.list();
-      if (appt.id) {
-        const idx = all.findIndex(a => a.id == appt.id);
-        if (idx !== -1) all[idx] = appt;
-        else all.push(appt);
-      } else {
-        appt.id = Date.now();
-        all.push(appt);
-      }
-      FakeDB.save('agendamentos', all);
-      return appt;
-    }
-  }
+    list()       { return _get('agendamentos', []); },
+    get(id)      { return this.list().find(a => String(a.id) === String(id)) ?? null; },
+    save(a)      { return _saveEntity('agendamentos', a); },
+    remove(id)   { _removeEntity('agendamentos', id); },
+  },
+
+  /* ─ ESTOQUE ───────────────────────────────────────────────── */
+  estoque: {
+    list()       { return _get('estoque', []); },
+    get(id)      { return this.list().find(i => String(i.id) === String(id)) ?? null; },
+    save(item)   { return _saveEntity('estoque', item); },
+    remove(id)   { _removeEntity('estoque', id); },
+  },
+
+  /* ─ Utilitários ───────────────────────────────────────────── */
+
+  /** Exporta todos os dados como JSON string (backup manual). */
+  exportar() {
+    const snap = { _schema: _SCHEMA, _exportadoEm: new Date().toISOString() };
+    ['pacientes','procedimentos','anamneses','financeiro','agendamentos','estoque']
+      .forEach(k => { snap[k] = _get(k, []); });
+    return JSON.stringify(snap, null, 2);
+  },
+
+  /** Importa dados de um JSON string produzido por exportar(). */
+  importar(json) {
+    const data = typeof json === 'string' ? JSON.parse(json) : json;
+    ['pacientes','procedimentos','anamneses','financeiro','agendamentos','estoque']
+      .forEach(k => { if (Array.isArray(data[k])) _set(k, data[k]); });
+  },
+
+  /** Apaga todos os dados (usar com cuidado). */
+  zerarTudo() {
+    ['pacientes','procedimentos','anamneses','financeiro','agendamentos','estoque']
+      .forEach(k => {
+        localStorage.removeItem('lcr_' + k);
+        localStorage.removeItem('lcr_id_' + k);
+      });
+  },
 };
 
-window.FakeDB = FakeDB;
+/* ── Alias de compatibilidade ──────────────────────────────── */
+window.DB     = DB;
+window.FakeDB = DB;   // código existente continua funcionando sem mudanças

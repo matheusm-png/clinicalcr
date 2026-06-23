@@ -3,17 +3,166 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Preencher Anamnese — Clínica LCR</title>
+  <title>Anamnese — Clínica LCR</title>
   <link rel="stylesheet" href="../css/styles.css">
   <style>
-    .anamnese-form { max-width: 800px; margin: 0 auto; }
-    .q-group { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-    .q-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: block; }
-    .options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-    .option-check { display: flex; align-items:center; gap: 8px; font-size: 13px; cursor: pointer; padding: 10px; border: 1.5px solid var(--border); border-radius: 8px; transition: all .15s; }
-    .option-check:hover { background: var(--bg2); }
-    .option-check input { width: 16px; height: 16px; border-radius: 4px; }
-    .option-check.selected { border-color: var(--primary); background: var(--primary-light); color: var(--primary-darker); }
+    /* ── Layout ─────────────────────────────────────────────── */
+    .an-wrapper { max-width: 760px; margin: 0 auto; }
+
+    /* ── Stepper ─────────────────────────────────────────────── */
+    .stepper {
+      display: flex; align-items: flex-start; gap: 0;
+      margin-bottom: 32px; position: relative;
+    }
+    .stepper::before {
+      content: '';
+      position: absolute; top: 16px; left: 0; right: 0; height: 2px;
+      background: var(--border-solid); z-index: 0;
+    }
+    .step {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      gap: 6px; position: relative; z-index: 1; cursor: pointer;
+    }
+    .step-circle {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 2px solid var(--border-solid);
+      background: var(--card); color: var(--text-muted);
+      font-size: 13px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s;
+    }
+    .step.active   .step-circle { border-color: var(--primary); background: var(--primary); color: #fff; }
+    .step.done     .step-circle { border-color: var(--success); background: var(--success); color: #fff; }
+    .step-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-align: center; line-height: 1.3; }
+    .step.active .step-label { color: var(--primary-darker); }
+    .step.done   .step-label { color: var(--success); }
+
+    /* ── Section card ─────────────────────────────────────────── */
+    .section-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 20px; padding-bottom: 14px;
+      border-bottom: 1.5px solid var(--border-solid);
+    }
+    .section-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: var(--primary-light);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .section-icon svg { width: 20px; height: 20px; color: var(--primary-darker); }
+    .section-title { font-size: 16px; font-weight: 700; color: var(--text); }
+    .section-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+
+    /* ── Form step panels ──────────────────────────────────────── */
+    .step-panel { display: none; }
+    .step-panel.active { display: block; }
+
+    /* ── Yes/No toggle ─────────────────────────────────────────── */
+    .yn-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .yn-row:last-child { border-bottom: none; }
+    .yn-label { flex: 1; font-size: 13px; color: var(--text); padding-top: 6px; }
+    .yn-toggle { display: flex; border-radius: 8px; overflow: hidden; border: 1.5px solid var(--border-solid); flex-shrink: 0; }
+    .yn-btn {
+      padding: 5px 14px; font-size: 12px; font-weight: 600;
+      border: none; background: transparent; cursor: pointer;
+      color: var(--text-muted); transition: all .15s;
+    }
+    .yn-btn + .yn-btn { border-left: 1.5px solid var(--border-solid); }
+    .yn-btn.selected-sim { background: var(--danger); color: #fff; }
+    .yn-btn.selected-nao { background: var(--primary-light); color: var(--primary-darker); }
+
+    .yn-detail {
+      display: none; margin-top: 8px;
+      animation: fadeIn .2s ease;
+    }
+    .yn-detail.visible { display: block; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(-4px) } to { opacity:1; transform:translateY(0) } }
+
+    /* ── Sex select grid ───────────────────────────────────────── */
+    .sex-opts { display: flex; gap: 10px; }
+    .sex-opt {
+      flex: 1; padding: 10px; border-radius: 8px;
+      border: 1.5px solid var(--border-solid); cursor: pointer;
+      text-align: center; font-size: 13px; font-weight: 600;
+      color: var(--text-muted); transition: all .15s;
+    }
+    .sex-opt:hover { border-color: var(--primary); }
+    .sex-opt.selected { border-color: var(--primary); background: var(--primary-light); color: var(--primary-darker); }
+    .sex-opt input { display: none; }
+
+    /* ── Signature canvas ──────────────────────────────────────── */
+    .sign-area {
+      border: 2px dashed var(--border-solid); border-radius: 12px;
+      background: var(--bg2); position: relative; overflow: hidden;
+    }
+    .sign-area canvas { display: block; width: 100%; height: 140px; cursor: crosshair; touch-action: none; }
+    .sign-placeholder {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 6px;
+      color: var(--text-muted); font-size: 13px; pointer-events: none;
+      transition: opacity .2s;
+    }
+    .sign-placeholder svg { width: 28px; height: 28px; opacity: .4; }
+    .sign-clear {
+      position: absolute; top: 8px; right: 8px;
+      background: rgba(0,0,0,.06); border: none; border-radius: 6px;
+      padding: 4px 10px; font-size: 11px; font-weight: 600;
+      color: var(--text-muted); cursor: pointer; display: none;
+    }
+    .sign-clear:hover { background: rgba(0,0,0,.12); }
+
+    /* ── Declaration box ───────────────────────────────────────── */
+    .declaration-box {
+      background: var(--primary-light);
+      border: 1.5px solid var(--primary);
+      border-radius: 12px; padding: 16px 18px;
+      font-size: 13px; color: var(--primary-darker);
+      line-height: 1.6; margin-bottom: 20px;
+    }
+    .declaration-box strong { font-weight: 700; }
+
+    .accept-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px; border-radius: 10px; border: 1.5px solid var(--border-solid);
+      cursor: pointer; transition: all .15s; margin-bottom: 20px;
+    }
+    .accept-row:hover { border-color: var(--primary); background: var(--primary-light); }
+    .accept-row input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--primary); flex-shrink: 0; }
+    .accept-row span { font-size: 13px; font-weight: 600; }
+
+    /* ── Photo auth ─────────────────────────────────────────────── */
+    .photo-auth-row {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 14px; border-radius: 10px; border: 1.5px solid var(--border-solid);
+      cursor: pointer; transition: all .15s; margin-bottom: 16px;
+    }
+    .photo-auth-row:hover { border-color: var(--primary); }
+    .photo-auth-row input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--primary); flex-shrink: 0; margin-top: 2px; }
+    .photo-auth-row span { font-size: 13px; line-height: 1.5; color: var(--text); }
+
+    /* ── Signed stamp ───────────────────────────────────────────── */
+    .signed-stamp {
+      background: #F0FFF4; border: 1.5px solid var(--success);
+      border-radius: 10px; padding: 12px 16px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; color: #166534;
+    }
+    .signed-stamp svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    /* ── Nav buttons ───────────────────────────────────────────── */
+    .step-nav {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 28px; padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+    .step-counter { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
+    /* ── Responsive ─────────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .step-label { display: none; }
+      .form-row-3 { grid-template-columns: 1fr; }
+    }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
   </style>
 </head>
 <body>
@@ -23,146 +172,787 @@
 <div id="main">
   <header class="topbar">
     <div style="display:flex;align-items:center;gap:10px">
-      <a href="prontuario.html" id="back-link" style="color:var(--text-muted);text-decoration:none;font-size:13px">← Voltar</a>
+      <a href="anamnese.html" id="back-link" style="color:var(--text-muted);text-decoration:none;font-size:13px;display:flex;align-items:center;gap:4px">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
+        Voltar
+      </a>
       <span style="color:var(--border)">/</span>
-      <h1>Anamnese Odontológica</h1>
+      <h1>Ficha de Anamnese</h1>
     </div>
     <div class="topbar-actions">
-      <button class="btn btn-primary" onclick="salvarAnamnese()">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M5 13l4 4L19 7"/></svg>
-        Salvar Anamnese
-      </button>
+      <button class="btn btn-outline btn-sm" onclick="salvarRascunho()" id="btn-rascunho">Salvar rascunho</button>
       <div class="avatar">LC</div>
     </div>
   </header>
 
   <main class="page-content">
-    <div class="card anamnese-form">
-      <div style="text-align:center;margin-bottom:30px">
-        <h2 style="font-size:22px;margin-bottom:8px" id="paciente-nome">Paciente</h2>
-        <p style="color:var(--text-muted);font-size:14px">Por favor, responda com sinceridade todas as questões abaixo.</p>
+    <div class="an-wrapper">
+
+      <!-- Cabeçalho do paciente -->
+      <div class="card mb-6" style="display:flex;align-items:center;gap:14px;padding:14px 18px">
+        <div class="patient-avatar" id="avatar-initials">--</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:15px;font-weight:700" id="paciente-nome-header">Paciente</div>
+          <div style="font-size:12px;color:var(--text-muted)" id="paciente-meta">Anamnese Odontológica Padrão</div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);text-align:right">
+          <div>Dra. Lara Camila</div>
+          <div>CRO-BA 15247</div>
+        </div>
       </div>
 
-      <form id="form-anamnese">
-        <!-- Histórico de Saúde -->
-        <div class="q-group">
-          <span class="q-title">1. Você está sob tratamento médico atualmente?</span>
-          <div class="form-row form-row-2">
-            <select class="form-control" name="sob_tratamento">
-              <option value="não">Não</option>
-              <option value="sim">Sim</option>
+      <!-- Stepper -->
+      <div class="stepper" id="stepper">
+        <div class="step active" data-step="1" onclick="goToStep(1)">
+          <div class="step-circle">1</div>
+          <div class="step-label">Dados<br>Pessoais</div>
+        </div>
+        <div class="step" data-step="2" onclick="goToStep(2)">
+          <div class="step-circle">2</div>
+          <div class="step-label">Saúde<br>Geral</div>
+        </div>
+        <div class="step" data-step="3" onclick="goToStep(3)">
+          <div class="step-circle">3</div>
+          <div class="step-label">Histórico<br>Dental</div>
+        </div>
+        <div class="step" data-step="4" onclick="goToStep(4)">
+          <div class="step-circle">4</div>
+          <div class="step-label">Assinatura</div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════
+           STEP 1 — Dados Pessoais
+      ══════════════════════════════════════════ -->
+      <div class="card step-panel active" id="step-1">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div>
+            <div class="section-title">Dados Pessoais</div>
+            <div class="section-subtitle">Informações de identificação do paciente</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nome completo *</label>
+          <input type="text" class="form-control" id="campo-nome" placeholder="Nome completo do paciente" required>
+        </div>
+
+        <div class="form-row form-row-3">
+          <div class="form-group">
+            <label class="form-label">Data de nascimento *</label>
+            <input type="date" class="form-control" id="campo-nascimento" required>
+          </div>
+          <div class="form-group" style="grid-column:span 2">
+            <label class="form-label">Telefone *</label>
+            <input type="tel" class="form-control" id="campo-tel" placeholder="(00) 00000-0000" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Sexo *</label>
+          <div class="sex-opts">
+            <label class="sex-opt" id="opt-fem" onclick="selectSex('F')">
+              <input type="radio" name="sexo" value="F"> Feminino
+            </label>
+            <label class="sex-opt" id="opt-mas" onclick="selectSex('M')">
+              <input type="radio" name="sexo" value="M"> Masculino
+            </label>
+            <label class="sex-opt" id="opt-outro" onclick="selectSex('O')">
+              <input type="radio" name="sexo" value="O"> Outro
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Endereço</label>
+          <input type="text" class="form-control" id="campo-endereco" placeholder="Rua, número, bairro, cidade">
+        </div>
+
+        <div class="form-row form-row-2">
+          <div class="form-group">
+            <label class="form-label">Profissão</label>
+            <input type="text" class="form-control" id="campo-profissao" placeholder="Profissão">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Indicado por</label>
+            <input type="text" class="form-control" id="campo-indicado" placeholder="Nome ou fonte de indicação">
+          </div>
+        </div>
+
+        <div class="form-row form-row-2">
+          <div class="form-group">
+            <label class="form-label">RG / Identidade</label>
+            <input type="text" class="form-control" id="campo-rg" placeholder="Número do documento">
+          </div>
+          <div class="form-group">
+            <label class="form-label">CPF</label>
+            <input type="text" class="form-control" id="campo-cpf" placeholder="000.000.000-00" maxlength="14">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Queixa principal e evolução da doença atual</label>
+          <textarea class="form-control" id="campo-queixa" rows="3" placeholder="Descreva o motivo da consulta e histórico relevante…"></textarea>
+        </div>
+
+        <div class="step-nav">
+          <div class="step-counter">Passo 1 de 4</div>
+          <button class="btn btn-primary" onclick="nextStep()">
+            Próximo
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════
+           STEP 2 — Saúde Geral
+      ══════════════════════════════════════════ -->
+      <div class="card step-panel" id="step-2">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </div>
+          <div>
+            <div class="section-title">Questionário de Saúde</div>
+            <div class="section-subtitle">Responda com sinceridade — as informações são confidenciais</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg2);border-radius:10px;padding:4px 14px;margin-bottom:16px">
+
+          <!-- Condições gerais -->
+          <div class="yn-row">
+            <span class="yn-label">Febre reumática</span>
+            <div class="yn-toggle" data-name="febre_reumatica">
+              <button type="button" class="yn-btn" data-val="não" onclick="toggleYN(this)">Não</button>
+              <button type="button" class="yn-btn" data-val="sim" onclick="toggleYN(this)">Sim</button>
+            </div>
+          </div>
+
+          <div class="yn-row" style="flex-direction:column;align-items:stretch">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span class="yn-label" style="padding-top:0">Problemas cardíacos</span>
+              <div class="yn-toggle" data-name="prob_cardiacos">
+                <button type="button" class="yn-btn" data-val="não" onclick="toggleYN(this,'detail-cardiacos')">Não</button>
+                <button type="button" class="yn-btn" data-val="sim" onclick="toggleYN(this,'detail-cardiacos')">Sim</button>
+              </div>
+            </div>
+            <div class="yn-detail" id="detail-cardiacos">
+              <input type="text" class="form-control" name="prob_cardiacos_desc" placeholder="Qual problema cardíaco?">
+            </div>
+          </div>
+
+          <div class="yn-row" style="flex-direction:column;align-items:stretch">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span class="yn-label" style="padding-top:0">Problemas renais</span>
+              <div class="yn-toggle" data-name="prob_renais">
+                <button type="button" class="yn-btn" data-val="não" onclick="toggleYN(this,'detail-renais')">Não</button>
+                <button type="button" class="yn-btn" data-val="sim" onclick="toggleYN(this,'detail-renais')">Sim</button>
+              </div>
+            </div>
+            <div class="yn-detail" id="detail-renais">
+              <input type="text" class="form-control" name="prob_renais_desc" placeholder="Qual problema renal?">
+            </div>
+          </div>
+
+          <div class="yn-row" style="flex-direction:column;align-items:stretch">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span class="yn-label" style="padding-top:0">Problemas gástricos</span>
+              <div class="yn-toggle" data-name="prob_gastricos">
+                <button type="button" class="yn-btn" data-val="não" onclick="toggleYN(this,'detail-gastricos')">Não</button>
+                <button type="button" class="yn-btn" data-val="sim" onclick="toggleYN(this,'detail-gastricos')">Sim</button>
+              </div>
+            </div>
+            <div class="yn-detail" id="detail-gastricos">
+              <input type="text" class="form-control" name="prob_gastricos_desc" placeholder="Qual problema gástrico? (ex: gastrite, úlcera…)">
+            </div>
+          </div>
+
+          <div class="yn-row" style="flex-direction:column;align-items:stretch">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span class="yn-label" style="padding-top:0">Problemas respiratórios</span>
+              <div class="yn-toggle" data-name="prob_respiratorios">
+                <button type="button" class="yn-btn" data-val="não" onclick="toggleYN(this,'detail-respiratorios')">Não</button>
+                <button type="button" class="yn-btn" data-val="sim" onclick="toggleYN(this,'detail-respiratorios')">Sim</button>
+              </div>
+            </div>
+            <div class="yn-detail" id="detail-respiratorios">
+              <input type="text" class="form-control" name="prob_respiratorios_desc" placeholder="Qual problema respiratório? (ex: asma, bronquite…)">
+            </div>
+          </div>
+
+          <div class="yn-row" style="flex-direction:column;align-items:stretch">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span class="yn-label" style="padding-top:0">Problemas articulares ou reumatismo</span>
+              <div class="yn-toggle" data-name="prob_articulares">
+                <button type="button" class="yn-btn" data-val="não" onclick="toggleYN(this,'detail-articulares')">Não</button>
+                <button type="button" class="yn-btn" data-val="sim" onclick="toggleYN(this,'detail-articulares')">Sim</button>
+              </div>
+            </div>
+            <div class="yn-detail" id="detail-articulares">
+              <input type="text" class="form-control" name="prob_articulares_desc" placeholder="Qual problema articular?">
+            </div>
+          </div>
+
+          <div class="yn-row">
+            <span class="yn-label">Diabetes</span>
+            <div class="yn-toggle" data-name="diabetes">
+              <button type="button" class="yn-btn" data-val="não" onclick="toggleYN(this)">Não</button>
+              <button type="button" class="yn-btn" data-val="sim" onclick="toggleYN(this)">Sim</button>
+            </div>
+          </div>
+
+          <div class="yn-row">
+            <span class="yn-label">Hipertensão arterial</span>
+            <div class="yn-toggle" data-name="hipertensao">
+              <button type="button" class="yn-btn" data-val="não" onclick="toggleYN(this)">Não</button>
+              <button type="button" class="yn-btn" data-val="sim" onclick="toggleYN(this)">Sim</button>
+            </div>
+          </div>
+
+          <div class="yn-row">
+            <span class="yn-label">Possibilidade de gravidez</span>
+            <div class="yn-toggle" data-name="gravidez">
+              <button type="button" class="yn-btn" data-val="não" onclick="toggleYN(this)">Não</button>
+              <button type="button" class="yn-btn" data-val="sim" onclick="toggleYN(this)">Sim</button>
+            </div>
+          </div>
+
+          <div class="yn-row" style="flex-direction:column;align-items:stretch">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span class="yn-label" style="padding-top:0">Fuma ou já fumou?</span>
+              <div class="yn-toggle" data-name="fuma">
+                <button type="button" class="yn-btn" data-val="não" onclick="toggleYN(this,'detail-fuma')">Não</button>
+                <button type="button" class="yn-btn" data-val="sim" onclick="toggleYN(this,'detail-fuma')">Sim</button>
+              </div>
+            </div>
+            <div class="yn-detail" id="detail-fuma">
+              <input type="text" class="form-control" name="fuma_desc" placeholder="Há quanto tempo? Quantidade por dia?">
+            </div>
+          </div>
+
+          <div class="yn-row" style="flex-direction:column;align-items:stretch">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span class="yn-label" style="padding-top:0">Está em tratamento médico atualmente?</span>
+              <div class="yn-toggle" data-name="tratamento_medico">
+                <button type="button" class="yn-btn" data-val="não" onclick="toggleYN(this,'detail-tratamento')">Não</button>
+                <button type="button" class="yn-btn" data-val="sim" onclick="toggleYN(this,'detail-tratamento')">Sim</button>
+              </div>
+            </div>
+            <div class="yn-detail" id="detail-tratamento">
+              <input type="text" class="form-control" name="tratamento_medico_desc" placeholder="Qual tratamento?">
+            </div>
+          </div>
+
+          <div class="yn-row" style="flex-direction:column;align-items:stretch">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span class="yn-label" style="padding-top:0">Está fazendo uso de alguma medicação?</span>
+              <div class="yn-toggle" data-name="medicacao">
+                <button type="button" class="yn-btn" data-val="não" onclick="toggleYN(this,'detail-medicacao')">Não</button>
+                <button type="button" class="yn-btn" data-val="sim" onclick="toggleYN(this,'detail-medicacao')">Sim</button>
+              </div>
+            </div>
+            <div class="yn-detail" id="detail-medicacao">
+              <textarea class="form-control" name="medicacao_desc" rows="2" placeholder="Quais medicamentos?"></textarea>
+            </div>
+          </div>
+
+          <div class="yn-row" style="flex-direction:column;align-items:stretch">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span class="yn-label" style="padding-top:0">Tem alergia?</span>
+              <div class="yn-toggle" data-name="alergia">
+                <button type="button" class="yn-btn" data-val="não" onclick="toggleYN(this,'detail-alergia')">Não</button>
+                <button type="button" class="yn-btn" data-val="sim" onclick="toggleYN(this,'detail-alergia')">Sim</button>
+              </div>
+            </div>
+            <div class="yn-detail" id="detail-alergia">
+              <input type="text" class="form-control" name="alergia_desc" placeholder="A quê? (ex: penicilina, látex, anestésicos…)">
+            </div>
+          </div>
+
+          <div class="yn-row" style="flex-direction:column;align-items:stretch">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span class="yn-label" style="padding-top:0">Já foi operado(a)?</span>
+              <div class="yn-toggle" data-name="cirurgia">
+                <button type="button" class="yn-btn" data-val="não" onclick="toggleYN(this,'detail-cirurgia')">Não</button>
+                <button type="button" class="yn-btn" data-val="sim" onclick="toggleYN(this,'detail-cirurgia')">Sim</button>
+              </div>
+            </div>
+            <div class="yn-detail" id="detail-cirurgia">
+              <input type="text" class="form-control" name="cirurgia_desc" placeholder="Qual cirurgia?">
+            </div>
+          </div>
+
+          <div class="yn-row" style="flex-direction:column;align-items:stretch">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span class="yn-label" style="padding-top:0">Teve problemas com a cicatrização?</span>
+              <div class="yn-toggle" data-name="cicatrizacao">
+                <button type="button" class="yn-btn" data-val="não" onclick="toggleYN(this,'detail-cicatrizacao')">Não</button>
+                <button type="button" class="yn-btn" data-val="sim" onclick="toggleYN(this,'detail-cicatrizacao')">Sim</button>
+              </div>
+            </div>
+            <div class="yn-detail" id="detail-cicatrizacao">
+              <input type="text" class="form-control" name="cicatrizacao_desc" placeholder="Em qual situação ocorreu?">
+            </div>
+          </div>
+
+          <div class="yn-row" style="flex-direction:column;align-items:stretch">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span class="yn-label" style="padding-top:0">Teve problemas com a anestesia?</span>
+              <div class="yn-toggle" data-name="prob_anestesia">
+                <button type="button" class="yn-btn" data-val="não" onclick="toggleYN(this,'detail-anestesia')">Não</button>
+                <button type="button" class="yn-btn" data-val="sim" onclick="toggleYN(this,'detail-anestesia')">Sim</button>
+              </div>
+            </div>
+            <div class="yn-detail" id="detail-anestesia">
+              <input type="text" class="form-control" name="prob_anestesia_desc" placeholder="Qual foi o problema? (ex: reação alérgica, tontura…)">
+            </div>
+          </div>
+
+          <div class="yn-row" style="flex-direction:column;align-items:stretch">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span class="yn-label" style="padding-top:0">Teve problemas de hemorragia?</span>
+              <div class="yn-toggle" data-name="prob_hemorragia">
+                <button type="button" class="yn-btn" data-val="não" onclick="toggleYN(this,'detail-hemorragia')">Não</button>
+                <button type="button" class="yn-btn" data-val="sim" onclick="toggleYN(this,'detail-hemorragia')">Sim</button>
+              </div>
+            </div>
+            <div class="yn-detail" id="detail-hemorragia">
+              <input type="text" class="form-control" name="prob_hemorragia_desc" placeholder="Em qual situação ocorreu?">
+            </div>
+          </div>
+
+        </div>
+
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Antecedentes familiares relevantes</label>
+          <textarea class="form-control" name="antecedentes_familiares" rows="2" placeholder="Doenças hereditárias ou condições importantes na família…"></textarea>
+        </div>
+
+        <div class="step-nav">
+          <button class="btn btn-outline" onclick="prevStep()">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+            Voltar
+          </button>
+          <div class="step-counter">Passo 2 de 4</div>
+          <button class="btn btn-primary" onclick="nextStep()">
+            Próximo
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════
+           STEP 3 — Histórico Dental
+      ══════════════════════════════════════════ -->
+      <div class="card step-panel" id="step-3">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+          </div>
+          <div>
+            <div class="section-title">Histórico Odontológico</div>
+            <div class="section-subtitle">Hábitos e histórico de atendimento odontológico</div>
+          </div>
+        </div>
+
+        <div class="form-row form-row-2">
+          <div class="form-group">
+            <label class="form-label">Última vez que foi ao dentista</label>
+            <input type="text" class="form-control" name="ultima_consulta" placeholder="Ex: há 6 meses, em 2024…">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Frequência de escovação</label>
+            <select class="form-control" name="freq_escovacao">
+              <option value="">Selecione…</option>
+              <option>1x ao dia</option>
+              <option>2x ao dia</option>
+              <option>3x ao dia</option>
+              <option>Após cada refeição</option>
             </select>
-            <input type="text" class="form-control" name="tratamento_desc" placeholder="Se sim, qual?">
           </div>
         </div>
 
-        <div class="q-group">
-          <span class="q-title">2. Está fazendo uso de alguma medicação?</span>
-          <textarea class="form-control" name="medicacoes" rows="2" placeholder="Liste os medicamentos que utiliza..."></textarea>
+        <div class="form-group">
+          <label class="form-label">Como realiza sua higiene oral?</label>
+          <textarea class="form-control" name="higiene_oral" rows="2" placeholder="Descreva sua rotina de higiene (escova, fio dental, enxaguante…)"></textarea>
         </div>
 
-        <div class="q-group">
-          <span class="q-title">3. Possui alguma alergia?</span>
-          <div class="options-grid">
-            <label class="option-check"><input type="checkbox" name="alergia" value="Penicilina"> Penicilina</label>
-            <label class="option-check"><input type="checkbox" name="alergia" value="Anestésicos"> Anestésicos</label>
-            <label class="option-check"><input type="checkbox" name="alergia" value="Látex"> Látex</label>
-            <label class="option-check"><input type="checkbox" name="alergia" value="Iodo"> Iodo</label>
-            <label class="option-check"><input type="checkbox" name="alergia" value="Outros"> Outros</label>
+        <div class="form-group">
+          <label class="form-label">Hábitos</label>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-bottom:8px">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;border:1.5px solid var(--border-solid);border-radius:8px" class="habit-check">
+              <input type="checkbox" name="habito" value="Bruxismo" style="accent-color:var(--primary)"> Bruxismo (ranger dentes)
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;border:1.5px solid var(--border-solid);border-radius:8px" class="habit-check">
+              <input type="checkbox" name="habito" value="Roer unhas" style="accent-color:var(--primary)"> Roer unhas
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;border:1.5px solid var(--border-solid);border-radius:8px" class="habit-check">
+              <input type="checkbox" name="habito" value="Chupar dedo" style="accent-color:var(--primary)"> Chupar dedo
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;border:1.5px solid var(--border-solid);border-radius:8px" class="habit-check">
+              <input type="checkbox" name="habito" value="Apertar dentes" style="accent-color:var(--primary)"> Apertar dentes
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;border:1.5px solid var(--border-solid);border-radius:8px" class="habit-check">
+              <input type="checkbox" name="habito" value="Morder objetos" style="accent-color:var(--primary)"> Morder objetos
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;border:1.5px solid var(--border-solid);border-radius:8px" class="habit-check">
+              <input type="checkbox" name="habito" value="Respirar pela boca" style="accent-color:var(--primary)"> Respirar pela boca
+            </label>
           </div>
         </div>
 
-        <div class="q-group">
-          <span class="q-title">4. Você possui ou já possuiu alguma destas condições?</span>
-          <div class="options-grid">
-            <label class="option-check"><input type="checkbox" name="condicao" value="Diabetes"> Diabetes</label>
-            <label class="option-check"><input type="checkbox" name="condicao" value="Hipertensão"> Hipertensão</label>
-            <label class="option-check"><input type="checkbox" name="condicao" value="Problemas Cardíacos"> Problemas Cardíacos</label>
-            <label class="option-check"><input type="checkbox" name="condicao" value="Asma/Bronquite"> Asma/Bronquite</label>
-            <label class="option-check"><input type="checkbox" name="condicao" value="Hepatite"> Hepatite</label>
-            <label class="option-check"><input type="checkbox" name="condicao" value="Anemia"> Anemia</label>
-            <label class="option-check"><input type="checkbox" name="condicao" value="Gastrite/Úlcera"> Gastrite/Úlcera</label>
-            <label class="option-check"><input type="checkbox" name="condicao" value="Epilepsia"> Epilepsia</label>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Outras observações importantes</label>
+          <textarea class="form-control" name="observacoes" rows="3" placeholder="Algo mais que a dentista deva saber?"></textarea>
+        </div>
+
+        <div class="step-nav">
+          <button class="btn btn-outline" onclick="prevStep()">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+            Voltar
+          </button>
+          <div class="step-counter">Passo 3 de 4</div>
+          <button class="btn btn-primary" onclick="nextStep()">
+            Próximo
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════
+           STEP 4 — Autorização & Assinatura
+      ══════════════════════════════════════════ -->
+      <div class="card step-panel" id="step-4">
+        <div class="section-header">
+          <div class="section-icon">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div>
+            <div class="section-title">Autorização e Assinatura</div>
+            <div class="section-subtitle">Leia com atenção antes de assinar</div>
           </div>
         </div>
 
-        <div class="q-group">
-          <span class="q-title">5. Já teve alguma complicação em tratamentos dentários anteriores?</span>
-          <div class="form-row form-row-2">
-            <select class="form-control" name="complicacao">
-              <option value="não">Não</option>
-              <option value="sim">Sim</option>
-            </select>
-            <input type="text" class="form-control" name="complicacao_desc" placeholder="Se sim, qual?">
-          </div>
+        <!-- Autorização fotográfica -->
+        <label class="photo-auth-row" for="check-foto">
+          <input type="checkbox" id="check-foto">
+          <span>
+            Autorizo a realização de <strong>fotografias durante o atendimento</strong> e a divulgação nas redes sociais
+            <strong>@clinica.lcr</strong> para fins exclusivamente profissionais e educacionais.
+          </span>
+        </label>
+
+        <!-- Declaração -->
+        <div class="declaration-box">
+          <strong>Declaração de veracidade das informações</strong><br><br>
+          Declaro que as informações acima prestadas são totalmente verdadeiras. Elas são
+          <strong>estritamente confidenciais</strong> e serão utilizadas apenas pelos profissionais
+          da clínica no decorrer do tratamento. Estou ciente de que a omissão de informações
+          verdadeiras pode comprometer minha saúde e o tratamento.
         </div>
 
-        <div class="q-group">
-          <span class="q-title">6. Observações Adicionais</span>
-          <textarea class="form-control" name="observacoes" rows="3" placeholder="Algo mais que o dentista deva saber?"></textarea>
-        </div>
+        <!-- Aceite -->
+        <label class="accept-row" for="check-declaro">
+          <input type="checkbox" id="check-declaro" required>
+          <span>Li e declaro que todas as informações acima são verdadeiras e completas.</span>
+        </label>
 
-        <!-- Assinatura (Simulação) -->
-        <div style="background:var(--bg2);padding:20px;border-radius:12px;margin-top:40px;text-align:center">
-          <label style="display:flex;align-items:center;justify-content:center;gap:10px;font-weight:600;cursor:pointer">
-            <input type="checkbox" required> Eu declaro que as informações acima são verdadeiras.
+        <!-- Assinatura -->
+        <div class="form-group">
+          <label class="form-label" style="display:flex;justify-content:space-between;align-items:center">
+            Assinatura do paciente ou responsável legal
+            <span style="font-size:11px;color:var(--text-muted);font-weight:400">Assine no campo abaixo</span>
           </label>
+          <div class="sign-area">
+            <canvas id="sign-canvas"></canvas>
+            <div class="sign-placeholder" id="sign-placeholder">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+              Assine aqui com o dedo ou mouse
+            </div>
+            <button type="button" class="sign-clear" id="sign-clear" onclick="clearSignature()">Limpar</button>
+          </div>
         </div>
-      </form>
-    </div>
+
+        <!-- Info do assinante -->
+        <div style="background:var(--bg2);border-radius:10px;padding:14px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Paciente</div>
+            <div style="font-size:14px;font-weight:600" id="sign-nome">—</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Data e hora</div>
+            <div style="font-size:14px;font-weight:600" id="sign-datetime">—</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Dentista responsável</div>
+            <div style="font-size:14px;font-weight:600">Dra. Lara Camila</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Local</div>
+            <div style="font-size:14px;font-weight:600">Clínica LCR</div>
+          </div>
+        </div>
+
+        <div class="step-nav">
+          <button class="btn btn-outline" onclick="prevStep()">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+            Voltar
+          </button>
+          <div class="step-counter">Passo 4 de 4</div>
+          <button class="btn btn-primary" onclick="salvarAnamnese()" style="gap:8px">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Finalizar e Assinar
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /an-wrapper -->
   </main>
-</div>
+</div><!-- /main -->
 
 <script src="../js/sidebar.js"></script>
 <script src="../js/db.js"></script>
 <script>
+/* ─── State ───────────────────────────────── */
+let currentStep = 1;
+const TOTAL_STEPS = 4;
 let PACIENTE_ATUAL = null;
+let sexoSelecionado = null;
+let signatureSigned = false;
 
+/* ─── Init ────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id');
-  if (!id) { window.location.href = 'pacientes.html'; return; }
 
-  PACIENTE_ATUAL = FakeDB.pacientes.get(id);
-  if (!PACIENTE_ATUAL) { window.location.href = 'pacientes.html'; return; }
+  if (id && typeof FakeDB !== 'undefined') {
+    PACIENTE_ATUAL = FakeDB.pacientes.get(id);
+  }
 
-  document.getElementById('paciente-nome').textContent = PACIENTE_ATUAL.nome;
-  document.getElementById('back-link').href = `prontuario.html?id=${id}`;
+  if (PACIENTE_ATUAL) {
+    const nomeCompleto = PACIENTE_ATUAL.nome;
+    document.getElementById('paciente-nome-header').textContent = nomeCompleto;
+    document.getElementById('avatar-initials').textContent = iniciais(nomeCompleto);
+    document.getElementById('campo-nome').value = nomeCompleto;
+    document.getElementById('back-link').href = `anamnese.html`;
+  }
 
-  // Estilo visual para as checkboxes
-  document.querySelectorAll('.option-check input').forEach(input => {
-    input.addEventListener('change', () => {
-      input.closest('.option-check').classList.toggle('selected', input.checked);
-    });
+  atualizarSignInfo();
+  initCanvas();
+  initHabitChecks();
+
+  // CPF mask
+  document.getElementById('campo-cpf').addEventListener('input', function() {
+    let v = this.value.replace(/\D/g,'');
+    if (v.length > 11) v = v.slice(0,11);
+    v = v.replace(/(\d{3})(\d)/,'$1.$2')
+         .replace(/(\d{3})(\d)/,'$1.$2')
+         .replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+    this.value = v;
   });
+
+  // Tel mask
+  document.getElementById('campo-tel').addEventListener('input', function() {
+    let v = this.value.replace(/\D/g,'');
+    if (v.length > 11) v = v.slice(0,11);
+    if (v.length > 6) v = '(' + v.slice(0,2) + ') ' + v.slice(2,7) + '-' + v.slice(7);
+    else if (v.length > 2) v = '(' + v.slice(0,2) + ') ' + v.slice(2);
+    this.value = v;
+  });
+
+  // Atualiza nome na assinatura
+  document.getElementById('campo-nome').addEventListener('input', atualizarSignInfo);
 });
 
+/* ─── Helpers ─────────────────────────────── */
+function iniciais(nome) {
+  const p = nome.trim().split(' ');
+  return p.length >= 2 ? (p[0][0]+p[p.length-1][0]).toUpperCase() : p[0][0].toUpperCase();
+}
+
+function atualizarSignInfo() {
+  const nome = document.getElementById('campo-nome')?.value || (PACIENTE_ATUAL?.nome || '—');
+  document.getElementById('sign-nome').textContent = nome || '—';
+  const now = new Date();
+  document.getElementById('sign-datetime').textContent =
+    now.toLocaleDateString('pt-BR') + ' às ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+}
+
+function selectSex(val) {
+  sexoSelecionado = val;
+  ['F','M','O'].forEach(v => {
+    const el = document.getElementById('opt-' + (v==='F'?'fem':v==='M'?'mas':'outro'));
+    el?.classList.toggle('selected', v === val);
+  });
+}
+
+/* ─── Yes/No toggles ─────────────────────── */
+function toggleYN(btn, detailId) {
+  const toggle = btn.closest('.yn-toggle');
+  toggle.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('selected-sim','selected-nao'));
+  if (btn.dataset.val === 'sim') {
+    btn.classList.add('selected-sim');
+    if (detailId) document.getElementById(detailId)?.classList.add('visible');
+  } else {
+    btn.classList.add('selected-nao');
+    if (detailId) document.getElementById(detailId)?.classList.remove('visible');
+  }
+}
+
+/* ─── Habit checkboxes ───────────────────── */
+function initHabitChecks() {
+  document.querySelectorAll('.habit-check').forEach(label => {
+    label.querySelector('input').addEventListener('change', function() {
+      label.style.borderColor = this.checked ? 'var(--primary)' : '';
+      label.style.background  = this.checked ? 'var(--primary-light)' : '';
+      label.style.color       = this.checked ? 'var(--primary-darker)' : '';
+    });
+  });
+}
+
+/* ─── Stepper navigation ──────────────────── */
+function goToStep(n) {
+  if (n < 1 || n > TOTAL_STEPS) return;
+  document.getElementById(`step-${currentStep}`)?.classList.remove('active');
+  document.querySelectorAll('.step').forEach((s, i) => {
+    s.classList.remove('active','done');
+    if (i + 1 < n) s.classList.add('done');
+    else if (i + 1 === n) s.classList.add('active');
+  });
+  currentStep = n;
+  document.getElementById(`step-${n}`)?.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  if (n === 4) atualizarSignInfo();
+}
+
+function nextStep() { goToStep(currentStep + 1); }
+function prevStep() { goToStep(currentStep - 1); }
+
+/* ─── Signature canvas ───────────────────── */
+function initCanvas() {
+  const canvas = document.getElementById('sign-canvas');
+  if (!canvas) return;
+
+  const dpr = window.devicePixelRatio || 1;
+  function resizeCanvas() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width  = rect.width  * dpr;
+    canvas.height = 140 * dpr;
+    canvas.style.height = '140px';
+    canvas.getContext('2d').scale(dpr, dpr);
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  const ctx = canvas.getContext('2d');
+  ctx.strokeStyle = '#142020';
+  ctx.lineWidth   = 2.5;
+  ctx.lineCap     = 'round';
+  ctx.lineJoin    = 'round';
+
+  let drawing = false, lastX = 0, lastY = 0;
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const src  = e.touches ? e.touches[0] : e;
+    return { x: src.clientX - rect.left, y: src.clientY - rect.top };
+  }
+
+  function startDraw(e) {
+    drawing = true;
+    const p = getPos(e);
+    lastX = p.x; lastY = p.y;
+    document.getElementById('sign-placeholder').style.opacity = '0';
+    document.getElementById('sign-clear').style.display = 'block';
+    signatureSigned = true;
+    e.preventDefault();
+  }
+
+  function draw(e) {
+    if (!drawing) return;
+    e.preventDefault();
+    const p = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    lastX = p.x; lastY = p.y;
+  }
+
+  function stopDraw() { drawing = false; }
+
+  canvas.addEventListener('mousedown',  startDraw);
+  canvas.addEventListener('mousemove',  draw);
+  canvas.addEventListener('mouseup',    stopDraw);
+  canvas.addEventListener('mouseleave', stopDraw);
+  canvas.addEventListener('touchstart', startDraw, { passive: false });
+  canvas.addEventListener('touchmove',  draw,      { passive: false });
+  canvas.addEventListener('touchend',   stopDraw);
+}
+
+function clearSignature() {
+  const canvas = document.getElementById('sign-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  signatureSigned = false;
+  document.getElementById('sign-placeholder').style.opacity = '1';
+  document.getElementById('sign-clear').style.display = 'none';
+}
+
+/* ─── Save ───────────────────────────────── */
+function salvarRascunho() {
+  // Apenas feedback visual; persistência futura via backend
+  const btn = document.getElementById('btn-rascunho');
+  const orig = btn.textContent;
+  btn.textContent = '✓ Rascunho salvo';
+  btn.style.color = 'var(--success)';
+  setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 2000);
+}
+
 function salvarAnamnese() {
-  const form = document.getElementById('form-anamnese');
-  
-  if (!form.checkValidity()) {
-    alert('Por favor, aceite a declaração de verdade das informações.');
+  if (!document.getElementById('check-declaro').checked) {
+    alert('Por favor, leia e aceite a declaração de veracidade das informações.');
+    return;
+  }
+  if (!signatureSigned) {
+    alert('Por favor, assine no campo de assinatura antes de finalizar.');
     return;
   }
 
-  const formData = new FormData(form);
-  const data = {};
-  formData.forEach((value, key) => {
-    if (!data[key]) {
-      data[key] = value;
-    } else {
-      if (!Array.isArray(data[key])) data[key] = [data[key]];
-      data[key].push(value);
-    }
-  });
+  const canvas = document.getElementById('sign-canvas');
+  const assinaturaImagem = canvas.toDataURL('image/png');
+  const now = new Date();
 
-  FakeDB.anamneses.save({
-    pacienteId: PACIENTE_ATUAL.id,
-    respostas: data
-  });
+  const dados = {
+    pacienteId: PACIENTE_ATUAL?.id,
+    pacienteNome: document.getElementById('campo-nome').value,
+    dataHora: now.toISOString(),
+    autorizacaoFoto: document.getElementById('check-foto').checked,
+    assinatura: assinaturaImagem,
+    status: 'Assinado',
+  };
 
-  alert('Anamnese salva com sucesso!');
-  window.location.href = `prontuario.html?id=${PACIENTE_ATUAL.id}`;
+  if (typeof FakeDB !== 'undefined') {
+    FakeDB.anamneses?.save?.(dados);
+  }
+
+  // Feedback visual antes de redirecionar
+  const btnFinalizar = document.querySelector('[onclick="salvarAnamnese()"]');
+  btnFinalizar.innerHTML = `
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M5 13l4 4L19 7"/></svg>
+    Anamnese salva!
+  `;
+  btnFinalizar.disabled = true;
+  btnFinalizar.style.background = 'var(--success)';
+
+  setTimeout(() => {
+    window.location.href = PACIENTE_ATUAL ? `prontuario.html?id=${PACIENTE_ATUAL.id}` : 'anamnese.html';
+  }, 1500);
 }
 </script>
 </body>

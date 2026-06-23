@@ -1,0 +1,10 @@
+# OS
+.DS_Store
+**/.DS_Store
+
+# Ferramentas locais / Claude Code
+.claude/
+
+# Documentos internos e prints (não fazem parte do site)
+DOCS/
+PRINTS/

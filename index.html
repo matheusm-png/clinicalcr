@@ -3,11 +3,80 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clínica LCR — Dra. Lara Camila | Volte a Sorrir com Confiança</title>
-  <meta name="description" content="Sorrisos transformados com segurança, naturalidade e um atendimento humano. Agende sua avaliação em Irecê - BA.">
+  <title>Clínica LCR — Dentista em Irecê-BA | Dra. Lara Camila | Implantes e Estética</title>
+  <meta name="description" content="Clínica odontológica em Irecê - BA. Implantes, lentes de porcelana, ortodontia e clínica geral com atendimento humano e acolhedor. Agende sua avaliação pelo WhatsApp.">
+  <meta name="keywords" content="dentista Irecê, clínica odontológica Irecê, implante dentário Irecê, lente de porcelana Irecê, ortodontia Irecê, Dra. Lara Camila">
+  <meta name="author" content="Clínica LCR Odontologia">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://www.clinicalcr.com/">
+
+  <!-- Geo (SEO local) -->
+  <meta name="geo.region" content="BR-BA">
+  <meta name="geo.placename" content="Irecê">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="assets/logo-lcr.png">
+  <link rel="apple-touch-icon" href="assets/logo-lcr.png">
+  <meta name="theme-color" content="#3dbdbd">
+
+  <!-- Open Graph (compartilhamento WhatsApp/Facebook/Instagram) -->
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:site_name" content="Clínica LCR">
+  <meta property="og:title" content="Clínica LCR — Dentista em Irecê-BA | Volte a Sorrir com Confiança">
+  <meta property="og:description" content="Implantes, estética e clínica geral com atendimento humano em Irecê - BA. Agende sua avaliação pelo WhatsApp.">
+  <meta property="og:url" content="https://www.clinicalcr.com/">
+  <meta property="og:image" content="https://www.clinicalcr.com/assets/foto-lara-camila.jpg">
+  <meta property="og:image:alt" content="Dra. Lara Camila — Clínica LCR">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Clínica LCR — Dentista em Irecê-BA">
+  <meta name="twitter:description" content="Implantes, estética e clínica geral com atendimento humano em Irecê - BA.">
+  <meta name="twitter:image" content="https://www.clinicalcr.com/assets/foto-lara-camila.jpg">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@300;400;700;900&display=swap" rel="stylesheet">
+
+  <!-- Dados estruturados: ajuda a clínica a aparecer no Google/Maps de Irecê -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dentist",
+    "name": "Clínica LCR Odontologia",
+    "image": "https://www.clinicalcr.com/assets/foto-lara-camila.jpg",
+    "url": "https://www.clinicalcr.com/",
+    "telephone": "+5574991266602",
+    "priceRange": "$$",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "R. Régio Emília, 210E — Centro",
+      "addressLocality": "Irecê",
+      "addressRegion": "BA",
+      "addressCountry": "BR"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": "-11.3046",
+      "longitude": "-41.8557"
+    },
+    "openingHoursSpecification": [{
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+      "opens": "08:00",
+      "closes": "18:00"
+    }],
+    "medicalSpecialty": "Dentistry",
+    "founder": {
+      "@type": "Person",
+      "name": "Dra. Lara Camila",
+      "jobTitle": "Cirurgiã-Dentista",
+      "identifier": "CRO-BA 15247"
+    },
+    "sameAs": []
+  }
+  </script>
   <style>
     :root {
       --accent: #3dbdbd;
@@ -46,7 +115,7 @@
     .btn-outline-dark:hover { background: var(--accent); color: var(--white); }
 
     /* Theme Sections */
-    .bg-dark { background: var(--darkeer); color: var(--text-light); }
+    .bg-dark { background: var(--darker); color: var(--text-light); }
     .bg-dark .text-muted { color: #94a3b8; }
     .bg-light { background: var(--light); color: var(--text-dark); }
     .bg-white { background: var(--white); color: var(--text-dark); }
@@ -85,7 +154,7 @@
     }
     .text-clipping-mask {
       font-size: clamp(3rem, 7vw, 6rem); font-family: var(--font-title); font-weight: 900; margin-bottom: 24px; letter-spacing: -2px; line-height: 1.1;
-      background: url('assets/FOTO-LARA-CAMILA.jpg') center/cover no-repeat;
+      background: url('assets/foto-lara-camila.jpg') center/cover no-repeat;
       -webkit-background-clip: text; color: transparent; /* A Mágica de Photoshop aqui */
       -webkit-text-fill-color: transparent;
       padding: 10px;
@@ -181,11 +250,34 @@
     .whatsapp-btn:hover { transform: scale(1.1); }
     .whatsapp-btn svg { width: 35px; height: 35px; fill: currentColor; }
 
+    /* Scroll reveal */
+    .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .reveal.active { opacity: 1; transform: none; }
+
     @media (max-width: 968px) {
       .hero .container, .doctor-grid { grid-template-columns: 1fr; text-align: center; }
       .hero-buttons { justify-content: center; }
       .clinic-section { grid-template-columns: 1fr; }
       .footer-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Mobile: substitui o hero cinematográfico (pesado) por um hero estático e leve */
+    @media (max-width: 768px) {
+      #cinematic-hero { height: auto; }
+      .cinema-sticky { position: relative; height: auto; min-height: 100vh; padding: 120px 0 80px; }
+      #cinema-logo, #blue-curtain { display: none; }
+      #cinema-content { position: relative; opacity: 1 !important; transform: none !important; height: auto; }
+      .text-clipping-mask { font-size: clamp(2.2rem, 9vw, 3.2rem); }
+    }
+
+    /* Acessibilidade: desliga a animação cinematográfica para quem pede menos movimento */
+    @media (prefers-reduced-motion: reduce) {
+      * { scroll-behavior: auto !important; }
+      .reveal { opacity: 1; transform: none; transition: none; }
+      #cinematic-hero { height: auto; }
+      .cinema-sticky { position: relative; height: auto; min-height: 100vh; padding: 120px 0 80px; }
+      #cinema-logo, #blue-curtain { display: none; }
+      #cinema-content { position: relative; opacity: 1 !important; transform: none !important; height: auto; }
     }
   </style>
 </head>
@@ -195,7 +287,7 @@
   <header>
     <div class="container">
       <div class="logo">
-        <img src="assets/LOGO-LCR.svg" alt="Logo LCR">
+        <img src="assets/logo-lcr.svg" alt="Logo LCR">
       </div>
       <a href="pages/dashboard.html" class="admin-link">Acesso Restrito</a>
     </div>
@@ -205,7 +297,7 @@
   <section id="cinematic-hero">
     <div class="cinema-sticky">
       <!-- Imagem do Logo que dará zoom in -->
-      <img id="cinema-logo" src="assets/LOGO-LCR.svg" alt="LCR">
+      <img id="cinema-logo" src="assets/logo-lcr.svg" alt="LCR">
       
       <!-- Cortina azul sólida que surge simulando que mergulhamos no dente -->
       <div id="blue-curtain"></div>
@@ -230,7 +322,7 @@
   <section class="bg-white doctor-section" id="sobre">
     <div class="container doctor-grid">
       <div class="doctor-photo">
-        <img src="assets/FOTO-LARA-CAMILA.jpg" alt="Dra. Lara Camila - Dentista">
+        <img src="assets/foto-lara-camila.jpg" alt="Dra. Lara Camila - Dentista">
       </div>
 
       <div class="doctor-info">
@@ -455,7 +547,11 @@
   </a>
 
   <script>
-    window.addEventListener('scroll', () => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const cinematicEnabled = !prefersReducedMotion && !isMobile;
+
+    function updateHero() {
       const heroSec = document.getElementById('cinematic-hero');
       const heroLogo = document.getElementById('cinema-logo');
       const blueCurtain = document.getElementById('blue-curtain');
@@ -488,13 +584,32 @@
         heroCont.style.transform = `scale(${scaleVal})`;
         heroCont.style.pointerEvents = 'auto';
       }
-    });
+    }
+
+    // Throttle do scroll via requestAnimationFrame (evita travar em celular)
+    if (cinematicEnabled) {
+      let ticking = false;
+      window.addEventListener('scroll', () => {
+        if (!ticking) {
+          window.requestAnimationFrame(() => { updateHero(); ticking = false; });
+          ticking = true;
+        }
+      }, { passive: true });
+      updateHero();
+    }
+
+    // Scroll reveal: marca elementos e revela ao entrar na tela
+    document.querySelectorAll('.section-header, .service-card, .diff-item, .testim-card, .team-card, .result-card, .doctor-grid')
+      .forEach(el => el.classList.add('reveal'));
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        if(entry.isIntersecting) entry.target.classList.add('active');
+        if(entry.isIntersecting) {
+          entry.target.classList.add('active');
+          observer.unobserve(entry.target);
+        }
       });
-    });
+    }, { threshold: 0.12 });
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
   </script>
 </body>
