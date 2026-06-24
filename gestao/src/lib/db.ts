@@ -88,6 +88,7 @@ const fromProcedimento = (r: any): Procedimento => ({
   procedimento: r.procedimento,
   custo: Number(r.custo),
   status: r.status,
+  profissionalId: r.profissional_id ?? undefined,
   obs: r.obs ?? "",
   criadoEm: r.created_at,
 });
@@ -97,6 +98,7 @@ const toProcedimento = (p: Procedimento) => ({
   procedimento: p.procedimento,
   custo: p.custo,
   status: p.status,
+  profissional_id: p.profissionalId ?? null,
   obs: orNull(p.obs),
 });
 
@@ -176,6 +178,7 @@ const fromProfissional = (r: any): Profissional => ({
   cro: r.cro ?? "",
   cor: r.cor ?? "#0f766e",
   ativo: r.ativo,
+  comissaoPercentual: r.comissao_percentual != null ? Number(r.comissao_percentual) : 0,
   criadoEm: r.created_at,
 });
 const toProfissional = (p: Profissional) => ({
@@ -184,6 +187,7 @@ const toProfissional = (p: Profissional) => ({
   cro: orNull(p.cro),
   cor: p.cor,
   ativo: p.ativo ?? true,
+  comissao_percentual: p.comissaoPercentual ?? 0,
 });
 
 const fromEstoque = (r: any): ItemEstoque => ({

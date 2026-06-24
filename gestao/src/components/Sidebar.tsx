@@ -200,6 +200,24 @@ export default function Sidebar() {
             </Link>
           </li>
           <li>
+            <Link href="/admin/relatorios" className={isActive("/admin/relatorios") ? "active" : ""}>
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
+                <path d="M3 3v18h18" />
+                <path d="M7 14l4-4 3 3 5-6" />
+              </svg>
+              Relatórios
+            </Link>
+          </li>
+          <li>
+            <Link href="/admin/comissoes" className={isActive("/admin/comissoes") ? "active" : ""}>
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
+                <circle cx="12" cy="12" r="9" />
+                <path d="M14.5 9.5a2.5 2 0 0 0-2.5-1.5c-1.4 0-2.5.7-2.5 1.8 0 2.6 5 1.3 5 3.9 0 1.1-1.1 1.8-2.5 1.8a2.5 2 0 0 1-2.5-1.5M12 6.5v11" />
+              </svg>
+              Comissões
+            </Link>
+          </li>
+          <li>
             <Link href="/admin/anamnese" className={isActive("/admin/anamnese") ? "active" : ""}>
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
                 <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />

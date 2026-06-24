@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { DB } from "@/lib/db";
-import { Paciente, Procedimento, Anamnese } from "@/lib/types";
+import { Paciente, Procedimento, Anamnese, Profissional } from "@/lib/types";
 import Topbar from "@/components/Topbar";
 import Odontograma from "@/components/Odontograma";
 import { useToast } from "@/components/Toast";
@@ -21,6 +21,7 @@ function ProntuarioContent() {
   const [paciente, setPaciente] = useState<Paciente | null>(null);
   const [procedimentos, setProcedimentos] = useState<Procedimento[]>([]);
   const [anamneses, setAnamneses] = useState<Anamnese[]>([]);
+  const [profissionais, setProfissionais] = useState<Profissional[]>([]);
   const [selectedTeeth, setSelectedTeeth] = useState<Set<string>>(new Set());
 
   // Active Tab state
@@ -39,6 +40,7 @@ function ProntuarioContent() {
   const [procNome, setProcNome] = useState("");
   const [procDente, setProcDente] = useState("");
   const [procEstado, setProcEstado] = useState<"a-realizar" | "realizado" | "pre-existente">("a-realizar");
+  const [procProfId, setProcProfId] = useState<string>("");
   const [procObs, setProcObs] = useState("");
 
   // Profile Edit Form State
@@ -51,6 +53,10 @@ function ProntuarioContent() {
   useEffect(() => {
     loadPaciente();
   }, [searchParams]);
+
+  useEffect(() => {
+    (async () => setProfissionais(await DB.profissionais.list(true)))();
+  }, []);
 
   const loadPaciente = async () => {
     const idParam = searchParams.get("id");
@@ -119,6 +125,7 @@ function ProntuarioContent() {
     setProcNome("");
     setProcObs("");
     setProcEstado("a-realizar");
+    setProcProfId(profissionais.length === 1 ? String(profissionais[0].id) : "");
 
     if (denteNum) {
       setProcDente(denteNum);
@@ -144,6 +151,7 @@ function ProntuarioContent() {
       dente: procDente,
       status: procEstado === "realizado" ? "Concluído" : procEstado === "a-realizar" ? "Pendente" : "Cancelado",
       custo: 150, // valor default
+      profissionalId: procProfId ? Number(procProfId) : undefined,
       obs: procObs,
     };
 
@@ -163,6 +171,7 @@ function ProntuarioContent() {
     setProcNome(p.nome || p.procedimento);
     setProcDente(p.dente);
     setProcEstado(p.estado || (p.status === "Concluído" ? "realizado" : "a-realizar"));
+    setProcProfId(p.profissionalId ? String(p.profissionalId) : "");
     setProcObs(p.obs || "");
     setIsFichaDenteOpen(false);
     setIsProcModalOpen(true);
@@ -584,6 +593,18 @@ function ProntuarioContent() {
                       <option value="pre-existente">Pré-existente</option>
                     </select>
                   </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Profissional responsável</label>
+                  <select className="form-control" value={procProfId} onChange={(e) => setProcProfId(e.target.value)}>
+                    <option value="">Não atribuído</option>
+                    {profissionais.map((pr) => (
+                      <option key={pr.id} value={String(pr.id)}>{pr.nome}</option>
+                    ))}
+                  </select>
+                  {procEstado === "realizado" && !procProfId && (
+                    <span style={{ fontSize: 11, color: "var(--warning)" }}>Atribua um profissional para que a produção entre no relatório de comissões.</span>
+                  )}
                 </div>
                 <div className="form-group">
                   <label className="form-label">Observações</label>

@@ -24,6 +24,7 @@ export default function ConfigPage() {
   const [pCro, setPCro] = useState("");
   const [pCor, setPCor] = useState(CORES[0]);
   const [pAtivo, setPAtivo] = useState(true);
+  const [pComissao, setPComissao] = useState("");
   const [salvandoP, setSalvandoP] = useState(false);
 
   // Modal novo usuário
@@ -44,20 +45,22 @@ export default function ConfigPage() {
   };
 
   const abrirNovoProf = () => {
-    setPId(null); setPNome(""); setPEsp(""); setPCro(""); setPCor(CORES[0]); setPAtivo(true);
+    setPId(null); setPNome(""); setPEsp(""); setPCro(""); setPCor(CORES[0]); setPAtivo(true); setPComissao("");
     setProfOpen(true);
   };
   const abrirEditarProf = (p: Profissional) => {
     setPId(p.id!); setPNome(p.nome); setPEsp(p.especialidade || ""); setPCro(p.cro || "");
-    setPCor(p.cor); setPAtivo(p.ativo); setProfOpen(true);
+    setPCor(p.cor); setPAtivo(p.ativo); setPComissao(p.comissaoPercentual ? String(p.comissaoPercentual) : ""); setProfOpen(true);
   };
   const salvarProfissional = async () => {
     if (!pNome.trim()) return showToast("Informe o nome do profissional.", "error");
+    const comissao = pComissao ? parseFloat(pComissao.replace(",", ".")) : 0;
+    if (isNaN(comissao) || comissao < 0 || comissao > 100) return showToast("Comissão deve ser entre 0 e 100%.", "error");
     setSalvandoP(true);
     try {
       await DB.profissionais.save({
         ...(pId ? { id: pId } : {}),
-        nome: pNome.trim(), especialidade: pEsp, cro: pCro, cor: pCor, ativo: pAtivo,
+        nome: pNome.trim(), especialidade: pEsp, cro: pCro, cor: pCor, ativo: pAtivo, comissaoPercentual: comissao,
       });
       setProfOpen(false);
       await load();
@@ -212,7 +215,7 @@ export default function ConfigPage() {
               <div className="table-wrapper">
                 <table>
                   <thead>
-                    <tr><th>Profissional</th><th>Especialidade</th><th>CRO</th><th>Status</th><th>Ações</th></tr>
+                    <tr><th>Profissional</th><th>Especialidade</th><th>CRO</th><th>Comissão</th><th>Status</th><th>Ações</th></tr>
                   </thead>
                   <tbody>
                     {profissionais.map((p) => (
@@ -225,6 +228,7 @@ export default function ConfigPage() {
                         </td>
                         <td>{p.especialidade || "—"}</td>
                         <td>{p.cro || "—"}</td>
+                        <td>{p.comissaoPercentual ? `${p.comissaoPercentual.toLocaleString("pt-BR")}%` : "—"}</td>
                         <td>
                           <span className={`badge ${p.ativo ? "badge-success" : "badge-danger"}`}>{p.ativo ? "Ativo" : "Inativo"}</span>
                         </td>
@@ -297,6 +301,20 @@ export default function ConfigPage() {
                     <label className="form-label">CRO</label>
                     <input className="form-control" value={pCro} onChange={(e) => setPCro(e.target.value)} placeholder="Ex: CRO-BA 12345" />
                   </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Comissão (%)</label>
+                  <input
+                    className="form-control"
+                    type="number"
+                    min={0}
+                    max={100}
+                    step="0.5"
+                    value={pComissao}
+                    onChange={(e) => setPComissao(e.target.value)}
+                    placeholder="Ex: 40"
+                  />
+                  <span style={{ fontSize: 11, color: "var(--text-muted)" }}>% sobre a produção realizada (procedimentos concluídos atribuídos ao profissional). Use o relatório de Comissões para apurar.</span>
                 </div>
                 <div className="form-group">
                   <label className="form-label">Cor na agenda</label>

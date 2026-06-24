@@ -31,6 +31,7 @@ export interface Procedimento {
   procedimento: string;
   custo: number;
   status: 'Pendente' | 'Concluído' | 'Cancelado';
+  profissionalId?: number; // a quem a produção é atribuída (base da comissão)
   obs?: string;
   criadoEm?: string;
 }
@@ -82,6 +83,7 @@ export interface Profissional {
   cro?: string;
   cor: string;
   ativo: boolean;
+  comissaoPercentual?: number; // % de comissão padrão (ex.: 40 = 40%)
   criadoEm?: string;
 }
 
