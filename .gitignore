@@ -8,3 +8,7 @@
 # Documentos internos e prints (não fazem parte do site)
 DOCS/
 PRINTS/
+
+# Dados de paciente (LGPD) — nunca versionar
+FICHA_PACIENTES/
+PROMPT_OCR_FICHAS.md

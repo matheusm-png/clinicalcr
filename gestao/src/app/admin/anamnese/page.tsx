@@ -10,6 +10,22 @@ import { useToast } from "@/components/Toast";
 import EmptyState from "@/components/EmptyState";
 import AnaliseRiscoIA from "@/components/AnaliseRiscoIA";
 
+// Rótulos amigáveis dos campos da ficha (para o aviso de revisão).
+const ROTULOS_CAMPO: Record<string, string> = {
+  nome: "Nome", nascimento: "Nascimento", sexo: "Sexo", tel: "Telefone", endereco: "Endereço", numero: "Número",
+  indicado_por: "Indicado por", profissao: "Profissão", cpf: "CPF", identidade: "Identidade/RG", queixa: "Queixa principal",
+  febre_reumatica: "Febre reumática", prob_cardiacos: "Problemas cardíacos", prob_cardiacos_desc: "Descrição (cardíaco)",
+  prob_renais: "Problemas renais", prob_gastricos: "Problemas gástricos", prob_respiratorios: "Problemas respiratórios",
+  prob_articulares: "Problemas articulares", diabetes: "Diabetes", hipertensao: "Hipertensão", gravidez: "Gravidez",
+  fuma: "Fuma", fuma_desc: "Descrição (fumo)", tratamento_medico: "Tratamento médico", medicacao: "Medicação",
+  medicacao_desc: "Descrição (medicação)", alergia: "Alergia", alergia_desc: "Descrição (alergia)", operado: "Já foi operado",
+  operado_desc: "Descrição (cirurgia)", prob_cicatrizacao: "Problemas de cicatrização", alergia_anestesia: "Alergia a anestésico",
+  alergia_anestesia_desc: "Descrição (anestésico)", prob_hemorragia: "Problemas de hemorragia",
+  antecedentes_familiares: "Antecedentes familiares", ultima_vez_dentista: "Última ida ao dentista",
+  higiene_oral: "Higiene oral", habitos: "Hábitos", observacoes: "Observações", autoriza_fotos: "Autoriza fotos",
+  local_data: "Local e data",
+};
+
 const iniciais = (nomeCompleto: string) => {
   if (!nomeCompleto) return "--";
   const partes = nomeCompleto.trim().split(" ");
@@ -80,6 +96,94 @@ function AnamneseContent() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [drawing, setDrawing] = useState(false);
   const [lastPos, setLastPos] = useState({ x: 0, y: 0 });
+
+  // ── OCR por foto (IA de visão) ──────────────────────────
+  const [importOpen, setImportOpen] = useState(false);
+  const [importImgs, setImportImgs] = useState<File[]>([]);
+  const [importLoading, setImportLoading] = useState(false);
+  const [camposRevisar, setCamposRevisar] = useState<Set<string>>(new Set());
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Realce amarelo nos campos que a IA marcou como baixa confiança.
+  const revStyle = (key: string): React.CSSProperties =>
+    camposRevisar.has(key) ? { borderColor: "#F59E0B", background: "#FFFBEB" } : {};
+
+  const normValor = (v: any) => (typeof v === "boolean" ? (v ? "sim" : "não") : String(v));
+  const normSexo = (s: string) => {
+    const c = s.trim().toUpperCase();
+    if (c.startsWith("M")) return "M";
+    if (c.startsWith("F")) return "F";
+    return sexo;
+  };
+  const normData = (s: string) => {
+    const m = String(s).match(/(\d{1,2})\D(\d{1,2})\D(\d{4})/);
+    if (!m) return "";
+    const [, d, mo, y] = m;
+    return `${y}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
+  };
+
+  // Pré-preenche o formulário com o que a IA extraiu. NADA é salvo aqui — só preenche para revisão humana.
+  const aplicarOCR = (dados: Record<string, any>, revisar: string[]) => {
+    const pessoais = new Set(["nome", "nascimento", "sexo", "tel", "endereco", "cpf", "queixa", "numero", "autoriza_fotos"]);
+    if (dados.nome) setNome(String(dados.nome));
+    if (dados.nascimento) setNascimento(normData(dados.nascimento));
+    if (dados.tel) setTel(String(dados.tel));
+    if (dados.sexo) setSexo(normSexo(String(dados.sexo)));
+    if (dados.cpf) setCpf(String(dados.cpf));
+    const end = [dados.endereco, dados.numero].filter(Boolean).join(", ");
+    if (end) setEndereco(end);
+    if (dados.queixa) setQueixa(String(dados.queixa));
+    if (dados.autoriza_fotos != null) setCheckFoto(dados.autoriza_fotos === "sim" || dados.autoriza_fotos === true);
+
+    const saude = { ...saudeRespostas };
+    const dental = { ...dentalRespostas };
+    Object.entries(dados).forEach(([k, v]) => {
+      if (v == null) return;
+      if (k in dental) dental[k] = normValor(v);
+      else if (k in saude) saude[k] = normValor(v);
+      else if (!pessoais.has(k)) saude[k] = normValor(v); // preserva extras nas respostas (não perde dado)
+    });
+    setSaudeRespostas(saude);
+    setDentalRespostas(dental);
+    setCamposRevisar(new Set(revisar));
+    setCurrentStep(1);
+  };
+
+  const onPickFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []).filter((f) => f.type.startsWith("image/"));
+    if (files.length) setImportImgs((prev) => [...prev, ...files].slice(0, 8));
+    e.target.value = ""; // permite re-selecionar/re-fotografar
+  };
+  const removerImg = (i: number) => setImportImgs((prev) => prev.filter((_, idx) => idx !== i));
+
+  const processarFotos = async () => {
+    if (!importImgs.length) {
+      showToast("Adicione ao menos uma foto da ficha.", "error");
+      return;
+    }
+    setImportLoading(true);
+    try {
+      const fd = new FormData();
+      importImgs.forEach((f) => fd.append("imagens", f));
+      const res = await fetch("/api/ai/ocr-ficha", { method: "POST", body: fd });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Falha ao processar a ficha.");
+      aplicarOCR(json.dados ?? {}, json.revisar ?? []);
+      setImportOpen(false);
+      setImportImgs([]);
+      const qtd = (json.revisar ?? []).length;
+      showToast(
+        qtd > 0
+          ? `Ficha lida. Confira os ${qtd} campo(s) destacados antes de salvar.`
+          : "Ficha lida. Revise os dados antes de salvar.",
+        "success",
+      );
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Não foi possível ler a ficha.", "error");
+    } finally {
+      setImportLoading(false);
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -421,6 +525,57 @@ function AnamneseContent() {
             </div>
           </div>
 
+          {/* Preencher por foto (IA de visão) */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            multiple
+            onChange={onPickFiles}
+            style={{ display: "none" }}
+          />
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => setImportOpen(true)}
+            style={{ width: "100%", marginBottom: camposRevisar.size > 0 ? 12 : 24, justifyContent: "center" }}
+          >
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: 17, height: 17 }}>
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+            Preencher por foto da ficha (IA)
+          </button>
+
+          {camposRevisar.size > 0 && (
+            <div
+              style={{
+                background: "#FFFBEB",
+                border: "1px solid #F59E0B",
+                color: "#92400E",
+                borderRadius: "var(--radius-lg)",
+                padding: "12px 16px",
+                marginBottom: 24,
+                fontSize: 13,
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: 20, height: 20, flexShrink: 0 }}>
+                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01" />
+              </svg>
+              <span>
+                <strong>{camposRevisar.size} campo(s)</strong> com baixa confiança na leitura — confira antes de salvar
+                {" "}(os que aparecem no formulário estão destacados em amarelo).
+                <span style={{ display: "block", marginTop: 4, fontWeight: 600 }}>
+                  {[...camposRevisar].map((k) => ROTULOS_CAMPO[k] || k).join(" · ")}
+                </span>
+              </span>
+            </div>
+          )}
+
           {/* Stepper */}
           <div
             className="stepper"
@@ -473,6 +628,7 @@ function AnamneseContent() {
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
                   placeholder="Nome do paciente"
+                  style={revStyle("nome")}
                 />
               </div>
               <div className="form-row form-row-2">
@@ -483,6 +639,7 @@ function AnamneseContent() {
                     className="form-control"
                     value={nascimento}
                     onChange={(e) => setNascimento(e.target.value)}
+                    style={revStyle("nascimento")}
                   />
                 </div>
                 <div className="form-group">
@@ -493,6 +650,7 @@ function AnamneseContent() {
                     value={tel}
                     onChange={(e) => setTel(e.target.value)}
                     placeholder="(00) 00000-0000"
+                    style={revStyle("tel")}
                   />
                 </div>
               </div>
@@ -504,6 +662,7 @@ function AnamneseContent() {
                   value={endereco}
                   onChange={(e) => setEndereco(e.target.value)}
                   placeholder="Endereço do paciente"
+                  style={revStyle("endereco")}
                 />
               </div>
               <div className="form-group">
@@ -514,6 +673,7 @@ function AnamneseContent() {
                   value={queixa}
                   onChange={(e) => setQueixa(e.target.value)}
                   placeholder="Descreva o principal motivo da consulta..."
+                  style={revStyle("queixa")}
                 />
               </div>
 
@@ -539,7 +699,16 @@ function AnamneseContent() {
                   { key: "hipertensao", label: "Hipertensão arterial" },
                   { key: "fuma", label: "Fuma ou já fumou?", descKey: "fuma_desc", descPlaceholder: "Quantidade por dia?" },
                 ].map((q) => (
-                  <div key={q.key} style={{ borderBottom: "1px solid var(--border)", paddingBottom: 12 }}>
+                  <div
+                    key={q.key}
+                    style={{
+                      borderBottom: "1px solid var(--border)",
+                      paddingBottom: 12,
+                      ...(camposRevisar.has(q.key)
+                        ? { background: "#FFFBEB", borderLeft: "3px solid #F59E0B", paddingLeft: 10, borderRadius: 6 }
+                        : {}),
+                    }}
+                  >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span>{q.label}</span>
                       <div style={{ display: "flex", gap: 8 }}>
@@ -602,7 +771,16 @@ function AnamneseContent() {
                   { key: "sensibilidade_frio_calor", label: "Sente sensibilidade ao frio ou calor?" },
                   { key: "alergia_anestesia", label: "Teve alguma reação ou alergia a anestésicos odontológicos?", descKey: "alergia_anestesia_desc", descPlaceholder: "Descreva a reação..." },
                 ].map((q) => (
-                  <div key={q.key} style={{ borderBottom: "1px solid var(--border)", paddingBottom: 12 }}>
+                  <div
+                    key={q.key}
+                    style={{
+                      borderBottom: "1px solid var(--border)",
+                      paddingBottom: 12,
+                      ...(camposRevisar.has(q.key)
+                        ? { background: "#FFFBEB", borderLeft: "3px solid #F59E0B", paddingLeft: 10, borderRadius: 6 }
+                        : {}),
+                    }}
+                  >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span>{q.label}</span>
                       <div style={{ display: "flex", gap: 8 }}>
@@ -767,6 +945,71 @@ function AnamneseContent() {
             </div>
           )}
         </div>
+
+        {/* Modal: preencher por foto da ficha (IA de visão) */}
+        {importOpen && (
+          <div className="modal-overlay open" onClick={(e) => e.target === e.currentTarget && !importLoading && setImportOpen(false)}>
+            <div className="modal">
+              <div className="modal-header">
+                <span className="modal-title">Preencher por foto da ficha</span>
+                <button className="modal-close" onClick={() => !importLoading && setImportOpen(false)}>
+                  &times;
+                </button>
+              </div>
+              <div className="modal-body">
+                <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 0 }}>
+                  Fotografe a ficha de anamnese preenchida à mão (uma foto por página, boa luz e enquadrada).
+                  A IA preenche o formulário e você <strong>revisa antes de salvar</strong>.
+                </p>
+
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={importLoading}
+                  style={{ width: "100%", justifyContent: "center", marginBottom: 14 }}
+                >
+                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}>
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
+                  {importImgs.length ? "Adicionar mais fotos" : "Tirar foto / escolher"}
+                </button>
+
+                {importImgs.length > 0 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
+                    {importImgs.map((f, i) => (
+                      <div key={i} style={{ position: "relative", width: 72, height: 72, borderRadius: 8, overflow: "hidden", border: "1px solid var(--border-solid)" }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={URL.createObjectURL(f)} alt={`Página ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <button
+                          type="button"
+                          onClick={() => removerImg(i)}
+                          disabled={importLoading}
+                          aria-label="Remover foto"
+                          style={{ position: "absolute", top: 2, right: 2, width: 20, height: 20, borderRadius: "50%", border: "none", background: "rgba(0,0,0,.6)", color: "#fff", cursor: "pointer", fontSize: 12, lineHeight: "20px", padding: 0 }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <p style={{ fontSize: 11, color: "var(--text-muted)", margin: 0 }}>
+                  As imagens são enviadas com segurança para leitura por IA e não substituem a conferência da dentista.
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-outline" onClick={() => setImportOpen(false)} disabled={importLoading}>
+                  Cancelar
+                </button>
+                <button className="btn btn-primary" onClick={processarFotos} disabled={importLoading || !importImgs.length}>
+                  {importLoading ? "Lendo a ficha…" : `Processar ${importImgs.length || ""} foto(s)`}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </>
   );
