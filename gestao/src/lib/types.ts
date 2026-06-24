@@ -1,0 +1,191 @@
+export interface Paciente {
+  id?: number;
+  nome: string;
+  nascimento?: string;
+  cpf: string;
+  tel: string;
+  plano: string;
+  status: 'Ativo' | 'Inativo';
+  sexo?: string;
+  estadoCivil?: string;
+  rg?: string;
+  orgaoEmissor?: string;
+  email?: string;
+  contatoEmergencia?: string;
+  telEmergencia?: string;
+  cep?: string;
+  endereco?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  uf?: string;
+  criadoEm?: string;
+}
+
+export interface Procedimento {
+  id?: number;
+  pacienteId: number;
+  dente: string | number;
+  procedimento: string;
+  custo: number;
+  status: 'Pendente' | 'Concluído' | 'Cancelado';
+  obs?: string;
+  criadoEm?: string;
+}
+
+export interface Anamnese {
+  id?: number;
+  pacienteId: number;
+  respostas: Record<string, any>;
+  // Campos extras persistidos junto da anamnese
+  pacienteNome?: string;
+  assinatura?: string; // data-URL PNG da assinatura
+  data?: string;
+  status?: string;
+  criadoEm?: string;
+}
+
+export interface TransacaoFinanceira {
+  id?: number;
+  tipo: 'receita' | 'despesa';
+  descricao: string;
+  valor: number;
+  categoria: string;
+  data: string;
+  status: 'pago' | 'pendente';
+  formaPagto?: string;
+  criadoEm?: string;
+}
+
+export interface Agendamento {
+  id?: number;
+  paciente: string;
+  pacienteId?: number;
+  proc: string;
+  dia: number; // 0 a 6 (dia da semana, Segunda a Domingo)
+  hora: number; // hora (ex: 8, 9, 10...)
+  min: number;  // minutos (ex: 0, 30)
+  dur: number;  // duração em minutos (ex: 30, 45, 60...)
+  status: 'confirmado' | 'pendente' | 'bloqueado';
+  obs?: string;
+  criadoEm?: string;
+}
+
+export interface ProcedimentoCatalogo {
+  id?: number;
+  nome: string;
+  categoria?: string;
+  preco: number;
+  duracaoMin?: number;
+  ativo?: boolean;
+  criadoEm?: string;
+}
+
+export interface OrcamentoItem {
+  id?: number;
+  orcamentoId?: number;
+  catalogoId?: number;
+  descricao: string;
+  dente?: string;
+  quantidade: number;
+  valorUnitario: number;
+}
+
+export interface Orcamento {
+  id?: number;
+  pacienteId: number;
+  status: 'rascunho' | 'enviado' | 'aprovado' | 'recusado';
+  desconto: number;
+  total: number;
+  observacoes?: string;
+  aprovadoEm?: string;
+  criadoEm?: string;
+  itens?: OrcamentoItem[];
+}
+
+export interface Evolucao {
+  id?: number;
+  pacienteId: number;
+  texto: string;
+  autor?: string;
+  criadoEm?: string;
+}
+
+export interface Anexo {
+  id?: number;
+  pacienteId: number;
+  nome: string;        // nome original do arquivo
+  path: string;        // caminho no Storage
+  tipo?: string;       // mime type
+  tamanho?: number;    // bytes
+  categoria: 'foto' | 'raio-x' | 'documento' | 'outro';
+  autor?: string;
+  criadoEm?: string;
+}
+
+export interface Documento {
+  id?: number;
+  pacienteId: number;
+  tipo: 'receituario' | 'atestado' | 'declaracao' | 'termo' | 'outro';
+  titulo: string;
+  conteudo: string;
+  assinatura?: string; // data-URL PNG
+  autor?: string;
+  criadoEm?: string;
+}
+
+export interface Clinica {
+  id?: number;
+  nome: string;
+  cnpj?: string;
+  telefone?: string;
+  email?: string;
+  cep?: string;
+  endereco?: string;
+  numero?: string;
+  bairro?: string;
+  cidade?: string;
+  uf?: string;
+  logoUrl?: string;
+}
+
+export interface Usuario {
+  id: string;
+  nome?: string;
+  papel: 'admin' | 'dentista' | 'secretaria';
+}
+
+export interface Parcela {
+  id?: number;
+  contaId?: number;
+  numero: number;
+  valor: number;
+  vencimento?: string;
+  pago: boolean;
+  pagoEm?: string;
+  formaPagamento?: string;
+}
+
+export interface ContaReceber {
+  id?: number;
+  pacienteId: number;
+  orcamentoId?: number;
+  descricao: string;
+  valorTotal: number;
+  status: 'aberta' | 'quitada' | 'cancelada';
+  criadoEm?: string;
+  parcelas?: Parcela[];
+}
+
+export interface ItemEstoque {
+  id?: number;
+  nome: string;
+  quantidade: number;
+  minimo: number;
+  categoria: string;
+  fornecedor: string;
+  unidade?: string;
+  obs?: string;
+  criadoEm?: string;
+}
