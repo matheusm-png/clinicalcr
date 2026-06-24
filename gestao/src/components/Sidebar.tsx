@@ -105,7 +105,7 @@ export default function Sidebar() {
         />
         <div className="sidebar-subtitle">Gestão Odontológica</div>
       </div>
-      <nav style={{ flex: 1 }}>
+      <nav style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
         <ul className="sidebar-nav">
           <li className="nav-group-label">Atendimento</li>
           <li>
