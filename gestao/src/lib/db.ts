@@ -16,6 +16,7 @@ import {
   Evolucao,
   Anexo,
   Documento,
+  Profissional,
 } from "./types";
 
 // ============================================================
@@ -53,6 +54,7 @@ const fromPaciente = (r: any): Paciente => ({
   bairro: r.bairro ?? "",
   cidade: r.cidade ?? "",
   uf: r.uf ?? "",
+  proximaRevisao: r.proxima_revisao ?? "",
   criadoEm: r.created_at,
 });
 const toPaciente = (p: Paciente) => ({
@@ -76,6 +78,7 @@ const toPaciente = (p: Paciente) => ({
   bairro: orNull(p.bairro),
   cidade: orNull(p.cidade),
   uf: orNull(p.uf),
+  proxima_revisao: orNull(p.proximaRevisao),
 });
 
 const fromProcedimento = (r: any): Procedimento => ({
@@ -147,6 +150,8 @@ const fromAgendamento = (r: any): Agendamento => ({
   min: r.min,
   dur: r.dur,
   status: r.status,
+  profissionalId: r.profissional_id ?? undefined,
+  presenca: r.presenca ?? "agendado",
   obs: r.obs ?? "",
   criadoEm: r.created_at,
 });
@@ -159,7 +164,26 @@ const toAgendamento = (a: Agendamento) => ({
   min: a.min,
   dur: a.dur,
   status: a.status,
+  profissional_id: a.profissionalId ?? null,
+  presenca: a.presenca ?? "agendado",
   obs: orNull(a.obs),
+});
+
+const fromProfissional = (r: any): Profissional => ({
+  id: r.id,
+  nome: r.nome,
+  especialidade: r.especialidade ?? "",
+  cro: r.cro ?? "",
+  cor: r.cor ?? "#0f766e",
+  ativo: r.ativo,
+  criadoEm: r.created_at,
+});
+const toProfissional = (p: Profissional) => ({
+  nome: p.nome,
+  especialidade: orNull(p.especialidade),
+  cro: orNull(p.cro),
+  cor: p.cor,
+  ativo: p.ativo ?? true,
 });
 
 const fromEstoque = (r: any): ItemEstoque => ({
@@ -731,6 +755,15 @@ export const DB = {
       if (error) console.error("[DB] remover arquivo anexo:", error.message);
       await removeTable("anexos", id);
     },
+  },
+
+  profissionais: {
+    list: (apenasAtivos = false): Promise<Profissional[]> =>
+      apenasAtivos
+        ? listTable<Profissional>("profissionais", fromProfissional, { col: "ativo", val: true })
+        : listTable<Profissional>("profissionais", fromProfissional),
+    save: (p: Profissional) => saveTable<Profissional>("profissionais", toProfissional, fromProfissional, p),
+    remove: (id: number | string) => removeTable("profissionais", id),
   },
 
   documentos: {

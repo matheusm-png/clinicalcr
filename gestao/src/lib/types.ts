@@ -20,6 +20,7 @@ export interface Paciente {
   bairro?: string;
   cidade?: string;
   uf?: string;
+  proximaRevisao?: string; // data ISO (yyyy-mm-dd) da próxima revisão/recall
   criadoEm?: string;
 }
 
@@ -68,7 +69,19 @@ export interface Agendamento {
   min: number;  // minutos (ex: 0, 30)
   dur: number;  // duração em minutos (ex: 30, 45, 60...)
   status: 'confirmado' | 'pendente' | 'bloqueado';
+  profissionalId?: number;
+  presenca?: 'agendado' | 'compareceu' | 'faltou';
   obs?: string;
+  criadoEm?: string;
+}
+
+export interface Profissional {
+  id?: number;
+  nome: string;
+  especialidade?: string;
+  cro?: string;
+  cor: string;
+  ativo: boolean;
   criadoEm?: string;
 }
 

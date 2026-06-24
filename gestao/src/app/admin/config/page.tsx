@@ -2,18 +2,29 @@
 
 import { useEffect, useState } from "react";
 import { DB } from "@/lib/db";
-import { Clinica, Usuario } from "@/lib/types";
+import { Clinica, Usuario, Profissional } from "@/lib/types";
 import Topbar from "@/components/Topbar";
 import { useToast } from "@/components/Toast";
 
-const PAPEL_LABEL: Record<string, string> = { admin: "Administrador", dentista: "Dentista", secretaria: "Secretária" };
+const CORES = ["#0f766e", "#2563EB", "#7C3AED", "#DB2777", "#EA580C", "#CA8A04", "#16A34A", "#0891B2"];
 
 export default function ConfigPage() {
-  const { showToast } = useToast();
-  const [tab, setTab] = useState<"clinica" | "usuarios">("clinica");
+  const { showToast, confirm } = useToast();
+  const [tab, setTab] = useState<"clinica" | "profissionais" | "usuarios">("clinica");
 
   const [clinica, setClinica] = useState<Clinica | null>(null);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [profissionais, setProfissionais] = useState<Profissional[]>([]);
+
+  // Modal profissional
+  const [profOpen, setProfOpen] = useState(false);
+  const [pId, setPId] = useState<number | null>(null);
+  const [pNome, setPNome] = useState("");
+  const [pEsp, setPEsp] = useState("");
+  const [pCro, setPCro] = useState("");
+  const [pCor, setPCor] = useState(CORES[0]);
+  const [pAtivo, setPAtivo] = useState(true);
+  const [salvandoP, setSalvandoP] = useState(false);
 
   // Modal novo usuário
   const [novoOpen, setNovoOpen] = useState(false);
@@ -26,9 +37,47 @@ export default function ConfigPage() {
   useEffect(() => { load(); }, []);
 
   const load = async () => {
-    const [c, us] = await Promise.all([DB.clinica.get(), DB.usuarios.list()]);
+    const [c, us, profs] = await Promise.all([DB.clinica.get(), DB.usuarios.list(), DB.profissionais.list()]);
     setClinica(c);
     setUsuarios(us);
+    setProfissionais(profs);
+  };
+
+  const abrirNovoProf = () => {
+    setPId(null); setPNome(""); setPEsp(""); setPCro(""); setPCor(CORES[0]); setPAtivo(true);
+    setProfOpen(true);
+  };
+  const abrirEditarProf = (p: Profissional) => {
+    setPId(p.id!); setPNome(p.nome); setPEsp(p.especialidade || ""); setPCro(p.cro || "");
+    setPCor(p.cor); setPAtivo(p.ativo); setProfOpen(true);
+  };
+  const salvarProfissional = async () => {
+    if (!pNome.trim()) return showToast("Informe o nome do profissional.", "error");
+    setSalvandoP(true);
+    try {
+      await DB.profissionais.save({
+        ...(pId ? { id: pId } : {}),
+        nome: pNome.trim(), especialidade: pEsp, cro: pCro, cor: pCor, ativo: pAtivo,
+      });
+      setProfOpen(false);
+      await load();
+      showToast("Profissional salvo.", "success");
+    } catch {
+      showToast("Não foi possível salvar o profissional.", "error");
+    } finally {
+      setSalvandoP(false);
+    }
+  };
+  const removerProfissional = async (p: Profissional) => {
+    if (p.id == null) return;
+    if (!(await confirm(`Remover "${p.nome}"? As consultas dele(a) ficarão sem profissional.`, { danger: true, okLabel: "Remover" }))) return;
+    try {
+      await DB.profissionais.remove(p.id);
+      await load();
+      showToast("Profissional removido.", "success");
+    } catch {
+      showToast("Não foi possível remover.", "error");
+    }
   };
 
   const setCampo = (k: keyof Clinica, v: string) => setClinica((c) => (c ? { ...c, [k]: v } : c));
@@ -89,6 +138,7 @@ export default function ConfigPage() {
       <main className="page-content">
         <div className="tabs">
           <button className={`tab-btn ${tab === "clinica" ? "active" : ""}`} onClick={() => setTab("clinica")}>Minha Clínica</button>
+          <button className={`tab-btn ${tab === "profissionais" ? "active" : ""}`} onClick={() => setTab("profissionais")}>Profissionais</button>
           <button className={`tab-btn ${tab === "usuarios" ? "active" : ""}`} onClick={() => setTab("usuarios")}>Usuários</button>
         </div>
 
@@ -148,6 +198,51 @@ export default function ConfigPage() {
           </div>
         )}
 
+        {tab === "profissionais" && (
+          <div className="card">
+            <div className="card-header">
+              <span className="card-title">Profissionais da clínica</span>
+              <button className="btn btn-primary btn-sm" onClick={abrirNovoProf}>+ Novo profissional</button>
+            </div>
+            {profissionais.length === 0 ? (
+              <p style={{ padding: "20px 16px", color: "var(--text-muted)", fontSize: 13 }}>
+                Nenhum profissional cadastrado. Cadastre dentistas para usar a agenda por profissional.
+              </p>
+            ) : (
+              <div className="table-wrapper">
+                <table>
+                  <thead>
+                    <tr><th>Profissional</th><th>Especialidade</th><th>CRO</th><th>Status</th><th>Ações</th></tr>
+                  </thead>
+                  <tbody>
+                    {profissionais.map((p) => (
+                      <tr key={p.id}>
+                        <td>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ width: 12, height: 12, borderRadius: "50%", background: p.cor, display: "inline-block", flexShrink: 0 }} />
+                            <strong>{p.nome}</strong>
+                          </span>
+                        </td>
+                        <td>{p.especialidade || "—"}</td>
+                        <td>{p.cro || "—"}</td>
+                        <td>
+                          <span className={`badge ${p.ativo ? "badge-success" : "badge-danger"}`}>{p.ativo ? "Ativo" : "Inativo"}</span>
+                        </td>
+                        <td>
+                          <div style={{ display: "flex", gap: 6 }}>
+                            <button className="btn btn-outline btn-sm" onClick={() => abrirEditarProf(p)}>Editar</button>
+                            <button className="btn btn-outline btn-sm" style={{ color: "var(--danger)", borderColor: "rgba(239,68,68,0.2)" }} onClick={() => removerProfissional(p)}>Remover</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
         {tab === "usuarios" && (
           <div className="card">
             <div className="card-header">
@@ -178,6 +273,62 @@ export default function ConfigPage() {
             <p style={{ fontSize: 12, color: "var(--text-muted)", padding: "12px 16px 0" }}>
               Papéis: <strong>Administrador</strong> (tudo), <strong>Dentista</strong> (clínico + financeiro), <strong>Secretária</strong> (atendimento, sem financeiro).
             </p>
+          </div>
+        )}
+
+        {profOpen && (
+          <div className="modal-overlay open" onClick={(e) => e.target === e.currentTarget && setProfOpen(false)}>
+            <div className="modal" style={{ maxWidth: 480 }}>
+              <div className="modal-header">
+                <span className="modal-title">{pId ? "Editar profissional" : "Novo profissional"}</span>
+                <button className="modal-close" onClick={() => setProfOpen(false)}>×</button>
+              </div>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label className="form-label">Nome *</label>
+                  <input className="form-control" value={pNome} onChange={(e) => setPNome(e.target.value)} placeholder="Ex: Dra. Lara Camila" />
+                </div>
+                <div className="form-row form-row-2">
+                  <div className="form-group">
+                    <label className="form-label">Especialidade</label>
+                    <input className="form-control" value={pEsp} onChange={(e) => setPEsp(e.target.value)} placeholder="Ex: Ortodontia" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">CRO</label>
+                    <input className="form-control" value={pCro} onChange={(e) => setPCro(e.target.value)} placeholder="Ex: CRO-BA 12345" />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Cor na agenda</label>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {CORES.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setPCor(c)}
+                        aria-label={c}
+                        style={{
+                          width: 30, height: 30, borderRadius: "50%", background: c, cursor: "pointer",
+                          border: pCor === c ? "3px solid var(--text)" : "2px solid var(--border)",
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                    <input type="checkbox" checked={pAtivo} onChange={(e) => setPAtivo(e.target.checked)} />
+                    Ativo (aparece na agenda)
+                  </label>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-outline" onClick={() => setProfOpen(false)}>Cancelar</button>
+                <button className="btn btn-primary" onClick={salvarProfissional} disabled={salvandoP}>
+                  {salvandoP ? "Salvando…" : "Salvar"}
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

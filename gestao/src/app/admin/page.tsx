@@ -47,6 +47,23 @@ export default function DashboardPage() {
 
   const proximosAgendamentos = agendamentos.filter((a) => a.status === "confirmado").slice(0, 5);
 
+  // Aniversariantes de hoje (mesmo dia/mês do nascimento).
+  const _h = new Date();
+  const aniversariantes = pacientes
+    .filter((p) => {
+      if (!p.nascimento) return false;
+      const n = new Date(p.nascimento + "T00:00:00");
+      return !isNaN(n.getTime()) && n.getMonth() === _h.getMonth() && n.getDate() === _h.getDate();
+    })
+    .map((p) => ({ p, idade: _h.getFullYear() - new Date(p.nascimento + "T00:00:00").getFullYear() }));
+
+  const zap = (p: Paciente) => {
+    const tel = (p.tel || "").replace(/\D/g, "");
+    const fone = tel.length >= 11 ? `55${tel}` : tel;
+    const msg = encodeURIComponent(`Feliz aniversário, ${p.nome.split(" ")[0]}! 🎉 Toda a equipe da clínica deseja um dia especial.`);
+    window.open(`https://wa.me/${fone}?text=${msg}`, "_blank", "noopener,noreferrer");
+  };
+
   const abrirProntuario = async (pacienteId?: number) => {
     if (!pacienteId) return;
     const paciente = await DB.pacientes.get(pacienteId);
@@ -137,6 +154,29 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {aniversariantes.length > 0 && (
+          <div className="card" style={{ marginBottom: 24, borderLeft: "4px solid #DB2777", padding: "16px 20px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <span style={{ fontSize: 22 }} aria-hidden>🎂</span>
+              <span style={{ fontWeight: 700, fontSize: 15 }}>Aniversariantes de hoje</span>
+              <span className="badge badge-info">{aniversariantes.length}</span>
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+              {aniversariantes.map(({ p, idade }) => (
+                <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--bg2)", borderRadius: 10, padding: "8px 12px" }}>
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    <span style={{ fontWeight: 600, fontSize: 13 }}>{p.nome}</span>
+                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{idade} anos · {p.tel || "sem telefone"}</span>
+                  </div>
+                  <button className="btn btn-sm" style={{ background: "#25D366", color: "#fff" }} onClick={() => zap(p)} disabled={!(p.tel || "").replace(/\D/g, "")}>
+                    Parabenizar
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="dashboard-cols">
           {/* Próximos Pacientes */}

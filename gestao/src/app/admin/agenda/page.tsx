@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { DB } from "@/lib/db";
-import { Agendamento, Paciente } from "@/lib/types";
+import { Agendamento, Paciente, Profissional } from "@/lib/types";
 import Topbar from "@/components/Topbar";
 import { useToast } from "@/components/Toast";
 
@@ -13,6 +13,8 @@ export default function AgendaPage() {
   const { showToast, confirm } = useToast();
   const [appointments, setAppointments] = useState<Agendamento[]>([]);
   const [patients, setPatients] = useState<Paciente[]>([]);
+  const [profissionais, setProfissionais] = useState<Profissional[]>([]);
+  const [filtroProf, setFiltroProf] = useState<number | "todos">("todos");
   const [currentMonday, setCurrentMonday] = useState<Date>(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -20,10 +22,12 @@ export default function AgendaPage() {
   const [modalId, setModalId] = useState<string>("");
   const [modalPaciente, setModalPaciente] = useState<string>("");
   const [modalProcedimento, setModalProcedimento] = useState<string>("");
+  const [modalProfissional, setModalProfissional] = useState<number | "">("");
   const [modalData, setModalData] = useState<string>("");
   const [modalHorario, setModalHorario] = useState<string>("08:00");
   const [modalDuracao, setModalDuracao] = useState<number>(30);
   const [modalStatus, setModalStatus] = useState<"confirmado" | "pendente" | "bloqueado">("confirmado");
+  const [modalPresenca, setModalPresenca] = useState<"agendado" | "compareceu" | "faltou">("agendado");
   const [modalObs, setModalObs] = useState<string>("");
 
   useEffect(() => {
@@ -33,13 +37,24 @@ export default function AgendaPage() {
   }, []);
 
   const loadData = async () => {
-    const [ags, pacs] = await Promise.all([
+    const [ags, pacs, profs] = await Promise.all([
       DB.agendamentos.list(),
       DB.pacientes.list(),
+      DB.profissionais.list(true),
     ]);
     setAppointments(ags);
     setPatients(pacs);
+    setProfissionais(profs);
   };
+
+  // Mapa id→cor para pintar os blocos por profissional.
+  const corProf = (id?: number) => profissionais.find((p) => p.id === id)?.cor;
+  const nomeProf = (id?: number) => profissionais.find((p) => p.id === id)?.nome;
+
+  // Agendamentos visíveis conforme o filtro de profissional.
+  const visiveis = filtroProf === "todos"
+    ? appointments
+    : appointments.filter((a) => a.profissionalId === filtroProf);
 
   function getMonday(d: Date) {
     const dt = new Date(d);
@@ -88,7 +103,10 @@ export default function AgendaPage() {
     setModalProcedimento("");
     setModalObs("");
     setModalStatus("confirmado");
+    setModalPresenca("agendado");
     setModalDuracao(30);
+    // Pré-seleciona o profissional do filtro (ou o primeiro ativo).
+    setModalProfissional(filtroProf !== "todos" ? filtroProf : (profissionais[0]?.id ?? ""));
 
     const d = new Date(currentMonday);
     if (dia !== undefined && hora !== undefined && min !== undefined) {
@@ -107,6 +125,8 @@ export default function AgendaPage() {
     setModalProcedimento(appt.proc);
     setModalStatus(appt.status);
     setModalDuracao(appt.dur || 30);
+    setModalProfissional(appt.profissionalId ?? "");
+    setModalPresenca(appt.presenca ?? "agendado");
     setModalObs(appt.obs || "");
 
     const d = new Date(currentMonday);
@@ -156,6 +176,8 @@ export default function AgendaPage() {
       min: m,
       dur: modalDuracao,
       status: modalStatus,
+      profissionalId: modalProfissional === "" ? undefined : Number(modalProfissional),
+      presenca: modalPresenca,
       obs: modalObs,
     };
 
@@ -203,9 +225,16 @@ export default function AgendaPage() {
               </button>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <select className="form-control" style={{ width: "auto", padding: "7px 12px", fontSize: 13 }}>
-                <option>Todos os dentistas</option>
-                <option>Dra. Lara Camila</option>
+              <select
+                className="form-control"
+                style={{ width: "auto", padding: "7px 12px", fontSize: 13 }}
+                value={filtroProf}
+                onChange={(e) => setFiltroProf(e.target.value === "todos" ? "todos" : Number(e.target.value))}
+              >
+                <option value="todos">Todos os profissionais</option>
+                {profissionais.map((p) => (
+                  <option key={p.id} value={p.id}>{p.nome}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -257,12 +286,23 @@ export default function AgendaPage() {
                         {String(h).padStart(2, "0")}:00
                       </td>
                       {days.map((d, di) => {
-                        const appt = appointments.find((a) => a.dia === di && a.hora === h && a.min < 30);
+                        const appt = visiveis.find((a) => a.dia === di && a.hora === h && a.min < 30);
                         if (appt) {
                           return (
                             <td key={di} style={{ padding: 3 }} className="clickable" onClick={() => openEditModal(appt)}>
-                              <div className={`appt-block ${appt.status}`} title={`${appt.paciente} — ${appt.proc}`}>
-                                <span style={{ fontSize: 10, fontWeight: 700 }}>{appt.proc}</span>
+                              <div
+                                className={`appt-block ${appt.status}`}
+                                title={`${appt.paciente} — ${appt.proc}${nomeProf(appt.profissionalId) ? " · " + nomeProf(appt.profissionalId) : ""}${appt.presenca === "compareceu" ? " (compareceu)" : appt.presenca === "faltou" ? " (faltou)" : ""}`}
+                                style={{
+                                  ...(appt.status !== "bloqueado" && corProf(appt.profissionalId) ? { borderLeft: `4px solid ${corProf(appt.profissionalId)}` } : {}),
+                                  ...(appt.presenca === "faltou" ? { opacity: 0.5 } : {}),
+                                }}
+                              >
+                                <span style={{ fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", gap: 3 }}>
+                                  {appt.presenca === "compareceu" && <span aria-hidden>✓</span>}
+                                  {appt.presenca === "faltou" && <span aria-hidden>✕</span>}
+                                  {appt.proc}
+                                </span>
                                 <span style={{ fontSize: 9, opacity: 0.85 }}>{appt.paciente}</span>
                               </div>
                             </td>
@@ -277,12 +317,23 @@ export default function AgendaPage() {
                     {/* Slot de :30 */}
                     <tr>
                       {days.map((d, di) => {
-                        const appt = appointments.find((a) => a.dia === di && a.hora === h && a.min >= 30);
+                        const appt = visiveis.find((a) => a.dia === di && a.hora === h && a.min >= 30);
                         if (appt) {
                           return (
                             <td key={di} style={{ padding: 3 }} className="clickable" onClick={() => openEditModal(appt)}>
-                              <div className={`appt-block ${appt.status}`} title={`${appt.paciente} — ${appt.proc}`}>
-                                <span style={{ fontSize: 10, fontWeight: 700 }}>{appt.proc}</span>
+                              <div
+                                className={`appt-block ${appt.status}`}
+                                title={`${appt.paciente} — ${appt.proc}${nomeProf(appt.profissionalId) ? " · " + nomeProf(appt.profissionalId) : ""}${appt.presenca === "compareceu" ? " (compareceu)" : appt.presenca === "faltou" ? " (faltou)" : ""}`}
+                                style={{
+                                  ...(appt.status !== "bloqueado" && corProf(appt.profissionalId) ? { borderLeft: `4px solid ${corProf(appt.profissionalId)}` } : {}),
+                                  ...(appt.presenca === "faltou" ? { opacity: 0.5 } : {}),
+                                }}
+                              >
+                                <span style={{ fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", gap: 3 }}>
+                                  {appt.presenca === "compareceu" && <span aria-hidden>✓</span>}
+                                  {appt.presenca === "faltou" && <span aria-hidden>✕</span>}
+                                  {appt.proc}
+                                </span>
                                 <span style={{ fontSize: 9, opacity: 0.85 }}>{appt.paciente}</span>
                               </div>
                             </td>
@@ -344,9 +395,16 @@ export default function AgendaPage() {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Dentista</label>
-                    <select className="form-control" disabled>
-                      <option>Dra. Lara Camila</option>
+                    <label className="form-label">Profissional</label>
+                    <select
+                      className="form-control"
+                      value={modalProfissional}
+                      onChange={(e) => setModalProfissional(e.target.value === "" ? "" : Number(e.target.value))}
+                    >
+                      <option value="">Sem profissional</option>
+                      {profissionais.map((p) => (
+                        <option key={p.id} value={p.id}>{p.nome}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -438,6 +496,36 @@ export default function AgendaPage() {
                     <option value="bloqueado">Bloqueio de horário</option>
                   </select>
                 </div>
+                {modalId && modalStatus !== "bloqueado" && (
+                  <div className="form-group">
+                    <label className="form-label">Comparecimento</label>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      {([
+                        { v: "agendado", label: "Agendado" },
+                        { v: "compareceu", label: "Compareceu" },
+                        { v: "faltou", label: "Faltou" },
+                      ] as const).map((opt) => {
+                        const ativo = modalPresenca === opt.v;
+                        const cor = opt.v === "compareceu" ? "#16A34A" : opt.v === "faltou" ? "#EF4444" : "var(--primary)";
+                        return (
+                          <button
+                            key={opt.v}
+                            type="button"
+                            className="btn btn-sm"
+                            onClick={() => setModalPresenca(opt.v)}
+                            style={{
+                              background: ativo ? cor : "var(--bg2)",
+                              color: ativo ? "#fff" : "var(--text-muted)",
+                              border: `1px solid ${ativo ? cor : "var(--border)"}`,
+                            }}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
                 <div className="form-group">
                   <label className="form-label">Observações</label>
                   <textarea
