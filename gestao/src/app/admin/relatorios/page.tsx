@@ -248,8 +248,8 @@ export default function RelatoriosPage() {
     const producaoTotal = producao.reduce((s, p) => s + p.valor, 0);
     const procPendentes = procedimentos.filter((p) => p.status === "Pendente").length;
 
-    // Comparecimento (snapshot geral — agendamentos não têm data absoluta)
-    const agValidos = agendamentos.filter((a) => a.status !== "bloqueado");
+    // Comparecimento no período (agenda agora guarda data absoluta — F1).
+    const agValidos = agendamentos.filter((a) => a.status !== "bloqueado" && noPeriodo(a.data, de, ate));
     const compareceu = agValidos.filter((a) => a.presenca === "compareceu").length;
     const faltou = agValidos.filter((a) => a.presenca === "faltou").length;
     const agendado = agValidos.filter((a) => (a.presenca ?? "agendado") === "agendado").length;
@@ -341,9 +341,9 @@ export default function RelatoriosPage() {
 <table><thead><tr><th>Mês</th><th style="text-align:right">Receita</th><th style="text-align:right">Despesa</th></tr></thead><tbody>${linhasMes || '<tr><td colspan="3">Sem dados</td></tr>'}</tbody></table>
 <h2>Produção (procedimentos concluídos)</h2>
 <table><thead><tr><th>Procedimento</th><th style="text-align:center">Qtd</th><th style="text-align:right">Valor</th></tr></thead><tbody>${linhasProd || '<tr><td colspan="3">Sem dados</td></tr>'}<tr><th>TOTAL</th><th style="text-align:center">${m.producao.reduce((s, p) => s + p.qtd, 0)}</th><th style="text-align:right">${brl(m.producaoTotal)}</th></tr></tbody></table>
-<h2>Desempenho por profissional <span style="font-weight:400;color:#94a3b8;font-size:11px">(comparecimento — total acumulado)</span></h2>
+<h2>Desempenho por profissional <span style="font-weight:400;color:#94a3b8;font-size:11px">(comparecimento no período)</span></h2>
 <table><thead><tr><th>Profissional</th><th style="text-align:center">Agend.</th><th style="text-align:center">Compareceu</th><th style="text-align:center">Faltou</th><th style="text-align:right">Taxa</th></tr></thead><tbody>${linhasProf || '<tr><td colspan="5">Sem dados</td></tr>'}</tbody></table>
-<div class="foot">Gerado pelo sistema de gestão ${clinica?.nome ?? ""}. Comparecimento e desempenho por profissional refletem o total acumulado dos agendamentos.</div>
+<div class="foot">Gerado pelo sistema de gestão ${clinica?.nome ?? ""}. Valores referentes ao período selecionado.</div>
 </body></html>`;
     const w = window.open("", "_blank");
     if (!w) {
@@ -470,7 +470,7 @@ export default function RelatoriosPage() {
                       <span><strong style={{ color: "var(--danger)" }}>{m.faltou}</strong> faltaram</span>
                       <span><strong>{m.agendado}</strong> agendados</span>
                     </div>
-                    <p style={{ fontSize: 11, color: "var(--text-muted)", margin: 0 }}>Total acumulado de todos os agendamentos (a agenda não guarda data absoluta).</p>
+                    <p style={{ fontSize: 11, color: "var(--text-muted)", margin: 0 }}>Considera os agendamentos do período selecionado.</p>
                   </div>
                 )}
               </div>
@@ -480,7 +480,7 @@ export default function RelatoriosPage() {
             <div className="card mb-6">
               <div className="card-header">
                 <h3 className="card-title">Desempenho por profissional</h3>
-                <span style={{ fontSize: 12, color: "var(--text-muted)" }}>comparecimento acumulado</span>
+                <span style={{ fontSize: 12, color: "var(--text-muted)" }}>comparecimento no período</span>
               </div>
               {m.porProf.length === 0 ? (
                 <EmptyState compact icon={<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.7" style={{ width: 26, height: 26 }}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>} title="Nenhum profissional cadastrado" hint="Cadastre profissionais em Configurações." />

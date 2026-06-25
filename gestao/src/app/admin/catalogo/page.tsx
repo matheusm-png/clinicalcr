@@ -6,8 +6,10 @@ import { ProcedimentoCatalogo } from "@/lib/types";
 import Topbar from "@/components/Topbar";
 import { useToast } from "@/components/Toast";
 import EmptyState from "@/components/EmptyState";
+import { catalogoPadraoFlat } from "@/lib/catalogo/padrao";
 
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const norm = (s: string) => s.trim().toLowerCase();
 
 export default function CatalogoPage() {
   const { showToast, confirm } = useToast();
@@ -21,6 +23,7 @@ export default function CatalogoPage() {
   const [preco, setPreco] = useState("");
   const [duracao, setDuracao] = useState("");
   const [ativo, setAtivo] = useState(true);
+  const [importando, setImportando] = useState(false);
 
   useEffect(() => {
     load();
@@ -67,6 +70,34 @@ export default function CatalogoPage() {
     }
   };
 
+  // Importa o catálogo padrão (C2), pulando os que já existem pelo nome.
+  const importarPadrao = async () => {
+    const padrao = catalogoPadraoFlat();
+    const existentes = new Set(itens.map((p) => norm(p.nome)));
+    const novos = padrao.filter((p) => !existentes.has(norm(p.nome)));
+    if (novos.length === 0) {
+      showToast("Seu catálogo já contém todos os procedimentos padrão.", "info");
+      return;
+    }
+    const ok = await confirm(
+      `Adicionar ${novos.length} procedimento(s) do catálogo padrão? Os preços vêm como sugestão e você pode editar depois.`,
+      { okLabel: "Importar" },
+    );
+    if (!ok) return;
+    setImportando(true);
+    try {
+      const qtd = await DB.catalogo.importarMuitos(
+        novos.map((p) => ({ nome: p.nome, categoria: p.categoria, preco: p.preco, duracaoMin: p.duracaoMin, ativo: true })),
+      );
+      await load();
+      showToast(`${qtd} procedimento(s) importado(s). Revise os preços conforme sua tabela.`, "success");
+    } catch {
+      showToast("Não foi possível importar o catálogo padrão.", "error");
+    } finally {
+      setImportando(false);
+    }
+  };
+
   const remover = async (p: ProcedimentoCatalogo) => {
     if (p.id == null) return;
     if (!(await confirm(`Remover "${p.nome}" do catálogo?`, { danger: true, okLabel: "Remover" }))) return;
@@ -87,6 +118,13 @@ export default function CatalogoPage() {
   return (
     <>
       <Topbar title="Catálogo de Procedimentos">
+        <button className="btn btn-outline" onClick={importarPadrao} disabled={importando}>
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: 15, height: 15 }}>
+            <path d="M12 3v12m0 0 4-4m-4 4-4-4" />
+            <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+          </svg>
+          {importando ? "Importando…" : "Importar catálogo padrão"}
+        </button>
         <button className="btn btn-primary" onClick={abrirNovo}>
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: 15, height: 15 }}>
             <path d="M12 5v14M5 12h14" />
@@ -115,8 +153,15 @@ export default function CatalogoPage() {
           {filtrados.length === 0 ? (
             <EmptyState
               title={search ? "Nenhum procedimento encontrado" : "Catálogo vazio"}
-              hint={search ? "Tente outra busca." : "Cadastre os procedimentos e preços para montar orçamentos."}
-              action={!search ? <button className="btn btn-primary btn-sm" onClick={abrirNovo}>+ Novo procedimento</button> : undefined}
+              hint={search ? "Tente outra busca." : "Importe o catálogo padrão para começar rápido ou cadastre manualmente."}
+              action={!search ? (
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+                  <button className="btn btn-primary btn-sm" onClick={importarPadrao} disabled={importando}>
+                    {importando ? "Importando…" : "Importar catálogo padrão"}
+                  </button>
+                  <button className="btn btn-outline btn-sm" onClick={abrirNovo}>+ Novo procedimento</button>
+                </div>
+              ) : undefined}
             />
           ) : (
             <div className="table-wrapper">

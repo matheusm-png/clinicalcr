@@ -4,88 +4,118 @@ Plano de evolução do app para nível de mercado (referências: Capim, Simples 
 
 Os "sprints" abaixo são **marcos de entrega** ordenados por dependência e impacto — cada um entrega valor utilizável. Itens marcados com 🔌 dependem de contas/integrações externas; ⚙️ dependem do Supabase ligado.
 
----
-
-## ✅ Já entregue (base)
-- Dashboard, Agenda semanal, Pacientes (cadastro completo + editar/excluir), Prontuário com odontograma, Anamnese com assinatura, Financeiro básico, Estoque.
-- Fundação técnica: migração para **Supabase** (Postgres + RLS + Auth por papéis) — código pronto, aguardando o projeto/keys.
-- UX: responsivo mobile, toasts, estados vazios, modais bottom-sheet.
-
-## ⚙️ Sprint 0 — Ligar o Supabase (pré-requisito)
-**Objetivo:** sair do modo demonstração e ter persistência real, multiusuário e Storage.
-- Criar projeto Supabase (Gmail da clínica), rodar migrations, criar usuários/papéis.
-- Ativar **Supabase Storage** (necessário para anexos do prontuário).
-- Verificação end-to-end de tudo que já existe.
-> Sem isso, vários sprints abaixo ficam só "de fachada".
+> Última revisão do plano: **2026-06-24**.
 
 ---
 
-## Sprint 1 — Plano de Tratamento + Orçamento  ⭐ (núcleo)
-**Por que:** é o coração do software odontológico e alimenta agenda + financeiro.
-- **Catálogo de procedimentos** com preços (tabela configurável) — base para orçar.
-- **Plano de tratamento**: seleciona procedimentos + dentes (integra com o odontograma), define sessões e valores.
-- **Orçamento**: gera documento, status (rascunho → enviado → aprovado → recusado), desconto, total e parcelas previstas.
-- **Aprovação** do paciente → vira itens executáveis no prontuário + lançamentos a receber.
-- Impressão/compartilhamento do orçamento (PDF).
-- *Entidades novas:* `procedimentos_catalogo`, `orcamentos`, `orcamento_itens`.
+## ✅ Entregue e em produção (app.clinicalcr.com.br)
 
-## Sprint 2 — Financeiro avançado
-**Por que:** hoje é um caixa avulso; precisa virar gestão financeira real.
-- Lançamento **vinculado a paciente/orçamento/procedimento**.
-- **Contas a receber** com **parcelamento** (carnê), datas de vencimento.
-- **Controle de inadimplência** (em atraso, alertas, total a receber).
-- Formas de pagamento (dinheiro, Pix, cartão, boleto) e **emissão de recibo** (PDF).
-- Relatório de fluxo de caixa por período (melhora o resumo atual).
-- *Entidades novas:* `contas_receber`, `parcelas`, `formas_pagamento`.
-
-## Sprint 3 — Prontuário rico  ⚙️
-**Por que:** prontuário digital completo é exigência clínica e de LGPD.
-- **Evolução clínica**: anotações por consulta/atendimento (timeline do paciente).
-- **Anexos**: fotos, radiografias, exames e documentos (Supabase Storage) com galeria.
-- **Documentos**: receituário, atestado, declaração, contrato — a partir de **modelos customizáveis**, com **assinatura** (reaproveita o canvas) e geração de PDF.
-- *Entidades novas:* `evolucoes`, `anexos`, `documentos`, `modelos_documento`.
-
-## Sprint 4 — Multiprofissional + Agenda avançada
-**Por que:** permite a clínica crescer além de uma dentista.
-- Cadastro de **profissionais** (e salas/cadeiras), agenda **por profissional** com filtro.
-- **Bloqueios** de agenda (reuniões, almoço), status de **comparecimento** (compareceu/faltou) → base de taxa de presença.
-- **Recall/retornos**: lista de pacientes para revisão/manutenção.
-- **Aniversários** do dia.
-- *Entidades novas:* `profissionais`, `salas` (opcional); campos em `agendamentos`.
-
-## Sprint 5 — Relatórios / BI
-**Por que:** decisão baseada em dados; diferencial dos líderes.
-- Produção (procedimentos realizados), **faturamento por período**, recebido vs a receber.
-- **Taxa de comparecimento/faltas**, novos pacientes, desempenho **por profissional**.
-- Exportação PDF/CSV.
-
-## Sprint 6 — Comissão de dentistas
-**Por que:** padrão do mercado para clínicas com vários profissionais.
-- Regras de **% por profissional/procedimento/convênio**, cálculo automático sobre o realizado/recebido, relatório de comissão.
-- *Depende de:* Sprint 2 (financeiro) + Sprint 4 (profissionais).
-
-## Sprint 7 — Integrações  🔌
-**Por que:** automações que reduzem falta e geram receita (forte na Capim).
-- **WhatsApp**: confirmação automática e lembretes de consulta.
-- **Agendamento online**: link público para o paciente marcar sozinho.
-- **Pagamentos**: Pix/cartão/boleto integrados (gateway).
-> Requer contas/credenciais externas (provedor WhatsApp, gateway de pagamento).
-
-## Sprint 8 — Convênios / TISS + NF-e  🔌 (avançado, opcional)
-- Cadastro de convênios, tabela **TUSS**, geração de **guia TISS**.
-- Emissão de **NF-e/NFS-e** de serviços.
-> Mais complexo e regulatório; só se a clínica atender convênios.
+- **Sprint 0** — Supabase ligado (Postgres + RLS + Auth por papéis + Storage), multi-tenant.
+- **Sprint 1** — Catálogo de procedimentos, orçamento (status, desconto, parcelas, aprovação → prontuário + a receber), impressão/PDF.
+- **Sprint 2** — Financeiro avançado: contas a receber, parcelamento, inadimplência, formas de pagamento, fluxo de caixa.
+- **Sprint 3** — Prontuário rico: evolução clínica (+ ditado por voz/Whisper), anexos (Storage), documentos com assinatura e PDF.
+- **Sprint 4** — Multiprofissional, agenda por profissional, comparecimento (compareceu/faltou), retornos/recall, aniversários.
+- **Sprint 5** — Relatórios/BI: faturamento por mês, produção, comparecimento, desempenho por profissional, novos pacientes; export CSV/PDF.
+- **Sprint 6** — Comissão de dentistas: % por profissional sobre a produção realizada, resumo + detalhamento, CSV/PDF.
+- **IA (AI-first)** — análise de risco da anamnese, explicador de orçamento, mensagem de cobrança, ditado→evolução, assistente copiloto, e **OCR de fichas de anamnese por foto** (câmera → preenche a anamnese, com revisão humana).
 
 ---
 
-## Extras / transversais (encaixam ao longo dos sprints)
-- **Configurações da clínica**: horário de funcionamento, salas/cadeiras, categorias, formas de pagamento, dados para documentos.
-- **Portal do paciente** (futuro): ver orçamento, histórico e agendar.
-- **Controle protético** (kanban de próteses) — estilo Capim.
-- **LGPD**: termo de consentimento, log de auditoria, exportação/backup de dados.
-- **Dashboard turbinado**: KPIs reais (faturamento, a receber, taxa de presença, retornos pendentes).
-- **PWA**: instalável no celular (atalho na tela inicial) — alternativa leve ao "app".
+## 🔧 Fundamentos (fazer primeiro — destravam o resto)
 
-## Notas de priorização
-Sequência recomendada: **0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8**.
-Sprints 1–3 são os que mais tiram a sensação de "simples". 7 e 8 dependem de decisões de negócio (custos de integração, se atende convênio).
+### F1 — Agenda com data absoluta ✅ *(concluído — 2026-06-24)*
+Antes `agendamentos` guardava `dia` 0–6 (relativo à semana de criação), fazendo a consulta vazar para todas as semanas e travando lembrete automático, BI por período fiel e agendamento online.
+- ✅ Migration **0013**: coluna `data date` (NOT NULL + índice), backfill dos existentes, `dia` agora nullable (mantida sem uso).
+- ✅ Grade semanal passa a ancorar por data absoluta; dashboard ("hoje"/"próximos") e relatórios (comparecimento/desempenho por período) agora usam a data real.
+
+### F2 — Onboarding multi-tenant (SaaS)
+Falta o fluxo de cadastro de **nova clínica + 1º admin** (o trigger cria o profile com `clinica_id` NULL; só dá pra criar usuário dentro de uma clínica existente). Necessário para vender para uma 2ª clínica.
+
+### F3 — Higiene de segurança & deploy
+- Rotacionar segredos que passaram por chat (Supabase secret key, OpenAI).
+- Configurar **Supabase Auth URL** de produção (Site URL + Redirect).
+- Conectar **GitHub → Vercel** (Root Directory = `gestao`) para auto-deploy (hoje é deploy manual via CLI).
+
+---
+
+## 📲 Sprint 7 — WhatsApp (com tudo)  🔌
+**Por que:** reduz falta e gera receita; é o recurso mais pedido.
+Reaproveita o cliente da **WhatsApp Cloud API oficial** já feito no projeto `alquimia-crm` (port enxuto).
+- **Camada `lib/whatsapp`** (`sendSessionText`, `sendTemplate`, `buildBodyComponents`, mock-aware) + rota `/api/whatsapp` autenticada.
+- **Consentimento LGPD**: campo de opt-in de WhatsApp no paciente.
+- **Templates** aprovados na Meta (`confirmacao_consulta`, `lembrete_consulta`).
+- **Outbound manual**: botões "Confirmar/Lembrar" na Agenda e Retornos (envio real pelo número da clínica).
+- **Inbound (webhook)**: endpoint público + verify token + app secret; armazenar mensagens; janela de 24h; paciente responde "1" → confirma presença.
+- **Lembrete automático**: Vercel Cron varrendo as consultas do dia seguinte → **depende de F1**.
+- *Externo (cliente):* número da clínica no WhatsApp Business Platform + `WA_ACCESS_TOKEN`, `WA_PHONE_NUMBER_ID`, `WA_WABA_ID`.
+
+## 📅 Sprint 8 — Agendamento online público
+**Por que:** o paciente marca sozinho, sem ligar. Decisão tomada: **sem login de paciente**.
+- Página pública de solicitação de horário; tabela de **solicitações** com data absoluta.
+- Caixa de entrada no admin para confirmar (→ vira agendamento); anti-spam; confirmação por WhatsApp.
+- **Depende de F1.**
+
+## 💳 Sprint 9 — Pagamentos  🔌
+**Por que:** receber Pix/cartão/boleto direto, com conciliação automática.
+- Gateway (ex.: Mercado Pago), link de pagamento, conciliação com "A Receber"/parcelas.
+- *Externo (cliente):* conta + chaves do gateway.
+
+## 🏥 Sprint 10 — Convênios / TISS + NF-e  🔌 *(avançado, opcional)*
+- Cadastro de convênios, tabela **TUSS**, geração de **guia TISS**; emissão de **NF-e/NFS-e**.
+- Só se a clínica atender convênios.
+
+---
+
+## 🌱 Sprints inspirados no Capim (análise dos prints — 2026-06-24)
+
+Após estudar o sistema do Capim print a print, estes são os **gaps** que viram feature. Já estamos em paridade (ou à frente, por sermos **AI-first**: OCR de anamnese, assistente IA, análise de risco) em agenda, pacientes, prontuário, orçamentos, a receber, financeiro, estoque, comissões, relatórios e documentos. Legenda: 🟢 pequeno · 🟡 médio · 🔴 grande · 🔌 conta externa · ✅ depende de F1 (feito).
+
+### C1 — Agenda PRO 🟡 ✅
+- **Horário de funcionamento configurável** (acaba a grade fixa 7–18h) + fuso horário.
+- **Marcadores coloridos + cadeiras/salas** nos eventos (ex.: "Cadeira 1", "Cirurgia").
+- **Bloqueio de agenda** como tipo de criação (almoço/reunião/férias), recorrência opcional.
+- Menu "Criar" com Consulta / Bloqueio / Link de agendamento (como Capim).
+
+### C2 — Catálogo odontológico completo 🟢 ✅ *(concluído — 2026-06-24)*
+- ✅ Botão **"Importar catálogo padrão"** na tela de Catálogo (e no estado vazio): insere ~61 procedimentos curados em 12 especialidades com **preço sugerido** (editável), pulando os que já existem por nome. Lista em `src/lib/catalogo/padrao.ts`; insert em lote `DB.catalogo.importarMuitos` (clinica_id carimbado pelo banco, multi-tenant, sem migration). Idempotente.
+
+### C3 — Recuperação de pacientes (Central de relacionamento) 🟡
+- **Kanban de Faltas** (Faltou → Contato realizado → Remarcado → Compareceu) e **Desmarcados**. Reaproveita o eixo de presença que já temos + WhatsApp. Recupera receita perdida.
+
+### C4 — Clínico customizável 🔴
+- **Builder de modelos de anamnese** (seções + perguntas + tipos de resposta) — substitui o wizard fixo, mantendo o OCR.
+- **Modelos de documentos** customizáveis (além dos 5 fixos).
+- **Receituário com base de medicamentos** padrão + favoritos.
+
+### C5 — Controle protético 🟡
+- **Kanban de solicitação de prótese** (Criada → Enviada ao laboratório → Retornada → Instalada), ligado ao paciente/procedimento, com prazos.
+
+### C6 — Simulador de parcelamento 🟢
+- Simulador de entrada + N parcelas + taxa para fechar orçamento na hora (espelha o "Simulador de vendas" do Capim).
+
+### C7 — Relatórios financeiros avançados 🟡
+- **Fluxo de caixa com previsão/inadimplência**, **preço médio** e **distribuição de receita** por procedimento/profissional, detalhamento por forma de pagamento.
+
+### C8 — Permissões granulares + migração guiada 🟡
+- **Permissões finas por usuário** (toggles por módulo, além dos 3 papéis) — encaixa com F2.
+- **Wizard de migração** (pacientes/agenda/financeiro/fichas) para captar clínicas vindas de planilha/concorrente.
+
+**Já cobertos pelo roadmap existente (não duplicar):** lembretes automáticos (Central de notificações) + campanhas de reativação + aniversário automático → **S7**; link/agendamento online → **S8**; maquininha/gateway + **conciliação** bancária → **S9**; convênios → **S10**.
+
+---
+
+## 🧹 Acabamentos (completar o que já existe — encaixam ao longo)
+- **Custo do procedimento**: o modal do prontuário grava `R$150` fixo — adicionar campo de custo (afeta comissão/produção).
+- **Orçamento aprovado**: atribuir o profissional aos procedimentos gerados (hoje saem sem, e não entram na comissão).
+- **Anamnese**: inputs para os campos que o OCR extrai mas o wizard não tem (profissão, identidade, observações, hábitos…) — hoje só ficam no JSON de respostas.
+- **Autor real** em evoluções/anexos/documentos (hoje "Dra. Lara Camila" fixo).
+- **Dashboard turbinado** e **PWA** (instalável no celular).
+- **LGPD**: termo de consentimento, log de auditoria, exportação/backup.
+
+---
+
+## Ordem recomendada (revisada 2026-06-24, com sprints do Capim)
+**C2 → C1 → C3 → S7 (WhatsApp) → C4 → S8 (online) → C5 → C6 → C7 → F2+C8 → S9 → S10.**
+Transversais ao longo do caminho: **F3** (higiene/deploy, rápido) e os **acabamentos**.
+
+Racional: prioriza **impacto na clínica real** e **baixa dependência externa** primeiro — C2 e C1 são ganhos rápidos e visíveis; C3 recupera receita com o que já temos; S7 é o maior multiplicador (mas exige conta Meta); C4 é o grande diferencial clínico. F1 (feito) já destravou lembrete automático (S7), agendamento online (S8) e BI por período.

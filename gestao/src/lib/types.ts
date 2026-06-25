@@ -65,7 +65,7 @@ export interface Agendamento {
   paciente: string;
   pacienteId?: number;
   proc: string;
-  dia: number; // 0 a 6 (dia da semana, Segunda a Domingo)
+  data: string; // data absoluta 'yyyy-mm-dd'
   hora: number; // hora (ex: 8, 9, 10...)
   min: number;  // minutos (ex: 0, 30)
   dur: number;  // duração em minutos (ex: 30, 45, 60...)

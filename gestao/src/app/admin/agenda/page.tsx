@@ -8,6 +8,11 @@ import { useToast } from "@/components/Toast";
 
 const HOURS = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
 const DAYS_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+const MINI_DOW = ["S", "T", "Q", "Q", "S", "S", "D"]; // Seg..Dom (mini-calendário)
+
+// 'yyyy-mm-dd' em horário LOCAL (evita o shift de fuso do toISOString).
+const ymd = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 export default function AgendaPage() {
   const { showToast, confirm } = useToast();
@@ -16,6 +21,8 @@ export default function AgendaPage() {
   const [profissionais, setProfissionais] = useState<Profissional[]>([]);
   const [filtroProf, setFiltroProf] = useState<number | "todos">("todos");
   const [currentMonday, setCurrentMonday] = useState<Date>(new Date());
+  // Mês exibido no mini-calendário lateral (1º dia do mês).
+  const [miniRef, setMiniRef] = useState<Date>(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Form State
@@ -85,16 +92,42 @@ export default function AgendaPage() {
     const prev = new Date(currentMonday);
     prev.setDate(prev.getDate() - 7);
     setCurrentMonday(prev);
+    setMiniRef(new Date(prev));
   };
 
   const handleNextWeek = () => {
     const next = new Date(currentMonday);
     next.setDate(next.getDate() + 7);
     setCurrentMonday(next);
+    setMiniRef(new Date(next));
   };
 
   const handleToday = () => {
     setCurrentMonday(getMonday(new Date()));
+    setMiniRef(new Date());
+  };
+
+  // Clica num dia do mini-calendário → salta a grade para a semana dele.
+  const selectDay = (d: Date) => {
+    setCurrentMonday(getMonday(d));
+    setMiniRef(new Date(d));
+  };
+
+  // Navega o mês do mini-calendário (sem mexer na semana exibida).
+  const miniPrevMonth = () => setMiniRef(new Date(miniRef.getFullYear(), miniRef.getMonth() - 1, 1));
+  const miniNextMonth = () => setMiniRef(new Date(miniRef.getFullYear(), miniRef.getMonth() + 1, 1));
+
+  // Grade do mês (6 semanas, começando na segunda) para o mini-calendário.
+  const miniGrid = () => {
+    const y = miniRef.getFullYear();
+    const m = miniRef.getMonth();
+    const firstDow = (new Date(y, m, 1).getDay() + 6) % 7; // 0 = segunda
+    const start = new Date(y, m, 1 - firstDow);
+    return Array.from({ length: 42 }, (_, i) => {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      return d;
+    });
   };
 
   const openNewModal = (dia?: number, hora?: number, min?: number) => {
@@ -115,7 +148,7 @@ export default function AgendaPage() {
     } else {
       setModalHorario("08:00");
     }
-    setModalData(d.toISOString().split("T")[0]);
+    setModalData(ymd(d));
     setIsModalOpen(true);
   };
 
@@ -129,9 +162,7 @@ export default function AgendaPage() {
     setModalPresenca(appt.presenca ?? "agendado");
     setModalObs(appt.obs || "");
 
-    const d = new Date(currentMonday);
-    d.setDate(d.getDate() + appt.dia);
-    setModalData(d.toISOString().split("T")[0]);
+    setModalData(appt.data);
     setModalHorario(`${String(appt.hora).padStart(2, "0")}:${String(appt.min).padStart(2, "0")}`);
     setIsModalOpen(true);
   };
@@ -156,11 +187,6 @@ export default function AgendaPage() {
       return;
     }
 
-    const selDate = new Date(modalData + "T00:00:00");
-    const MondayTime = new Date(currentMonday).setHours(0, 0, 0, 0);
-    const SelTime = selDate.getTime();
-    const diffDays = Math.round((SelTime - MondayTime) / (1000 * 60 * 60 * 24));
-
     const [h, m] = modalHorario.split(":").map(Number);
 
     // Buscar ID do paciente se já existir cadastrado
@@ -171,7 +197,7 @@ export default function AgendaPage() {
       paciente: modalPaciente,
       pacienteId: patientObj ? patientObj.id : undefined,
       proc: modalProcedimento,
-      dia: diffDays,
+      data: modalData,
       hora: h,
       min: m,
       dur: modalDuracao,
@@ -240,8 +266,53 @@ export default function AgendaPage() {
           </div>
         </div>
 
-        {/* Grade Semanal */}
-        <div className="card agenda-grid">
+        {/* Mini-calendário + Grade semanal lado a lado */}
+        <div style={{ display: "flex", gap: 16, alignItems: "flex-start", flexWrap: "wrap" }}>
+          {/* Mini-calendário do mês */}
+          <div className="card" style={{ flex: "0 0 250px", maxWidth: "100%", padding: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+              <button className="btn btn-outline btn-sm" style={{ padding: "2px 8px" }} onClick={miniPrevMonth} aria-label="Mês anterior">&#8249;</button>
+              <span style={{ fontSize: 13, fontWeight: 600 }}>
+                {(() => { const s = miniRef.toLocaleDateString("pt-BR", { month: "long", year: "numeric" }); return s.charAt(0).toUpperCase() + s.slice(1); })()}
+              </span>
+              <button className="btn btn-outline btn-sm" style={{ padding: "2px 8px" }} onClick={miniNextMonth} aria-label="Próximo mês">&#8250;</button>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2 }}>
+              {MINI_DOW.map((d, i) => (
+                <div key={i} style={{ textAlign: "center", fontSize: 10, fontWeight: 700, color: "var(--text-muted)", padding: "2px 0" }}>{d}</div>
+              ))}
+              {miniGrid().map((d, i) => {
+                const inMonth = d.getMonth() === miniRef.getMonth();
+                const isToday = d.getTime() === today.getTime();
+                const weekEnd = new Date(currentMonday); weekEnd.setDate(weekEnd.getDate() + 6);
+                const inWeek = d >= currentMonday && d <= weekEnd;
+                return (
+                  <button
+                    key={i}
+                    onClick={() => selectDay(d)}
+                    title={d.toLocaleDateString("pt-BR")}
+                    style={{
+                      aspectRatio: "1 / 1",
+                      border: "none",
+                      cursor: "pointer",
+                      borderRadius: 8,
+                      fontSize: 12,
+                      fontWeight: isToday ? 700 : 500,
+                      opacity: inMonth ? 1 : 0.32,
+                      color: isToday ? "#fff" : "var(--text)",
+                      background: isToday ? "var(--primary)" : inWeek ? "var(--primary-light, rgba(99,102,241,0.14))" : "transparent",
+                    }}
+                  >
+                    {d.getDate()}
+                  </button>
+                );
+              })}
+            </div>
+            <button className="btn btn-outline btn-sm" style={{ width: "100%", marginTop: 10 }} onClick={handleToday}>Hoje</button>
+          </div>
+
+          {/* Grade Semanal */}
+          <div className="card agenda-grid" style={{ flex: "1 1 320px", minWidth: 0 }}>
           <table className="agenda-table">
             <thead>
               <tr>
@@ -286,7 +357,8 @@ export default function AgendaPage() {
                         {String(h).padStart(2, "0")}:00
                       </td>
                       {days.map((d, di) => {
-                        const appt = visiveis.find((a) => a.dia === di && a.hora === h && a.min < 30);
+                        const dKey = ymd(d);
+                        const appt = visiveis.find((a) => a.data === dKey && a.hora === h && a.min < 30);
                         if (appt) {
                           return (
                             <td key={di} style={{ padding: 3 }} className="clickable" onClick={() => openEditModal(appt)}>
@@ -317,7 +389,8 @@ export default function AgendaPage() {
                     {/* Slot de :30 */}
                     <tr>
                       {days.map((d, di) => {
-                        const appt = visiveis.find((a) => a.dia === di && a.hora === h && a.min >= 30);
+                        const dKey = ymd(d);
+                        const appt = visiveis.find((a) => a.data === dKey && a.hora === h && a.min >= 30);
                         if (appt) {
                           return (
                             <td key={di} style={{ padding: 3 }} className="clickable" onClick={() => openEditModal(appt)}>
@@ -350,6 +423,7 @@ export default function AgendaPage() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
 
         {/* Legenda */}

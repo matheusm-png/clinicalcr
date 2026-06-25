@@ -9,7 +9,7 @@ const hoje = () => new Date().toISOString().split("T")[0];
 async function montarContexto(supabase: Awaited<ReturnType<typeof createClient>>): Promise<string> {
   const [pac, ag, fin, contas, parc, est, orc] = await Promise.all([
     supabase.from("pacientes").select("status"),
-    supabase.from("agendamentos").select("paciente, proc, dia, hora, min, status"),
+    supabase.from("agendamentos").select("paciente, proc, data, hora, min, status"),
     supabase.from("transacoes_financeiras").select("tipo, valor, status, data"),
     supabase.from("contas_receber").select("status, valor_total"),
     supabase.from("parcelas").select("valor, pago, vencimento"),

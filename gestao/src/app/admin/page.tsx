@@ -9,7 +9,21 @@ import Topbar from "@/components/Topbar";
 import EmptyState from "@/components/EmptyState";
 
 const brl = (v: number) => "R$ " + (v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 0 });
-const hoje = () => new Date().toISOString().split("T")[0];
+
+// 'yyyy-mm-dd' em horário local (consistente com a coluna `data` da agenda).
+const ymd = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const hoje = () => ymd(new Date());
+
+// Rótulo amigável: "Hoje", "Amanhã" ou "dd/mm".
+const rotuloDia = (data: string) => {
+  const amanha = new Date();
+  amanha.setDate(amanha.getDate() + 1);
+  if (data === hoje()) return "Hoje";
+  if (data === ymd(amanha)) return "Amanhã";
+  const [y, m, d] = data.split("-");
+  return `${d}/${m}`;
+};
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -38,14 +52,18 @@ export default function DashboardPage() {
     .reduce((sum, item) => sum + item.valor, 0);
 
   const pacientesAtivos = pacientes.filter((p) => p.status === "Ativo").length;
-  const agendamentosHoje = agendamentos.filter((a) => a.status === "confirmado").length;
+  const agendamentosHoje = agendamentos.filter((a) => a.status === "confirmado" && a.data === hoje()).length;
 
   // A Receber agora vem das contas/parcelas (mais fiel que os lançamentos pendentes)
   const parcelas = contas.filter((c) => c.status !== "cancelada").flatMap((c) => c.parcelas ?? []);
   const aReceber = parcelas.filter((p) => !p.pago).reduce((s, p) => s + p.valor, 0);
   const emAtraso = parcelas.filter((p) => !p.pago && p.vencimento && p.vencimento < hoje()).reduce((s, p) => s + p.valor, 0);
 
-  const proximosAgendamentos = agendamentos.filter((a) => a.status === "confirmado").slice(0, 5);
+  // Próximos: confirmados de hoje em diante, ordenados por data e horário.
+  const proximosAgendamentos = agendamentos
+    .filter((a) => a.status === "confirmado" && a.data >= hoje())
+    .sort((a, b) => a.data.localeCompare(b.data) || a.hora - b.hora || a.min - b.min)
+    .slice(0, 5);
 
   // Aniversariantes de hoje (mesmo dia/mês do nascimento).
   const _h = new Date();
@@ -202,12 +220,15 @@ export default function DashboardPage() {
               <div className="table-wrapper">
                 <table>
                   <thead>
-                    <tr><th>Horário</th><th>Paciente</th><th>Procedimento</th><th>Status</th></tr>
+                    <tr><th>Quando</th><th>Paciente</th><th>Procedimento</th><th>Status</th></tr>
                   </thead>
                   <tbody>
                     {proximosAgendamentos.map((a) => (
                       <tr key={a.id} onClick={() => abrirProntuario(a.pacienteId)} style={{ cursor: "pointer" }}>
-                        <td><span className="badge badge-info">{String(a.hora).padStart(2, "0")}:{String(a.min).padStart(2, "0")}</span></td>
+                        <td>
+                          <span className="badge badge-info">{String(a.hora).padStart(2, "0")}:{String(a.min).padStart(2, "0")}</span>
+                          <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 2 }}>{rotuloDia(a.data)}</div>
+                        </td>
                         <td><strong>{a.paciente}</strong></td>
                         <td>{a.proc}</td>
                         <td><span className="badge badge-success">Confirmado</span></td>

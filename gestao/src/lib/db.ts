@@ -147,7 +147,7 @@ const fromAgendamento = (r: any): Agendamento => ({
   paciente: r.paciente,
   pacienteId: r.paciente_id ?? undefined,
   proc: r.proc ?? "",
-  dia: r.dia,
+  data: r.data,
   hora: r.hora,
   min: r.min,
   dur: r.dur,
@@ -161,7 +161,7 @@ const toAgendamento = (a: Agendamento) => ({
   paciente: a.paciente,
   paciente_id: a.pacienteId ?? null,
   proc: a.proc,
-  dia: a.dia,
+  data: a.data,
   hora: a.hora,
   min: a.min,
   dur: a.dur,
@@ -456,6 +456,21 @@ export const DB = {
     save: (c: ProcedimentoCatalogo) =>
       saveTable<ProcedimentoCatalogo>("procedimentos_catalogo", toCatalogo, fromCatalogo, c),
     remove: (id: number | string) => removeTable("procedimentos_catalogo", id),
+    // Insert em lote (importação do catálogo padrão). O clinica_id é carimbado
+    // pelo banco (DEFAULT clinica_atual()). Retorna quantos foram inseridos.
+    importarMuitos: async (itens: ProcedimentoCatalogo[]): Promise<number> => {
+      if (semBackend()) {
+        throw new Error("Supabase não configurado — não é possível importar. Veja supabase/SETUP.md.");
+      }
+      if (itens.length === 0) return 0;
+      const rows = itens.map(toCatalogo);
+      const { data, error } = await sb().from("procedimentos_catalogo").insert(rows).select("id");
+      if (error) {
+        console.error("[DB] importar catálogo:", error.message);
+        throw error;
+      }
+      return data?.length ?? 0;
+    },
   },
 
   orcamentos: {
