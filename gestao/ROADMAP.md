@@ -4,7 +4,7 @@ Plano de evolução do app para nível de mercado (referências: Capim, Simples 
 
 Os "sprints" abaixo são **marcos de entrega** ordenados por dependência e impacto — cada um entrega valor utilizável. Itens marcados com 🔌 dependem de contas/integrações externas; ⚙️ dependem do Supabase ligado.
 
-> Última revisão do plano: **2026-06-24**.
+> Última revisão do plano: **2026-06-25**.
 
 ---
 
@@ -18,6 +18,36 @@ Os "sprints" abaixo são **marcos de entrega** ordenados por dependência e impa
 - **Sprint 5** — Relatórios/BI: faturamento por mês, produção, comparecimento, desempenho por profissional, novos pacientes; export CSV/PDF.
 - **Sprint 6** — Comissão de dentistas: % por profissional sobre a produção realizada, resumo + detalhamento, CSV/PDF.
 - **IA (AI-first)** — análise de risco da anamnese, explicador de orçamento, mensagem de cobrança, ditado→evolução, assistente copiloto, e **OCR de fichas de anamnese por foto** (câmera → preenche a anamnese, com revisão humana).
+- **F1** — Agenda com **data absoluta** + **mini-calendário** do mês.
+- **C1** — Agenda PRO: horário de funcionamento configurável, marcadores/cadeiras coloridos, bloqueio de agenda.
+- **C2** — Catálogo odontológico padrão importável (12 especialidades).
+- **C3** — Recuperação de pacientes: kanban de Faltas e Desmarcados + WhatsApp.
+- **C4** — Clínico customizável: modelos de documentos, receituário com base de medicamentos, modelos de anamnese.
+- **C6** — Simulador de parcelamento (Tabela Price).
+
+> _Deploy de 2026-06-25 (commit `48308f5`, Vercel `dpl_F54jnkA7h1sxKNuLSYpumTw9PJ8L`)._
+
+---
+
+## 🗂️ PRÓXIMA LEVA — organizada por responsável (2026-06-25)
+
+Tudo que falta, separado por **quem faz**. Atalho: um **PAT do Supabase** elimina o passo "colar SQL" e deixa a Trilha A 100% autônoma.
+
+### 🟩 Trilha A — Claude implementa (autônomo)
+Único passo do usuário: **colar 1 SQL** quando houver tabela nova (🗄️).
+- **A1 — C7 Relatórios financeiros avançados** (fluxo de caixa com previsão/inadimplência, preço médio, distribuição de receita). _Sem SQL._
+- **A2 — Acabamentos** (custo manual no procedimento; atribuir profissional no orçamento aprovado; autor real; histórico de anamnese mostrar o nome do modelo; procedimento do modal da agenda puxar do catálogo; botão "reabrir" consulta desmarcada). _Sem SQL._
+- **A3 — C5 Controle protético** (kanban solicitação → laboratório → retornada → instalada). 🗄️
+- **A4 — S8 Agendamento online público** (página pública + caixa de entrada no admin; confirmação por WhatsApp fica pra depois do B2). 🗄️
+- **A5 — C8 Migração guiada + permissões granulares**. 🗄️
+- **A6 — F2 Signup de nova clínica** (cadastro de clínica + 1º admin). 🗄️
+- **A7 — Dashboard turbinado + PWA** (instalável no celular). _Sem SQL._
+
+### 🟦 Trilha B — Usuário precisa fazer (painel/contas); Claude faz o código depois
+- **B1 — F3 Higiene/deploy**: rotacionar segredos (Supabase secret key + OpenAI), setar Supabase Auth URL de produção (Site URL + Redirect `https://app.clinicalcr.com.br/**`), conectar GitHub→Vercel (Root Directory=`gestao`) para auto-deploy. _Claude escreve o guia passo a passo._
+- **B2 — Conta WhatsApp Business Platform (Meta)** + número + `WA_ACCESS_TOKEN`/`WA_PHONE_NUMBER_ID`/`WA_WABA_ID` → **destrava S7** (lembretes automáticos, confirmação, campanhas de reativação, aniversário automático). Reaproveita o cliente do `alquimia-crm`.
+- **B3 — Conta de gateway** (ex.: Mercado Pago) + chaves → **destrava S9** (Pix/cartão/boleto + conciliação).
+- **B4 — Decisão sobre convênios** → **S10** (TISS + NF-e), só se a clínica atender convênio.
 
 ---
 
