@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { DB } from "@/lib/db";
-import { Clinica, Usuario, Profissional, Marcador, ModeloDoc } from "@/lib/types";
+import { Clinica, Usuario, Profissional, Marcador, ModeloDoc, Medicamento } from "@/lib/types";
 import Topbar from "@/components/Topbar";
 import { useToast } from "@/components/Toast";
 
@@ -17,6 +17,12 @@ export default function ConfigPage() {
   const [profissionais, setProfissionais] = useState<Profissional[]>([]);
   const [marcadores, setMarcadores] = useState<Marcador[]>([]);
   const [modelosDoc, setModelosDoc] = useState<ModeloDoc[]>([]);
+  const [medicamentos, setMedicamentos] = useState<Medicamento[]>([]);
+
+  // Novo medicamento (inline)
+  const [medNome, setMedNome] = useState("");
+  const [medPosologia, setMedPosologia] = useState("");
+  const [salvandoMed, setSalvandoMed] = useState(false);
 
   // Novo marcador (inline)
   const [mNome, setMNome] = useState("");
@@ -54,12 +60,39 @@ export default function ConfigPage() {
   useEffect(() => { load(); }, []);
 
   const load = async () => {
-    const [c, us, profs, marcs, mods] = await Promise.all([DB.clinica.get(), DB.usuarios.list(), DB.profissionais.list(), DB.marcadores.list(), DB.modelosDocumento.list()]);
+    const [c, us, profs, marcs, mods, meds] = await Promise.all([DB.clinica.get(), DB.usuarios.list(), DB.profissionais.list(), DB.marcadores.list(), DB.modelosDocumento.list(), DB.medicamentos.list()]);
     setClinica(c);
     setUsuarios(us);
     setProfissionais(profs);
     setMarcadores(marcs);
     setModelosDoc(mods);
+    setMedicamentos(meds);
+  };
+
+  const adicionarMedicamento = async () => {
+    if (!medNome.trim()) return showToast("Informe o nome do medicamento.", "error");
+    setSalvandoMed(true);
+    try {
+      await DB.medicamentos.save({ nome: medNome.trim(), posologia: medPosologia.trim(), ativo: true });
+      setMedNome(""); setMedPosologia("");
+      await load();
+      showToast("Medicamento adicionado.", "success");
+    } catch {
+      showToast("Não foi possível adicionar.", "error");
+    } finally {
+      setSalvandoMed(false);
+    }
+  };
+  const removerMedicamento = async (m: Medicamento) => {
+    if (m.id == null) return;
+    if (!(await confirm(`Remover "${m.nome}" dos medicamentos?`, { danger: true, okLabel: "Remover" }))) return;
+    try {
+      await DB.medicamentos.remove(m.id);
+      await load();
+      showToast("Medicamento removido.", "success");
+    } catch {
+      showToast("Não foi possível remover.", "error");
+    }
   };
 
   const abrirNovoModelo = () => {
@@ -389,6 +422,48 @@ export default function ConfigPage() {
                             <button className="btn btn-outline btn-sm" onClick={() => abrirEditarModelo(m)}>Editar</button>
                             <button className="btn btn-outline btn-sm" style={{ color: "var(--danger)", borderColor: "rgba(239,68,68,0.2)" }} onClick={() => removerModelo(m)}>Remover</button>
                           </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === "documentos" && (
+          <div className="card" style={{ marginTop: 16 }}>
+            <div className="card-header">
+              <span className="card-title">Medicamentos do receituário</span>
+            </div>
+            <p style={{ padding: "0 16px", fontSize: 13, color: "var(--text-muted)", margin: "0 0 12px" }}>
+              Seus medicamentos favoritos aparecem no editor de Receituário (além da base padrão) para inserir com um clique.
+            </p>
+            <div style={{ display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap", padding: "0 16px 16px" }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Nome</label>
+                <input className="form-control" style={{ width: 220 }} value={medNome} placeholder="Ex.: Amoxicilina 500mg" onChange={(e) => setMedNome(e.target.value)} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0, flex: 1, minWidth: 240 }}>
+                <label className="form-label">Posologia</label>
+                <input className="form-control" value={medPosologia} placeholder="Ex.: 1 cápsula de 8/8h por 7 dias" onChange={(e) => setMedPosologia(e.target.value)} />
+              </div>
+              <button className="btn btn-primary btn-sm" onClick={adicionarMedicamento} disabled={salvandoMed}>+ Adicionar</button>
+            </div>
+            {medicamentos.length === 0 ? (
+              <p style={{ padding: "0 16px 20px", color: "var(--text-muted)", fontSize: 13 }}>Nenhum medicamento próprio cadastrado (a base padrão já está disponível no receituário).</p>
+            ) : (
+              <div className="table-wrapper">
+                <table>
+                  <thead><tr><th>Medicamento</th><th>Posologia</th><th>Ações</th></tr></thead>
+                  <tbody>
+                    {medicamentos.map((m) => (
+                      <tr key={m.id}>
+                        <td><strong>{m.nome}</strong></td>
+                        <td style={{ color: "var(--text-muted)", fontSize: 13 }}>{m.posologia || "—"}</td>
+                        <td>
+                          <button className="btn btn-outline btn-sm" style={{ color: "var(--danger)", borderColor: "rgba(239,68,68,0.2)" }} onClick={() => removerMedicamento(m)}>Remover</button>
                         </td>
                       </tr>
                     ))}

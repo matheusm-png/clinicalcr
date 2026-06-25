@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { DB } from "@/lib/db";
-import { Documento, Clinica, Paciente, ModeloDoc } from "@/lib/types";
+import { Documento, Clinica, Paciente, ModeloDoc, Medicamento } from "@/lib/types";
 import { MODELOS, montarHtmlImpressao, aplicarPlaceholders } from "@/lib/documentos/modelos";
+import { MEDICAMENTOS_BASE, linhaPrescricao } from "@/lib/receituario/medicamentos";
 import { useToast } from "@/components/Toast";
 import EmptyState from "@/components/EmptyState";
 import SignaturePad, { SignaturePadHandle } from "@/components/SignaturePad";
@@ -36,15 +37,18 @@ export default function DocumentosTab({
   const [conteudo, setConteudo] = useState("");
   const [modelos, setModelos] = useState<ModeloDoc[]>([]); // modelos customizáveis da clínica
   const [modeloKey, setModeloKey] = useState<string>("receituario"); // chave do seletor
+  const [medicamentos, setMedicamentos] = useState<Medicamento[]>([]); // medicamentos da clínica
+  const [medSel, setMedSel] = useState<string>(""); // medicamento selecionado p/ inserir
   const [assinaturaAtual, setAssinaturaAtual] = useState<string>(""); // assinatura já salva
   const [salvando, setSalvando] = useState(false);
   const padRef = useRef<SignaturePadHandle>(null);
 
   useEffect(() => {
     (async () => {
-      const [c, ms] = await Promise.all([DB.clinica.get(), DB.modelosDocumento.list()]);
+      const [c, ms, meds] = await Promise.all([DB.clinica.get(), DB.modelosDocumento.list(), DB.medicamentos.list()]);
       setClinica(c);
       setModelos(ms.filter((m) => m.ativo !== false));
+      setMedicamentos(meds.filter((m) => m.ativo !== false));
       await load();
       setCarregando(false);
     })();
@@ -85,6 +89,22 @@ export default function DocumentosTab({
       setTitulo(g.titulo);
       setConteudo(g.conteudo);
     }
+  };
+
+  // Insere a prescrição do medicamento selecionado no fim do conteúdo.
+  const inserirMedicamento = () => {
+    if (!medSel) return;
+    let nome = "", posologia = "";
+    if (medSel.startsWith("b")) {
+      const m = MEDICAMENTOS_BASE[Number(medSel.slice(1))];
+      if (m) { nome = m.nome; posologia = m.posologia; }
+    } else if (medSel.startsWith("c")) {
+      const m = medicamentos.find((x) => `c${x.id}` === medSel);
+      if (m) { nome = m.nome; posologia = m.posologia; }
+    }
+    if (!nome) return;
+    setConteudo((c) => `${c.replace(/\s+$/, "")}\n\n${linhaPrescricao(nome, posologia)}`.replace(/^\n+/, ""));
+    setMedSel("");
   };
 
   const editar = (d: Documento) => {
@@ -227,6 +247,30 @@ export default function DocumentosTab({
                 <label className="form-label">Título *</label>
                 <input type="text" className="form-control" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
               </div>
+              {tipo === "receituario" && (
+                <div className="form-group">
+                  <label className="form-label">Adicionar medicamento</label>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <select className="form-control" style={{ flex: 1, minWidth: 200 }} value={medSel} onChange={(e) => setMedSel(e.target.value)}>
+                      <option value="">Escolher da base…</option>
+                      {medicamentos.length > 0 && (
+                        <optgroup label="Medicamentos da clínica">
+                          {medicamentos.map((m) => <option key={m.id} value={`c${m.id}`}>{m.nome}</option>)}
+                        </optgroup>
+                      )}
+                      {Object.entries(MEDICAMENTOS_BASE.reduce((acc, m, i) => {
+                        (acc[m.categoria] ||= []).push({ i, nome: m.nome }); return acc;
+                      }, {} as Record<string, { i: number; nome: string }[]>)).map(([cat, itens]) => (
+                        <optgroup key={cat} label={cat}>
+                          {itens.map((it) => <option key={it.i} value={`b${it.i}`}>{it.nome}</option>)}
+                        </optgroup>
+                      ))}
+                    </select>
+                    <button type="button" className="btn btn-outline" onClick={inserirMedicamento} disabled={!medSel}>+ Inserir</button>
+                  </div>
+                  <small style={{ color: "var(--text-muted)", fontSize: 11 }}>Insere o nome + posologia no fim do receituário. Você pode editar o texto depois.</small>
+                </div>
+              )}
               <div className="form-group">
                 <label className="form-label">Conteúdo *</label>
                 <textarea className="form-control" rows={10} value={conteudo} onChange={(e) => setConteudo(e.target.value)} style={{ fontFamily: "inherit", lineHeight: 1.6 }} />

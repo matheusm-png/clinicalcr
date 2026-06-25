@@ -19,6 +19,7 @@ import {
   Profissional,
   Marcador,
   ModeloDoc,
+  Medicamento,
 } from "./types";
 
 // ============================================================
@@ -711,6 +712,22 @@ export const DB = {
         m,
       ),
     remove: (id: number | string) => removeTable("modelos_documento", id),
+  },
+
+  medicamentos: {
+    list: () =>
+      listTable<Medicamento>(
+        "medicamentos",
+        (r: any) => ({ id: r.id, nome: r.nome, posologia: r.posologia ?? "", ativo: r.ativo, criadoEm: r.created_at }),
+      ),
+    save: (m: Medicamento) =>
+      saveTable<Medicamento>(
+        "medicamentos",
+        (x) => ({ nome: x.nome, posologia: x.posologia ?? "", ativo: x.ativo ?? true }),
+        (r: any) => ({ id: r.id, nome: r.nome, posologia: r.posologia ?? "", ativo: r.ativo, criadoEm: r.created_at }),
+        m,
+      ),
+    remove: (id: number | string) => removeTable("medicamentos", id),
   },
 
   evolucoes: {

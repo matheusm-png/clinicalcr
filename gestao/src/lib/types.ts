@@ -98,6 +98,14 @@ export interface ModeloDoc {
   criadoEm?: string;
 }
 
+export interface Medicamento {
+  id?: number;
+  nome: string;
+  posologia: string;
+  ativo?: boolean;
+  criadoEm?: string;
+}
+
 export interface Profissional {
   id?: number;
   nome: string;
