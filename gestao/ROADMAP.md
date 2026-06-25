@@ -91,8 +91,8 @@ Após estudar o sistema do Capim print a print, estes são os **gaps** que viram
 ### C5 — Controle protético 🟡
 - **Kanban de solicitação de prótese** (Criada → Enviada ao laboratório → Retornada → Instalada), ligado ao paciente/procedimento, com prazos.
 
-### C6 — Simulador de parcelamento 🟢
-- Simulador de entrada + N parcelas + taxa para fechar orçamento na hora (espelha o "Simulador de vendas" do Capim).
+### C6 — Simulador de parcelamento 🟢 ✅ *(concluído — 2026-06-25)*
+- ✅ Página `/admin/simulador` (link no Sidebar): valor + entrada (R$/%) + nº parcelas + juros (% a.m.); Tabela Price (parcelas fixas) com amortização; KPIs (parcelado/juros/total). Sem migration.
 
 ### C7 — Relatórios financeiros avançados 🟡
 - **Fluxo de caixa com previsão/inadimplência**, **preço médio** e **distribuição de receita** por procedimento/profissional, detalhamento por forma de pagamento.
