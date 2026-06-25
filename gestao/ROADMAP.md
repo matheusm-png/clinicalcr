@@ -44,10 +44,12 @@ Tudo que falta, separado por **quem faz**. Atalho: um **PAT do Supabase** elimin
 - **A7 — Dashboard turbinado + PWA** (instalável no celular). _Sem SQL._
 
 ### 🟦 Trilha B — Usuário precisa fazer (painel/contas); Claude faz o código depois
-- **B1 — F3 Higiene/deploy**: rotacionar segredos (Supabase secret key + OpenAI), setar Supabase Auth URL de produção (Site URL + Redirect `https://app.clinicalcr.com.br/**`), conectar GitHub→Vercel (Root Directory=`gestao`) para auto-deploy. _Claude escreve o guia passo a passo._
-- **B2 — Conta WhatsApp Business Platform (Meta)** + número + `WA_ACCESS_TOKEN`/`WA_PHONE_NUMBER_ID`/`WA_WABA_ID` → **destrava S7** (lembretes automáticos, confirmação, campanhas de reativação, aniversário automático). Reaproveita o cliente do `alquimia-crm`.
-- **B3 — Conta de gateway** (ex.: Mercado Pago) + chaves → **destrava S9** (Pix/cartão/boleto + conciliação).
-- **B4 — Decisão sobre convênios** → **S10** (TISS + NF-e), só se a clínica atender convênio.
+- **B1 — F3 Higiene/deploy**: setar Supabase Auth URL de produção (Site URL + Redirect `https://app.clinicalcr.com.br/**`), conectar GitHub→Vercel (Root Directory=`gestao`) para auto-deploy. _Claude escreve o guia passo a passo._
+  - ⏸️ **Rotacionar segredos (Supabase secret key + OpenAI) → adiado para o LANÇAMENTO** (decisão do usuário em 2026-06-25). Não cobrar antes disso.
+- **B2 — Conta WhatsApp Business Platform (Meta)** ✅ *queremos* + número + `WA_ACCESS_TOKEN`/`WA_PHONE_NUMBER_ID`/`WA_WABA_ID` → **destrava S7** (lembretes automáticos, confirmação, campanhas de reativação, aniversário automático). Reaproveita o cliente do `alquimia-crm`. _Tarefa mais demorada (aprovação Meta)._
+- **B3 — Conta de gateway** (ex.: Mercado Pago) + chaves → **destrava S9** (Pix/cartão/boleto + conciliação). ⏸️ **EM ESPERA** (2026-06-25): usuário vai estudar + a irmã ainda não definiu qual meio usa. Não cobrar até ela definir.
+- **B4 — Decisão sobre convênios** → **S10** (TISS + NF-e). Não priorizado pelo usuário; provavelmente fora (confirmar antes de descartar).
+- **PAT do Supabase** ✅ usuário vai gerar → quando chegar, Claude aplica migrations sozinho (Trilha A 100% autônoma). _O PAT entra na rotação de segredos do lançamento._
 
 ---
 
