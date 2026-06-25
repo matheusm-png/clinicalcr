@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { DB } from "@/lib/db";
 import { Clinica, Usuario, Profissional, Marcador, ModeloDoc, Medicamento } from "@/lib/types";
 import Topbar from "@/components/Topbar";
@@ -10,7 +11,7 @@ const CORES = ["#0f766e", "#2563EB", "#7C3AED", "#DB2777", "#EA580C", "#CA8A04",
 
 export default function ConfigPage() {
   const { showToast, confirm } = useToast();
-  const [tab, setTab] = useState<"clinica" | "agenda" | "documentos" | "profissionais" | "usuarios">("clinica");
+  const [tab, setTab] = useState<"clinica" | "agenda" | "documentos" | "anamnese" | "profissionais" | "usuarios">("clinica");
 
   const [clinica, setClinica] = useState<Clinica | null>(null);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -258,6 +259,7 @@ export default function ConfigPage() {
           <button className={`tab-btn ${tab === "clinica" ? "active" : ""}`} onClick={() => setTab("clinica")}>Minha Clínica</button>
           <button className={`tab-btn ${tab === "agenda" ? "active" : ""}`} onClick={() => setTab("agenda")}>Agenda</button>
           <button className={`tab-btn ${tab === "documentos" ? "active" : ""}`} onClick={() => setTab("documentos")}>Documentos</button>
+          <button className={`tab-btn ${tab === "anamnese" ? "active" : ""}`} onClick={() => setTab("anamnese")}>Anamnese</button>
           <button className={`tab-btn ${tab === "profissionais" ? "active" : ""}`} onClick={() => setTab("profissionais")}>Profissionais</button>
           <button className={`tab-btn ${tab === "usuarios" ? "active" : ""}`} onClick={() => setTab("usuarios")}>Usuários</button>
         </div>
@@ -471,6 +473,16 @@ export default function ConfigPage() {
                 </table>
               </div>
             )}
+          </div>
+        )}
+
+        {tab === "anamnese" && (
+          <div className="card" style={{ padding: 24, maxWidth: 720 }}>
+            <span className="card-title" style={{ display: "block", marginBottom: 4 }}>Modelos de anamnese</span>
+            <p style={{ fontSize: 13, color: "var(--text-muted)", margin: "0 0 16px" }}>
+              Crie fichas de anamnese próprias (seções e perguntas) para usar no prontuário, além da ficha padrão. A ficha padrão e o preenchimento por foto (OCR) continuam funcionando.
+            </p>
+            <Link href="/admin/modelos-anamnese" className="btn btn-primary">Gerenciar modelos de anamnese</Link>
           </div>
         )}
 

@@ -20,6 +20,7 @@ import {
   Marcador,
   ModeloDoc,
   Medicamento,
+  ModeloAnamnese,
 } from "./types";
 
 // ============================================================
@@ -728,6 +729,28 @@ export const DB = {
         m,
       ),
     remove: (id: number | string) => removeTable("medicamentos", id),
+  },
+
+  modelosAnamnese: {
+    list: () =>
+      listTable<ModeloAnamnese>(
+        "modelos_anamnese",
+        (r: any) => ({ id: r.id, nome: r.nome, estrutura: Array.isArray(r.estrutura) ? r.estrutura : [], ativo: r.ativo, criadoEm: r.created_at }),
+      ),
+    get: (id: number | string) =>
+      getTable<ModeloAnamnese>(
+        "modelos_anamnese",
+        (r: any) => ({ id: r.id, nome: r.nome, estrutura: Array.isArray(r.estrutura) ? r.estrutura : [], ativo: r.ativo, criadoEm: r.created_at }),
+        id,
+      ),
+    save: (m: ModeloAnamnese) =>
+      saveTable<ModeloAnamnese>(
+        "modelos_anamnese",
+        (x) => ({ nome: x.nome, estrutura: x.estrutura ?? [], ativo: x.ativo ?? true }),
+        (r: any) => ({ id: r.id, nome: r.nome, estrutura: Array.isArray(r.estrutura) ? r.estrutura : [], ativo: r.ativo, criadoEm: r.created_at }),
+        m,
+      ),
+    remove: (id: number | string) => removeTable("modelos_anamnese", id),
   },
 
   evolucoes: {

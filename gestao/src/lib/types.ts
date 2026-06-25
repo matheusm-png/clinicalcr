@@ -106,6 +106,23 @@ export interface Medicamento {
   criadoEm?: string;
 }
 
+export type TipoPergunta = "texto" | "sim_nao" | "numero";
+export interface PerguntaModelo {
+  texto: string;
+  tipo: TipoPergunta;
+}
+export interface SecaoModelo {
+  nome: string;
+  perguntas: PerguntaModelo[];
+}
+export interface ModeloAnamnese {
+  id?: number;
+  nome: string;
+  estrutura: SecaoModelo[];
+  ativo?: boolean;
+  criadoEm?: string;
+}
+
 export interface Profissional {
   id?: number;
   nome: string;

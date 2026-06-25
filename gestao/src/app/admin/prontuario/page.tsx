@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { DB } from "@/lib/db";
-import { Paciente, Procedimento, Anamnese, Profissional } from "@/lib/types";
+import { Paciente, Procedimento, Anamnese, Profissional, ModeloAnamnese } from "@/lib/types";
 import Topbar from "@/components/Topbar";
 import Odontograma from "@/components/Odontograma";
 import { useToast } from "@/components/Toast";
@@ -22,6 +22,7 @@ function ProntuarioContent() {
   const [procedimentos, setProcedimentos] = useState<Procedimento[]>([]);
   const [anamneses, setAnamneses] = useState<Anamnese[]>([]);
   const [profissionais, setProfissionais] = useState<Profissional[]>([]);
+  const [modelosAnamnese, setModelosAnamnese] = useState<ModeloAnamnese[]>([]);
   const [selectedTeeth, setSelectedTeeth] = useState<Set<string>>(new Set());
 
   // Active Tab state
@@ -85,12 +86,14 @@ function ProntuarioContent() {
 
     if (currentPaciente) {
       setPaciente(currentPaciente);
-      const [procs, anms] = await Promise.all([
+      const [procs, anms, mods] = await Promise.all([
         DB.procedimentos.list(currentPaciente.id),
         DB.anamneses.list(currentPaciente.id),
+        DB.modelosAnamnese.list(),
       ]);
       setProcedimentos(procs);
       setAnamneses(anms);
+      setModelosAnamnese(mods.filter((m) => m.ativo !== false));
       localStorage.setItem("lcr-selected-paciente", JSON.stringify(currentPaciente));
 
       // Prefill Profile Edit
@@ -502,9 +505,22 @@ function ProntuarioContent() {
             <div className="tab-panel active">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                 <span style={{ fontSize: 14, fontWeight: 600 }}>Histórico de Anamneses</span>
-                <Link href={`/admin/anamnese?id=${paciente.id}`} className="btn btn-primary btn-sm">
-                  + Nova Anamnese
-                </Link>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {modelosAnamnese.length > 0 && (
+                    <select
+                      className="form-control"
+                      style={{ width: "auto", padding: "6px 10px", fontSize: 13 }}
+                      defaultValue=""
+                      onChange={(e) => { if (e.target.value) router.push(`/admin/anamnese/modelo?modelo=${e.target.value}&id=${paciente.id}`); }}
+                    >
+                      <option value="">Usar modelo…</option>
+                      {modelosAnamnese.map((m) => <option key={m.id} value={m.id}>{m.nome}</option>)}
+                    </select>
+                  )}
+                  <Link href={`/admin/anamnese?id=${paciente.id}`} className="btn btn-primary btn-sm">
+                    + Nova Anamnese
+                  </Link>
+                </div>
               </div>
 
               {anamneses.length === 0 ? (
