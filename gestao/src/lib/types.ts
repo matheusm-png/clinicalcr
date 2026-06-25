@@ -88,6 +88,16 @@ export interface Marcador {
   criadoEm?: string;
 }
 
+export interface ModeloDoc {
+  id?: number;
+  nome: string;
+  tipo: string; // categoria do documento (receituario|atestado|declaracao|termo|outro)
+  titulo: string;
+  conteudo: string;
+  ativo?: boolean;
+  criadoEm?: string;
+}
+
 export interface Profissional {
   id?: number;
   nome: string;

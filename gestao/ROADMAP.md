@@ -79,8 +79,9 @@ Após estudar o sistema do Capim print a print, estes são os **gaps** que viram
 ### C2 — Catálogo odontológico completo 🟢 ✅ *(concluído — 2026-06-24)*
 - ✅ Botão **"Importar catálogo padrão"** na tela de Catálogo (e no estado vazio): insere ~61 procedimentos curados em 12 especialidades com **preço sugerido** (editável), pulando os que já existem por nome. Lista em `src/lib/catalogo/padrao.ts`; insert em lote `DB.catalogo.importarMuitos` (clinica_id carimbado pelo banco, multi-tenant, sem migration). Idempotente.
 
-### C3 — Recuperação de pacientes (Central de relacionamento) 🟡
-- **Kanban de Faltas** (Faltou → Contato realizado → Remarcado → Compareceu) e **Desmarcados**. Reaproveita o eixo de presença que já temos + WhatsApp. Recupera receita perdida.
+### C3 — Recuperação de pacientes (Central de relacionamento) 🟡 ✅ *(concluído — 2026-06-25, migration 0015)*
+- ✅ Página `/admin/relacionamento`: **kanban de Faltas** (Faltou → Contato realizado → Remarcado → Compareceu) e **Desmarcados**, com mover ←/→, WhatsApp por card (mensagem personalizada) e filtro de período (data absoluta). Faltas = `presenca='faltou'`; Desmarcados = `cancelado=true`.
+- ✅ Agenda: botão **"Desmarcar"** no modal (mantém o registro p/ recuperação, some da grade). Migration 0015 (`recuperacao` + `cancelado`).
 
 ### C4 — Clínico customizável 🔴
 - **Builder de modelos de anamnese** (seções + perguntas + tipos de resposta) — substitui o wizard fixo, mantendo o OCR.

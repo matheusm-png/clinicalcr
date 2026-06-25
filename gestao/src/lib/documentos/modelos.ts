@@ -85,6 +85,23 @@ export const MODELOS: ModeloDocumento[] = [
   },
 ];
 
+// Substitui placeholders ({{paciente}}, {{cpf}}, {{cidade}}, {{data}}, {{clinica}})
+// nos modelos customizáveis criados pela clínica.
+export function aplicarPlaceholders(texto: string, ctx: ModeloCtx): string {
+  const { paciente, clinica } = ctx;
+  const mapa: Record<string, string> = {
+    paciente: paciente.nome || "",
+    cpf: paciente.cpf || "____",
+    cidade: cidade(clinica),
+    data: new Date().toLocaleDateString("pt-BR"),
+    dataExtenso: hojeExtenso(),
+    clinica: clinica?.nome || "",
+  };
+  return texto.replace(/\{\{\s*(\w+)\s*\}\}/g, (m, chave) =>
+    chave in mapa ? mapa[chave] : m,
+  );
+}
+
 // Escapa texto para uso seguro dentro do HTML de impressão.
 function esc(s: string) {
   return s

@@ -18,6 +18,7 @@ import {
   Documento,
   Profissional,
   Marcador,
+  ModeloDoc,
 } from "./types";
 
 // ============================================================
@@ -694,6 +695,22 @@ export const DB = {
         m,
       ),
     remove: (id: number | string) => removeTable("marcadores", id),
+  },
+
+  modelosDocumento: {
+    list: () =>
+      listTable<ModeloDoc>(
+        "modelos_documento",
+        (r: any) => ({ id: r.id, nome: r.nome, tipo: r.tipo ?? "outro", titulo: r.titulo ?? "", conteudo: r.conteudo ?? "", ativo: r.ativo, criadoEm: r.created_at }),
+      ),
+    save: (m: ModeloDoc) =>
+      saveTable<ModeloDoc>(
+        "modelos_documento",
+        (x) => ({ nome: x.nome, tipo: x.tipo || "outro", titulo: x.titulo ?? "", conteudo: x.conteudo ?? "", ativo: x.ativo ?? true }),
+        (r: any) => ({ id: r.id, nome: r.nome, tipo: r.tipo ?? "outro", titulo: r.titulo ?? "", conteudo: r.conteudo ?? "", ativo: r.ativo, criadoEm: r.created_at }),
+        m,
+      ),
+    remove: (id: number | string) => removeTable("modelos_documento", id),
   },
 
   evolucoes: {

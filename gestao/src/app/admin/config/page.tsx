@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { DB } from "@/lib/db";
-import { Clinica, Usuario, Profissional, Marcador } from "@/lib/types";
+import { Clinica, Usuario, Profissional, Marcador, ModeloDoc } from "@/lib/types";
 import Topbar from "@/components/Topbar";
 import { useToast } from "@/components/Toast";
 
@@ -10,17 +10,27 @@ const CORES = ["#0f766e", "#2563EB", "#7C3AED", "#DB2777", "#EA580C", "#CA8A04",
 
 export default function ConfigPage() {
   const { showToast, confirm } = useToast();
-  const [tab, setTab] = useState<"clinica" | "agenda" | "profissionais" | "usuarios">("clinica");
+  const [tab, setTab] = useState<"clinica" | "agenda" | "documentos" | "profissionais" | "usuarios">("clinica");
 
   const [clinica, setClinica] = useState<Clinica | null>(null);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [profissionais, setProfissionais] = useState<Profissional[]>([]);
   const [marcadores, setMarcadores] = useState<Marcador[]>([]);
+  const [modelosDoc, setModelosDoc] = useState<ModeloDoc[]>([]);
 
   // Novo marcador (inline)
   const [mNome, setMNome] = useState("");
   const [mCor, setMCor] = useState(CORES[4]);
   const [salvandoM, setSalvandoM] = useState(false);
+
+  // Modal modelo de documento
+  const [docOpen, setDocOpen] = useState(false);
+  const [dId, setDId] = useState<number | null>(null);
+  const [dNome, setDNome] = useState("");
+  const [dTipo, setDTipo] = useState("termo");
+  const [dTitulo, setDTitulo] = useState("");
+  const [dConteudo, setDConteudo] = useState("");
+  const [salvandoD, setSalvandoD] = useState(false);
 
   // Modal profissional
   const [profOpen, setProfOpen] = useState(false);
@@ -44,11 +54,48 @@ export default function ConfigPage() {
   useEffect(() => { load(); }, []);
 
   const load = async () => {
-    const [c, us, profs, marcs] = await Promise.all([DB.clinica.get(), DB.usuarios.list(), DB.profissionais.list(), DB.marcadores.list()]);
+    const [c, us, profs, marcs, mods] = await Promise.all([DB.clinica.get(), DB.usuarios.list(), DB.profissionais.list(), DB.marcadores.list(), DB.modelosDocumento.list()]);
     setClinica(c);
     setUsuarios(us);
     setProfissionais(profs);
     setMarcadores(marcs);
+    setModelosDoc(mods);
+  };
+
+  const abrirNovoModelo = () => {
+    setDId(null); setDNome(""); setDTipo("termo"); setDTitulo(""); setDConteudo(""); setDocOpen(true);
+  };
+  const abrirEditarModelo = (m: ModeloDoc) => {
+    setDId(m.id!); setDNome(m.nome); setDTipo(m.tipo || "termo"); setDTitulo(m.titulo || ""); setDConteudo(m.conteudo || ""); setDocOpen(true);
+  };
+  const salvarModelo = async () => {
+    if (!dNome.trim()) return showToast("Informe o nome do modelo.", "error");
+    if (!dConteudo.trim()) return showToast("Informe o conteúdo do modelo.", "error");
+    setSalvandoD(true);
+    try {
+      await DB.modelosDocumento.save({
+        ...(dId ? { id: dId } : {}),
+        nome: dNome.trim(), tipo: dTipo, titulo: dTitulo.trim(), conteudo: dConteudo, ativo: true,
+      });
+      setDocOpen(false);
+      await load();
+      showToast("Modelo salvo.", "success");
+    } catch {
+      showToast("Não foi possível salvar o modelo.", "error");
+    } finally {
+      setSalvandoD(false);
+    }
+  };
+  const removerModelo = async (m: ModeloDoc) => {
+    if (m.id == null) return;
+    if (!(await confirm(`Remover o modelo "${m.nome}"?`, { danger: true, okLabel: "Remover" }))) return;
+    try {
+      await DB.modelosDocumento.remove(m.id);
+      await load();
+      showToast("Modelo removido.", "success");
+    } catch {
+      showToast("Não foi possível remover.", "error");
+    }
   };
 
   const adicionarMarcador = async () => {
@@ -177,6 +224,7 @@ export default function ConfigPage() {
         <div className="tabs">
           <button className={`tab-btn ${tab === "clinica" ? "active" : ""}`} onClick={() => setTab("clinica")}>Minha Clínica</button>
           <button className={`tab-btn ${tab === "agenda" ? "active" : ""}`} onClick={() => setTab("agenda")}>Agenda</button>
+          <button className={`tab-btn ${tab === "documentos" ? "active" : ""}`} onClick={() => setTab("documentos")}>Documentos</button>
           <button className={`tab-btn ${tab === "profissionais" ? "active" : ""}`} onClick={() => setTab("profissionais")}>Profissionais</button>
           <button className={`tab-btn ${tab === "usuarios" ? "active" : ""}`} onClick={() => setTab("usuarios")}>Usuários</button>
         </div>
@@ -316,6 +364,41 @@ export default function ConfigPage() {
           </>
         )}
 
+        {tab === "documentos" && (
+          <div className="card">
+            <div className="card-header">
+              <span className="card-title">Modelos de documentos</span>
+              <button className="btn btn-primary btn-sm" onClick={abrirNovoModelo}>+ Novo modelo</button>
+            </div>
+            <p style={{ padding: "0 16px", fontSize: 13, color: "var(--text-muted)", margin: "0 0 12px" }}>
+              Crie modelos próprios (termos, contratos, orientações…) que aparecem no editor de Documentos do prontuário, além dos modelos padrão. Use os campos {"{{paciente}}"}, {"{{cpf}}"}, {"{{cidade}}"}, {"{{data}}"} e {"{{clinica}}"} para preencher automaticamente.
+            </p>
+            {modelosDoc.length === 0 ? (
+              <p style={{ padding: "0 16px 20px", color: "var(--text-muted)", fontSize: 13 }}>Nenhum modelo personalizado ainda.</p>
+            ) : (
+              <div className="table-wrapper">
+                <table>
+                  <thead><tr><th>Modelo</th><th>Categoria</th><th>Ações</th></tr></thead>
+                  <tbody>
+                    {modelosDoc.map((m) => (
+                      <tr key={m.id}>
+                        <td><strong>{m.nome}</strong></td>
+                        <td style={{ color: "var(--text-muted)", textTransform: "capitalize" }}>{m.tipo}</td>
+                        <td>
+                          <div style={{ display: "flex", gap: 6 }}>
+                            <button className="btn btn-outline btn-sm" onClick={() => abrirEditarModelo(m)}>Editar</button>
+                            <button className="btn btn-outline btn-sm" style={{ color: "var(--danger)", borderColor: "rgba(239,68,68,0.2)" }} onClick={() => removerModelo(m)}>Remover</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
         {tab === "profissionais" && (
           <div className="card">
             <div className="card-header">
@@ -392,6 +475,52 @@ export default function ConfigPage() {
             <p style={{ fontSize: 12, color: "var(--text-muted)", padding: "12px 16px 0" }}>
               Papéis: <strong>Administrador</strong> (tudo), <strong>Dentista</strong> (clínico + financeiro), <strong>Secretária</strong> (atendimento, sem financeiro).
             </p>
+          </div>
+        )}
+
+        {docOpen && (
+          <div className="modal-overlay open" onClick={(e) => e.target === e.currentTarget && setDocOpen(false)}>
+            <div className="modal" style={{ maxWidth: 640 }}>
+              <div className="modal-header">
+                <span className="modal-title">{dId ? "Editar modelo" : "Novo modelo de documento"}</span>
+                <button className="modal-close" onClick={() => setDocOpen(false)}>×</button>
+              </div>
+              <div className="modal-body">
+                <div className="form-row form-row-2">
+                  <div className="form-group">
+                    <label className="form-label">Nome do modelo *</label>
+                    <input className="form-control" value={dNome} onChange={(e) => setDNome(e.target.value)} placeholder="Ex.: Termo de consentimento — Implante" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Categoria</label>
+                    <select className="form-control" value={dTipo} onChange={(e) => setDTipo(e.target.value)}>
+                      <option value="termo">Termo</option>
+                      <option value="receituario">Receituário</option>
+                      <option value="atestado">Atestado</option>
+                      <option value="declaracao">Declaração</option>
+                      <option value="outro">Outro</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Título do documento</label>
+                  <input className="form-control" value={dTitulo} onChange={(e) => setDTitulo(e.target.value)} placeholder="Ex.: Termo de Consentimento (se vazio, usa o nome do modelo)" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Conteúdo *</label>
+                  <textarea className="form-control" rows={10} value={dConteudo} onChange={(e) => setDConteudo(e.target.value)}
+                    placeholder={"Use os campos automáticos:\n{{paciente}}, {{cpf}}, {{cidade}}, {{data}}, {{clinica}}"}
+                    style={{ fontFamily: "inherit", lineHeight: 1.6 }} />
+                  <small style={{ color: "var(--text-muted)", fontSize: 11 }}>
+                    Campos automáticos: <code>{"{{paciente}}"}</code> <code>{"{{cpf}}"}</code> <code>{"{{cidade}}"}</code> <code>{"{{data}}"}</code> <code>{"{{clinica}}"}</code>
+                  </small>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-outline" onClick={() => setDocOpen(false)}>Cancelar</button>
+                <button className="btn btn-primary" onClick={salvarModelo} disabled={salvandoD}>{salvandoD ? "Salvando…" : "Salvar modelo"}</button>
+              </div>
+            </div>
           </div>
         )}
 

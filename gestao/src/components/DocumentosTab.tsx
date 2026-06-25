@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { DB } from "@/lib/db";
-import { Documento, Clinica, Paciente } from "@/lib/types";
-import { MODELOS, montarHtmlImpressao } from "@/lib/documentos/modelos";
+import { Documento, Clinica, Paciente, ModeloDoc } from "@/lib/types";
+import { MODELOS, montarHtmlImpressao, aplicarPlaceholders } from "@/lib/documentos/modelos";
 import { useToast } from "@/components/Toast";
 import EmptyState from "@/components/EmptyState";
 import SignaturePad, { SignaturePadHandle } from "@/components/SignaturePad";
@@ -34,14 +34,17 @@ export default function DocumentosTab({
   const [tipo, setTipo] = useState<Documento["tipo"]>("receituario");
   const [titulo, setTitulo] = useState("");
   const [conteudo, setConteudo] = useState("");
+  const [modelos, setModelos] = useState<ModeloDoc[]>([]); // modelos customizáveis da clínica
+  const [modeloKey, setModeloKey] = useState<string>("receituario"); // chave do seletor
   const [assinaturaAtual, setAssinaturaAtual] = useState<string>(""); // assinatura já salva
   const [salvando, setSalvando] = useState(false);
   const padRef = useRef<SignaturePadHandle>(null);
 
   useEffect(() => {
     (async () => {
-      const [c] = await Promise.all([DB.clinica.get()]);
+      const [c, ms] = await Promise.all([DB.clinica.get(), DB.modelosDocumento.list()]);
       setClinica(c);
+      setModelos(ms.filter((m) => m.ativo !== false));
       await load();
       setCarregando(false);
     })();
@@ -53,6 +56,7 @@ export default function DocumentosTab({
   const novo = () => {
     setEditId(null);
     setAssinaturaAtual("");
+    setModeloKey("receituario");
     const modelo = MODELOS.find((m) => m.id === "receituario")!;
     const { titulo, conteudo } = modelo.gerar({ paciente, clinica });
     setTipo("receituario");
@@ -61,22 +65,32 @@ export default function DocumentosTab({
     setAberto(true);
   };
 
-  const aplicarModelo = (id: Documento["tipo"]) => {
-    setTipo(id);
-    // Só repreenche se for criação (não sobrescreve edição de um doc salvo).
-    if (editId == null) {
-      const modelo = MODELOS.find((m) => m.id === id);
-      if (modelo) {
-        const g = modelo.gerar({ paciente, clinica });
-        setTitulo(g.titulo);
-        setConteudo(g.conteudo);
+  // key: id de modelo fixo (ex.: "receituario") ou "c<id>" para modelo da clínica.
+  const aplicarModelo = (key: string) => {
+    setModeloKey(key);
+    if (editId != null) return; // não sobrescreve edição de doc salvo
+    if (key.startsWith("c")) {
+      const m = modelos.find((x) => `c${x.id}` === key);
+      if (m) {
+        setTipo((m.tipo || "outro") as Documento["tipo"]);
+        setTitulo(aplicarPlaceholders(m.titulo || m.nome, { paciente, clinica }));
+        setConteudo(aplicarPlaceholders(m.conteudo, { paciente, clinica }));
       }
+      return;
+    }
+    const modelo = MODELOS.find((m) => m.id === key);
+    if (modelo) {
+      setTipo(key as Documento["tipo"]);
+      const g = modelo.gerar({ paciente, clinica });
+      setTitulo(g.titulo);
+      setConteudo(g.conteudo);
     }
   };
 
   const editar = (d: Documento) => {
     setEditId(d.id!);
     setTipo(d.tipo);
+    setModeloKey(d.tipo);
     setTitulo(d.titulo);
     setConteudo(d.conteudo);
     setAssinaturaAtual(d.assinatura || "");
@@ -191,10 +205,19 @@ export default function DocumentosTab({
             <div className="modal-body">
               <div className="form-group">
                 <label className="form-label">Modelo</label>
-                <select className="form-control" value={tipo} onChange={(e) => aplicarModelo(e.target.value as Documento["tipo"])}>
-                  {MODELOS.map((m) => (
-                    <option key={m.id} value={m.id}>{m.nome}</option>
-                  ))}
+                <select className="form-control" value={modeloKey} onChange={(e) => aplicarModelo(e.target.value)}>
+                  <optgroup label="Modelos padrão">
+                    {MODELOS.map((m) => (
+                      <option key={m.id} value={m.id}>{m.nome}</option>
+                    ))}
+                  </optgroup>
+                  {modelos.length > 0 && (
+                    <optgroup label="Modelos da clínica">
+                      {modelos.map((m) => (
+                        <option key={m.id} value={`c${m.id}`}>{m.nome}</option>
+                      ))}
+                    </optgroup>
+                  )}
                 </select>
                 {editId == null && (
                   <small style={{ color: "var(--text-muted)", fontSize: 11 }}>Trocar o modelo recarrega o texto pré-preenchido.</small>
