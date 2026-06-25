@@ -182,6 +182,17 @@ export default function Sidebar() {
               Orçamentos
             </Link>
           </li>
+          <li>
+            <Link href="/admin/simulador" className={isActive("/admin/simulador") ? "active" : ""}>
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
+                <rect x="4" y="2" width="16" height="20" rx="2" />
+                <line x1="8" y1="6" x2="16" y2="6" />
+                <line x1="8" y1="10" x2="8" y2="10" /><line x1="12" y1="10" x2="12" y2="10" /><line x1="16" y1="10" x2="16" y2="10" />
+                <line x1="8" y1="14" x2="8" y2="14" /><line x1="12" y1="14" x2="12" y2="14" /><line x1="16" y1="14" x2="16" y2="18" />
+              </svg>
+              Simulador
+            </Link>
+          </li>
 
           <li className="nav-group-label">Gestão</li>
           <li>

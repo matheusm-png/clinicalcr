@@ -83,10 +83,10 @@ Após estudar o sistema do Capim print a print, estes são os **gaps** que viram
 - ✅ Página `/admin/relacionamento`: **kanban de Faltas** (Faltou → Contato realizado → Remarcado → Compareceu) e **Desmarcados**, com mover ←/→, WhatsApp por card (mensagem personalizada) e filtro de período (data absoluta). Faltas = `presenca='faltou'`; Desmarcados = `cancelado=true`.
 - ✅ Agenda: botão **"Desmarcar"** no modal (mantém o registro p/ recuperação, some da grade). Migration 0015 (`recuperacao` + `cancelado`).
 
-### C4 — Clínico customizável 🔴
-- **Builder de modelos de anamnese** (seções + perguntas + tipos de resposta) — substitui o wizard fixo, mantendo o OCR.
-- **Modelos de documentos** customizáveis (além dos 5 fixos).
-- **Receituário com base de medicamentos** padrão + favoritos.
+### C4 — Clínico customizável 🔴 ✅ *(concluído — 2026-06-25, migrations 0016/0017/0018)*
+- ✅ **Modelos de documentos** customizáveis (Config › Documentos; placeholders {{paciente}} etc.; seletor agrupado no prontuário).
+- ✅ **Receituário com base de medicamentos** (base curada + favoritos da clínica; quick-insert no editor de receituário).
+- ✅ **Modelos de anamnese** customizáveis (opção escolhida: **mantém o wizard fixo + OCR** e adiciona fichas próprias — builder em `/admin/modelos-anamnese`, preenchimento dinâmico, seletor no prontuário).
 
 ### C5 — Controle protético 🟡
 - **Kanban de solicitação de prótese** (Criada → Enviada ao laboratório → Retornada → Instalada), ligado ao paciente/procedimento, com prazos.
