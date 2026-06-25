@@ -75,10 +75,11 @@ export default function AgendaPage() {
   // Marcador (rótulo colorido) do agendamento.
   const marcadorDe = (id?: number) => marcadores.find((m) => m.id === id);
 
-  // Agendamentos visíveis conforme o filtro de profissional.
-  const visiveis = filtroProf === "todos"
-    ? appointments
-    : appointments.filter((a) => a.profissionalId === filtroProf);
+  // Agendamentos visíveis na grade: exclui desmarcados (vão p/ a Recuperação)
+  // e aplica o filtro de profissional.
+  const visiveis = appointments
+    .filter((a) => !a.cancelado)
+    .filter((a) => filtroProf === "todos" || a.profissionalId === filtroProf);
 
   function getMonday(d: Date) {
     const dt = new Date(d);
@@ -199,6 +200,23 @@ export default function AgendaPage() {
       } catch {
         showToast("Não foi possível excluir a consulta.", "error");
       }
+    }
+  };
+
+  // Desmarcar = paciente cancelou. Mantém o registro (vai p/ a Recuperação),
+  // some da grade. Diferente de Excluir (apaga de vez).
+  const handleDesmarcar = async () => {
+    if (!modalId) return;
+    if (!(await confirm("Marcar esta consulta como desmarcada pelo paciente? Ela sai da agenda e vai para a Recuperação.", { okLabel: "Desmarcar" }))) return;
+    try {
+      const atual = appointments.find((a) => a.id === Number(modalId));
+      if (!atual) return;
+      await DB.agendamentos.save({ ...atual, cancelado: true, recuperacao: undefined });
+      setIsModalOpen(false);
+      await loadData();
+      showToast("Consulta desmarcada. Veja em Recuperação.", "success");
+    } catch {
+      showToast("Não foi possível desmarcar.", "error");
     }
   };
 
@@ -658,10 +676,15 @@ export default function AgendaPage() {
                 </div>
               </div>
               <div className="modal-footer" style={{ justifyContent: "space-between" }}>
-                <div>
+                <div style={{ display: "flex", gap: 8 }}>
                   {modalId && (
                     <button className="btn btn-danger" onClick={handleDelete}>
                       Excluir
+                    </button>
+                  )}
+                  {modalId && modalTipo === "consulta" && (
+                    <button className="btn btn-outline" onClick={handleDesmarcar} title="Paciente cancelou — manda para a Recuperação">
+                      Desmarcar
                     </button>
                   )}
                 </div>

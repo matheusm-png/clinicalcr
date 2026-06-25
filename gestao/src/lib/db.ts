@@ -156,6 +156,8 @@ const fromAgendamento = (r: any): Agendamento => ({
   profissionalId: r.profissional_id ?? undefined,
   marcadorId: r.marcador_id ?? undefined,
   presenca: r.presenca ?? "agendado",
+  recuperacao: r.recuperacao ?? undefined,
+  cancelado: r.cancelado ?? false,
   obs: r.obs ?? "",
   criadoEm: r.created_at,
 });
@@ -171,6 +173,8 @@ const toAgendamento = (a: Agendamento) => ({
   profissional_id: a.profissionalId ?? null,
   marcador_id: a.marcadorId ?? null,
   presenca: a.presenca ?? "agendado",
+  recuperacao: a.recuperacao ?? null,
+  cancelado: a.cancelado ?? false,
   obs: orNull(a.obs),
 });
 

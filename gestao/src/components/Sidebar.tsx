@@ -165,6 +165,16 @@ export default function Sidebar() {
             </Link>
           </li>
           <li>
+            <Link href="/admin/relacionamento" className={isActive("/admin/relacionamento") ? "active" : ""}>
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M22 11l-3 3-2-2" />
+              </svg>
+              Recuperação
+            </Link>
+          </li>
+          <li>
             <Link href="/admin/orcamentos" className={isActive("/admin/orcamentos") ? "active" : ""}>
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
                 <path d="M9 14l2 2 4-4M5 3h14a2 2 0 0 1 2 2v16l-3-2-2 2-2-2-2 2-2-2-3 2V5a2 2 0 0 1 2-2z" />

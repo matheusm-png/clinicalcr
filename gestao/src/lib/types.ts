@@ -73,6 +73,9 @@ export interface Agendamento {
   profissionalId?: number;
   marcadorId?: number;
   presenca?: 'agendado' | 'compareceu' | 'faltou';
+  // Funil de recuperação (faltas/desmarcações): undefined=pendente.
+  recuperacao?: 'contatado' | 'remarcado' | 'recuperado';
+  cancelado?: boolean; // desmarcada pelo paciente (fora da grade, vai p/ kanban)
   obs?: string;
   criadoEm?: string;
 }
