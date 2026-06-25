@@ -17,6 +17,7 @@ import {
   Anexo,
   Documento,
   Profissional,
+  Marcador,
 } from "./types";
 
 // ============================================================
@@ -153,6 +154,7 @@ const fromAgendamento = (r: any): Agendamento => ({
   dur: r.dur,
   status: r.status,
   profissionalId: r.profissional_id ?? undefined,
+  marcadorId: r.marcador_id ?? undefined,
   presenca: r.presenca ?? "agendado",
   obs: r.obs ?? "",
   criadoEm: r.created_at,
@@ -167,6 +169,7 @@ const toAgendamento = (a: Agendamento) => ({
   dur: a.dur,
   status: a.status,
   profissional_id: a.profissionalId ?? null,
+  marcador_id: a.marcadorId ?? null,
   presenca: a.presenca ?? "agendado",
   obs: orNull(a.obs),
 });
@@ -657,6 +660,7 @@ export const DB = {
         email: data.email ?? "", cep: data.cep ?? "", endereco: data.endereco ?? "",
         numero: data.numero ?? "", bairro: data.bairro ?? "", cidade: data.cidade ?? "",
         uf: data.uf ?? "", logoUrl: data.logo_url ?? "",
+        agendaHoraInicio: data.agenda_hora_inicio ?? 7, agendaHoraFim: data.agenda_hora_fim ?? 19,
       };
     },
     async update(c: Clinica): Promise<void> {
@@ -665,9 +669,27 @@ export const DB = {
         nome: c.nome, cnpj: orNull(c.cnpj), telefone: orNull(c.telefone), email: orNull(c.email),
         cep: orNull(c.cep), endereco: orNull(c.endereco), numero: orNull(c.numero),
         bairro: orNull(c.bairro), cidade: orNull(c.cidade), uf: orNull(c.uf), logo_url: orNull(c.logoUrl),
+        ...(c.agendaHoraInicio != null ? { agenda_hora_inicio: c.agendaHoraInicio } : {}),
+        ...(c.agendaHoraFim != null ? { agenda_hora_fim: c.agendaHoraFim } : {}),
       }).eq("id", c.id);
       if (error) throw error;
     },
+  },
+
+  marcadores: {
+    list: () =>
+      listTable<Marcador>(
+        "marcadores",
+        (r: any) => ({ id: r.id, nome: r.nome, cor: r.cor, ativo: r.ativo, criadoEm: r.created_at }),
+      ),
+    save: (m: Marcador) =>
+      saveTable<Marcador>(
+        "marcadores",
+        (x) => ({ nome: x.nome, cor: x.cor, ativo: x.ativo ?? true }),
+        (r: any) => ({ id: r.id, nome: r.nome, cor: r.cor, ativo: r.ativo, criadoEm: r.created_at }),
+        m,
+      ),
+    remove: (id: number | string) => removeTable("marcadores", id),
   },
 
   evolucoes: {

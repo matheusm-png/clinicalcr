@@ -71,8 +71,17 @@ export interface Agendamento {
   dur: number;  // duração em minutos (ex: 30, 45, 60...)
   status: 'confirmado' | 'pendente' | 'bloqueado';
   profissionalId?: number;
+  marcadorId?: number;
   presenca?: 'agendado' | 'compareceu' | 'faltou';
   obs?: string;
+  criadoEm?: string;
+}
+
+export interface Marcador {
+  id?: number;
+  nome: string;
+  cor: string;
+  ativo?: boolean;
   criadoEm?: string;
 }
 
@@ -163,6 +172,8 @@ export interface Clinica {
   cidade?: string;
   uf?: string;
   logoUrl?: string;
+  agendaHoraInicio?: number; // hora de abertura da agenda (default 7)
+  agendaHoraFim?: number;    // hora de fechamento da agenda (default 19)
 }
 
 export interface Usuario {

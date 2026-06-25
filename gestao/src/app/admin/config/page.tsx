@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { DB } from "@/lib/db";
-import { Clinica, Usuario, Profissional } from "@/lib/types";
+import { Clinica, Usuario, Profissional, Marcador } from "@/lib/types";
 import Topbar from "@/components/Topbar";
 import { useToast } from "@/components/Toast";
 
@@ -10,11 +10,17 @@ const CORES = ["#0f766e", "#2563EB", "#7C3AED", "#DB2777", "#EA580C", "#CA8A04",
 
 export default function ConfigPage() {
   const { showToast, confirm } = useToast();
-  const [tab, setTab] = useState<"clinica" | "profissionais" | "usuarios">("clinica");
+  const [tab, setTab] = useState<"clinica" | "agenda" | "profissionais" | "usuarios">("clinica");
 
   const [clinica, setClinica] = useState<Clinica | null>(null);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [profissionais, setProfissionais] = useState<Profissional[]>([]);
+  const [marcadores, setMarcadores] = useState<Marcador[]>([]);
+
+  // Novo marcador (inline)
+  const [mNome, setMNome] = useState("");
+  const [mCor, setMCor] = useState(CORES[4]);
+  const [salvandoM, setSalvandoM] = useState(false);
 
   // Modal profissional
   const [profOpen, setProfOpen] = useState(false);
@@ -38,10 +44,38 @@ export default function ConfigPage() {
   useEffect(() => { load(); }, []);
 
   const load = async () => {
-    const [c, us, profs] = await Promise.all([DB.clinica.get(), DB.usuarios.list(), DB.profissionais.list()]);
+    const [c, us, profs, marcs] = await Promise.all([DB.clinica.get(), DB.usuarios.list(), DB.profissionais.list(), DB.marcadores.list()]);
     setClinica(c);
     setUsuarios(us);
     setProfissionais(profs);
+    setMarcadores(marcs);
+  };
+
+  const adicionarMarcador = async () => {
+    if (!mNome.trim()) return showToast("Informe o nome do marcador.", "error");
+    setSalvandoM(true);
+    try {
+      await DB.marcadores.save({ nome: mNome.trim(), cor: mCor, ativo: true });
+      setMNome(""); setMCor(CORES[4]);
+      await load();
+      showToast("Marcador adicionado.", "success");
+    } catch {
+      showToast("Não foi possível adicionar o marcador.", "error");
+    } finally {
+      setSalvandoM(false);
+    }
+  };
+
+  const removerMarcador = async (m: Marcador) => {
+    if (m.id == null) return;
+    if (!(await confirm(`Remover o marcador "${m.nome}"? Os agendamentos com ele ficam sem marcador.`, { danger: true, okLabel: "Remover" }))) return;
+    try {
+      await DB.marcadores.remove(m.id);
+      await load();
+      showToast("Marcador removido.", "success");
+    } catch {
+      showToast("Não foi possível remover.", "error");
+    }
   };
 
   const abrirNovoProf = () => {
@@ -84,6 +118,7 @@ export default function ConfigPage() {
   };
 
   const setCampo = (k: keyof Clinica, v: string) => setClinica((c) => (c ? { ...c, [k]: v } : c));
+  const setCampoNum = (k: keyof Clinica, v: number) => setClinica((c) => (c ? { ...c, [k]: v } : c));
 
   const salvarClinica = async () => {
     if (!clinica) return;
@@ -141,6 +176,7 @@ export default function ConfigPage() {
       <main className="page-content">
         <div className="tabs">
           <button className={`tab-btn ${tab === "clinica" ? "active" : ""}`} onClick={() => setTab("clinica")}>Minha Clínica</button>
+          <button className={`tab-btn ${tab === "agenda" ? "active" : ""}`} onClick={() => setTab("agenda")}>Agenda</button>
           <button className={`tab-btn ${tab === "profissionais" ? "active" : ""}`} onClick={() => setTab("profissionais")}>Profissionais</button>
           <button className={`tab-btn ${tab === "usuarios" ? "active" : ""}`} onClick={() => setTab("usuarios")}>Usuários</button>
         </div>
@@ -199,6 +235,85 @@ export default function ConfigPage() {
               <button className="btn btn-primary" onClick={salvarClinica}>Salvar dados da clínica</button>
             </div>
           </div>
+        )}
+
+        {tab === "agenda" && clinica && (
+          <>
+            <div className="card" style={{ padding: 24, maxWidth: 720, marginBottom: 16 }}>
+              <span className="card-title" style={{ display: "block", marginBottom: 4 }}>Horário de funcionamento</span>
+              <p style={{ fontSize: 13, color: "var(--text-muted)", margin: "0 0 14px" }}>
+                Define a faixa de horas exibida na grade da agenda.
+              </p>
+              <div className="form-row form-row-2" style={{ maxWidth: 360 }}>
+                <div className="form-group">
+                  <label className="form-label">Abre às</label>
+                  <select className="form-control" value={clinica.agendaHoraInicio ?? 7} onChange={(e) => setCampoNum("agendaHoraInicio", Number(e.target.value))}>
+                    {Array.from({ length: 24 }, (_, h) => <option key={h} value={h}>{String(h).padStart(2, "0")}:00</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Fecha às</label>
+                  <select className="form-control" value={clinica.agendaHoraFim ?? 19} onChange={(e) => setCampoNum("agendaHoraFim", Number(e.target.value))}>
+                    {Array.from({ length: 24 }, (_, h) => h + 1).map((h) => <option key={h} value={h}>{String(h).padStart(2, "0")}:00</option>)}
+                  </select>
+                </div>
+              </div>
+              {clinica.agendaHoraFim != null && clinica.agendaHoraInicio != null && clinica.agendaHoraFim <= clinica.agendaHoraInicio && (
+                <p style={{ fontSize: 12, color: "var(--danger)", margin: "0 0 10px" }}>O horário de fechamento deve ser maior que o de abertura.</p>
+              )}
+              <button className="btn btn-primary" onClick={salvarClinica}>Salvar horário</button>
+            </div>
+
+            <div className="card">
+              <div className="card-header">
+                <span className="card-title">Marcadores</span>
+              </div>
+              <p style={{ padding: "0 16px", fontSize: 13, color: "var(--text-muted)", margin: "0 0 12px" }}>
+                Rótulos coloridos para identificar consultas na agenda (ex.: cadeiras/salas, tipo de atendimento).
+              </p>
+              <div style={{ display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap", padding: "0 16px 16px" }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Nome</label>
+                  <input className="form-control" style={{ width: 200 }} value={mNome} placeholder="Ex.: Cadeira 1" onChange={(e) => setMNome(e.target.value)} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Cor</label>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    {CORES.map((c) => (
+                      <button key={c} type="button" aria-label={c} onClick={() => setMCor(c)}
+                        style={{ width: 24, height: 24, borderRadius: "50%", background: c, border: mCor === c ? "3px solid var(--text)" : "2px solid var(--border)", cursor: "pointer" }} />
+                    ))}
+                  </div>
+                </div>
+                <button className="btn btn-primary btn-sm" onClick={adicionarMarcador} disabled={salvandoM}>+ Adicionar</button>
+              </div>
+              {marcadores.length === 0 ? (
+                <p style={{ padding: "0 16px 20px", color: "var(--text-muted)", fontSize: 13 }}>Nenhum marcador cadastrado.</p>
+              ) : (
+                <div className="table-wrapper">
+                  <table>
+                    <thead><tr><th>Marcador</th><th>Cor</th><th>Ações</th></tr></thead>
+                    <tbody>
+                      {marcadores.map((m) => (
+                        <tr key={m.id}>
+                          <td>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                              <span style={{ width: 12, height: 12, borderRadius: "50%", background: m.cor, display: "inline-block", flexShrink: 0 }} />
+                              <strong>{m.nome}</strong>
+                            </span>
+                          </td>
+                          <td style={{ color: "var(--text-muted)", fontSize: 12 }}>{m.cor}</td>
+                          <td>
+                            <button className="btn btn-outline btn-sm" style={{ color: "var(--danger)", borderColor: "rgba(239,68,68,0.2)" }} onClick={() => removerMarcador(m)}>Remover</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </>
         )}
 
         {tab === "profissionais" && (

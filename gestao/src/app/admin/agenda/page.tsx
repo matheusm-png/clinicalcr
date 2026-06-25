@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { DB } from "@/lib/db";
-import { Agendamento, Paciente, Profissional } from "@/lib/types";
+import { Agendamento, Paciente, Profissional, Marcador } from "@/lib/types";
 import Topbar from "@/components/Topbar";
 import { useToast } from "@/components/Toast";
 
-const HOURS = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
 const DAYS_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const MINI_DOW = ["S", "T", "Q", "Q", "S", "S", "D"]; // Seg..Dom (mini-calendário)
 
@@ -19,6 +18,9 @@ export default function AgendaPage() {
   const [appointments, setAppointments] = useState<Agendamento[]>([]);
   const [patients, setPatients] = useState<Paciente[]>([]);
   const [profissionais, setProfissionais] = useState<Profissional[]>([]);
+  const [marcadores, setMarcadores] = useState<Marcador[]>([]);
+  const [horaInicio, setHoraInicio] = useState(7);
+  const [horaFim, setHoraFim] = useState(19);
   const [filtroProf, setFiltroProf] = useState<number | "todos">("todos");
   const [currentMonday, setCurrentMonday] = useState<Date>(new Date());
   // Mês exibido no mini-calendário lateral (1º dia do mês).
@@ -30,6 +32,9 @@ export default function AgendaPage() {
   const [modalPaciente, setModalPaciente] = useState<string>("");
   const [modalProcedimento, setModalProcedimento] = useState<string>("");
   const [modalProfissional, setModalProfissional] = useState<number | "">("");
+  const [modalMarcador, setModalMarcador] = useState<number | "">("");
+  // "consulta" = agendamento normal; "bloqueio" = horário indisponível (sem paciente).
+  const [modalTipo, setModalTipo] = useState<"consulta" | "bloqueio">("consulta");
   const [modalData, setModalData] = useState<string>("");
   const [modalHorario, setModalHorario] = useState<string>("08:00");
   const [modalDuracao, setModalDuracao] = useState<number>(30);
@@ -44,19 +49,31 @@ export default function AgendaPage() {
   }, []);
 
   const loadData = async () => {
-    const [ags, pacs, profs] = await Promise.all([
+    const [ags, pacs, profs, marcs, clinica] = await Promise.all([
       DB.agendamentos.list(),
       DB.pacientes.list(),
       DB.profissionais.list(true),
+      DB.marcadores.list(),
+      DB.clinica.get(),
     ]);
     setAppointments(ags);
     setPatients(pacs);
     setProfissionais(profs);
+    setMarcadores(marcs);
+    if (clinica?.agendaHoraInicio != null) setHoraInicio(clinica.agendaHoraInicio);
+    if (clinica?.agendaHoraFim != null) setHoraFim(clinica.agendaHoraFim);
   };
+
+  // Faixa de horas da grade, conforme o horário de funcionamento da clínica.
+  const HOURS = Array.from({ length: Math.max(1, horaFim - horaInicio) }, (_, i) => horaInicio + i);
+  // Opções de horário (a cada 30 min) dentro do funcionamento.
+  const timeSlots = HOURS.flatMap((hh) => [`${String(hh).padStart(2, "0")}:00`, `${String(hh).padStart(2, "0")}:30`]);
 
   // Mapa id→cor para pintar os blocos por profissional.
   const corProf = (id?: number) => profissionais.find((p) => p.id === id)?.cor;
   const nomeProf = (id?: number) => profissionais.find((p) => p.id === id)?.nome;
+  // Marcador (rótulo colorido) do agendamento.
+  const marcadorDe = (id?: number) => marcadores.find((m) => m.id === id);
 
   // Agendamentos visíveis conforme o filtro de profissional.
   const visiveis = filtroProf === "todos"
@@ -130,14 +147,16 @@ export default function AgendaPage() {
     });
   };
 
-  const openNewModal = (dia?: number, hora?: number, min?: number) => {
+  const openNewModal = (dia?: number, hora?: number, min?: number, tipo: "consulta" | "bloqueio" = "consulta") => {
     setModalId("");
     setModalPaciente("");
     setModalProcedimento("");
     setModalObs("");
-    setModalStatus("confirmado");
+    setModalTipo(tipo);
+    setModalStatus(tipo === "bloqueio" ? "bloqueado" : "confirmado");
     setModalPresenca("agendado");
-    setModalDuracao(30);
+    setModalDuracao(tipo === "bloqueio" ? 60 : 30);
+    setModalMarcador("");
     // Pré-seleciona o profissional do filtro (ou o primeiro ativo).
     setModalProfissional(filtroProf !== "todos" ? filtroProf : (profissionais[0]?.id ?? ""));
 
@@ -156,9 +175,11 @@ export default function AgendaPage() {
     setModalId(String(appt.id));
     setModalPaciente(appt.paciente);
     setModalProcedimento(appt.proc);
+    setModalTipo(appt.status === "bloqueado" ? "bloqueio" : "consulta");
     setModalStatus(appt.status);
     setModalDuracao(appt.dur || 30);
     setModalProfissional(appt.profissionalId ?? "");
+    setModalMarcador(appt.marcadorId ?? "");
     setModalPresenca(appt.presenca ?? "agendado");
     setModalObs(appt.obs || "");
 
@@ -182,8 +203,9 @@ export default function AgendaPage() {
   };
 
   const handleSave = async () => {
-    if (!modalPaciente || !modalProcedimento || !modalData || !modalHorario) {
-      showToast("Preencha todos os campos obrigatórios.", "error");
+    const ehBloqueio = modalTipo === "bloqueio";
+    if (!modalData || !modalHorario || (!ehBloqueio && (!modalPaciente || !modalProcedimento))) {
+      showToast(ehBloqueio ? "Informe data e horário do bloqueio." : "Preencha todos os campos obrigatórios.", "error");
       return;
     }
 
@@ -194,16 +216,17 @@ export default function AgendaPage() {
 
     const appt: Agendamento = {
       ...(modalId ? { id: Number(modalId) } : {}),
-      paciente: modalPaciente,
-      pacienteId: patientObj ? patientObj.id : undefined,
-      proc: modalProcedimento,
+      paciente: ehBloqueio ? "" : modalPaciente,
+      pacienteId: ehBloqueio ? undefined : (patientObj ? patientObj.id : undefined),
+      proc: ehBloqueio ? (modalObs || "Bloqueio") : modalProcedimento,
       data: modalData,
       hora: h,
       min: m,
       dur: modalDuracao,
-      status: modalStatus,
+      status: ehBloqueio ? "bloqueado" : modalStatus,
       profissionalId: modalProfissional === "" ? undefined : Number(modalProfissional),
-      presenca: modalPresenca,
+      marcadorId: ehBloqueio || modalMarcador === "" ? undefined : Number(modalMarcador),
+      presenca: ehBloqueio ? "agendado" : modalPresenca,
       obs: modalObs,
     };
 
@@ -211,9 +234,10 @@ export default function AgendaPage() {
       await DB.agendamentos.save(appt);
       setIsModalOpen(false);
       await loadData();
-      showToast(modalId ? "Consulta atualizada." : "Consulta agendada.", "success");
+      const verbo = modalId ? "atualizado" : (ehBloqueio ? "criado" : "agendada");
+      showToast(ehBloqueio ? `Bloqueio ${verbo}.` : `Consulta ${verbo === "criado" ? "agendada" : verbo}.`, "success");
     } catch {
-      showToast("Não foi possível salvar a consulta.", "error");
+      showToast("Não foi possível salvar.", "error");
     }
   };
 
@@ -224,6 +248,13 @@ export default function AgendaPage() {
   return (
     <>
       <Topbar title="Agenda">
+        <button className="btn btn-outline" onClick={() => openNewModal(undefined, undefined, undefined, "bloqueio")}>
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: 15, height: 15 }}>
+            <circle cx="12" cy="12" r="9" />
+            <path d="M5.6 5.6l12.8 12.8" />
+          </svg>
+          Bloquear horário
+        </button>
         <button className="btn btn-primary" onClick={() => openNewModal()}>
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}>
             <path d="M12 5v14M5 12h14" />
@@ -373,6 +404,9 @@ export default function AgendaPage() {
                                 <span style={{ fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", gap: 3 }}>
                                   {appt.presenca === "compareceu" && <span aria-hidden>✓</span>}
                                   {appt.presenca === "faltou" && <span aria-hidden>✕</span>}
+                                  {marcadorDe(appt.marcadorId) && (
+                                    <span aria-hidden title={marcadorDe(appt.marcadorId)!.nome} style={{ width: 7, height: 7, borderRadius: "50%", background: marcadorDe(appt.marcadorId)!.cor, flexShrink: 0 }} />
+                                  )}
                                   {appt.proc}
                                 </span>
                                 <span style={{ fontSize: 9, opacity: 0.85 }}>{appt.paciente}</span>
@@ -405,6 +439,9 @@ export default function AgendaPage() {
                                 <span style={{ fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", gap: 3 }}>
                                   {appt.presenca === "compareceu" && <span aria-hidden>✓</span>}
                                   {appt.presenca === "faltou" && <span aria-hidden>✕</span>}
+                                  {marcadorDe(appt.marcadorId) && (
+                                    <span aria-hidden title={marcadorDe(appt.marcadorId)!.nome} style={{ width: 7, height: 7, borderRadius: "50%", background: marcadorDe(appt.marcadorId)!.cor, flexShrink: 0 }} />
+                                  )}
                                   {appt.proc}
                                 </span>
                                 <span style={{ fontSize: 9, opacity: 0.85 }}>{appt.paciente}</span>
@@ -445,13 +482,22 @@ export default function AgendaPage() {
           <div className="modal-overlay open" onClick={(e) => e.target === e.currentTarget && setIsModalOpen(false)}>
             <div className="modal">
               <div className="modal-header">
-                <span className="modal-title">{modalId ? "Editar Consulta" : "Nova Consulta"}</span>
+                <span className="modal-title">
+                  {modalTipo === "bloqueio"
+                    ? (modalId ? "Editar bloqueio" : "Bloquear horário")
+                    : (modalId ? "Editar Consulta" : "Nova Consulta")}
+                </span>
                 <button className="modal-close" onClick={() => setIsModalOpen(false)}>
                   &times;
                 </button>
               </div>
               <div className="modal-body">
-                <div className="form-row form-row-2">
+                {modalTipo === "bloqueio" && (
+                  <p style={{ fontSize: 13, color: "var(--text-muted)", margin: "0 0 12px" }}>
+                    Reserva um horário como indisponível (almoço, reunião, férias…). Não precisa de paciente.
+                  </p>
+                )}
+                {modalTipo === "consulta" && (
                   <div className="form-group">
                     <label className="form-label">Paciente *</label>
                     <select
@@ -465,9 +511,10 @@ export default function AgendaPage() {
                           {p.nome}
                         </option>
                       ))}
-                      {/* Caso o paciente não esteja listado, permitir digitar ou apenas listar os criados */}
                     </select>
                   </div>
+                )}
+                <div className="form-row form-row-2">
                   <div className="form-group">
                     <label className="form-label">Profissional</label>
                     <select
@@ -481,27 +528,44 @@ export default function AgendaPage() {
                       ))}
                     </select>
                   </div>
+                  {modalTipo === "consulta" && marcadores.length > 0 && (
+                    <div className="form-group">
+                      <label className="form-label">Marcador</label>
+                      <select
+                        className="form-control"
+                        value={modalMarcador}
+                        onChange={(e) => setModalMarcador(e.target.value === "" ? "" : Number(e.target.value))}
+                      >
+                        <option value="">Sem marcador</option>
+                        {marcadores.map((m) => (
+                          <option key={m.id} value={m.id}>{m.nome}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Procedimento *</label>
-                  <select
-                    className="form-control"
-                    value={modalProcedimento}
-                    onChange={(e) => setModalProcedimento(e.target.value)}
-                  >
-                    <option value="">Selecionar procedimento...</option>
-                    <option value="Consulta de Avaliação">Consulta de Avaliação</option>
-                    <option value="Consulta de Retorno">Consulta de Retorno</option>
-                    <option value="Extração">Extração</option>
-                    <option value="Clareamento">Clareamento</option>
-                    <option value="Ortodontia">Ortodontia</option>
-                    <option value="Implante">Implante</option>
-                    <option value="Limpeza / Profilaxia">Limpeza / Profilaxia</option>
-                    <option value="Canal (Endodontia)">Canal (Endodontia)</option>
-                    <option value="Restauração">Restauração</option>
-                    <option value="Prótese">Prótese</option>
-                  </select>
-                </div>
+                {modalTipo === "consulta" && (
+                  <div className="form-group">
+                    <label className="form-label">Procedimento *</label>
+                    <select
+                      className="form-control"
+                      value={modalProcedimento}
+                      onChange={(e) => setModalProcedimento(e.target.value)}
+                    >
+                      <option value="">Selecionar procedimento...</option>
+                      <option value="Consulta de Avaliação">Consulta de Avaliação</option>
+                      <option value="Consulta de Retorno">Consulta de Retorno</option>
+                      <option value="Extração">Extração</option>
+                      <option value="Clareamento">Clareamento</option>
+                      <option value="Ortodontia">Ortodontia</option>
+                      <option value="Implante">Implante</option>
+                      <option value="Limpeza / Profilaxia">Limpeza / Profilaxia</option>
+                      <option value="Canal (Endodontia)">Canal (Endodontia)</option>
+                      <option value="Restauração">Restauração</option>
+                      <option value="Prótese">Prótese</option>
+                    </select>
+                  </div>
+                )}
                 <div className="form-row form-row-3">
                   <div className="form-group">
                     <label className="form-label">Data *</label>
@@ -519,28 +583,9 @@ export default function AgendaPage() {
                       value={modalHorario}
                       onChange={(e) => setModalHorario(e.target.value)}
                     >
-                      <option value="08:00">08:00</option>
-                      <option value="08:30">08:30</option>
-                      <option value="09:00">09:00</option>
-                      <option value="09:30">09:30</option>
-                      <option value="10:00">10:00</option>
-                      <option value="10:30">10:30</option>
-                      <option value="11:00">11:00</option>
-                      <option value="11:30">11:30</option>
-                      <option value="12:00">12:00</option>
-                      <option value="12:30">12:30</option>
-                      <option value="13:00">13:00</option>
-                      <option value="13:30">13:30</option>
-                      <option value="14:00">14:00</option>
-                      <option value="14:30">14:30</option>
-                      <option value="15:00">15:00</option>
-                      <option value="15:30">15:30</option>
-                      <option value="16:00">16:00</option>
-                      <option value="16:30">16:30</option>
-                      <option value="17:00">17:00</option>
-                      <option value="17:30">17:30</option>
-                      <option value="18:00">18:00</option>
-                      <option value="18:30">18:30</option>
+                      {timeSlots.map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
                     </select>
                   </div>
                   <div className="form-group">
@@ -558,18 +603,19 @@ export default function AgendaPage() {
                     </select>
                   </div>
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Status</label>
-                  <select
-                    className="form-control"
-                    value={modalStatus}
-                    onChange={(e) => setModalStatus(e.target.value as any)}
-                  >
-                    <option value="confirmado">Confirmado</option>
-                    <option value="pendente">Pendente de confirmação</option>
-                    <option value="bloqueado">Bloqueio de horário</option>
-                  </select>
-                </div>
+                {modalTipo === "consulta" && (
+                  <div className="form-group">
+                    <label className="form-label">Status</label>
+                    <select
+                      className="form-control"
+                      value={modalStatus}
+                      onChange={(e) => setModalStatus(e.target.value as any)}
+                    >
+                      <option value="confirmado">Confirmado</option>
+                      <option value="pendente">Pendente de confirmação</option>
+                    </select>
+                  </div>
+                )}
                 {modalId && modalStatus !== "bloqueado" && (
                   <div className="form-group">
                     <label className="form-label">Comparecimento</label>
@@ -601,11 +647,11 @@ export default function AgendaPage() {
                   </div>
                 )}
                 <div className="form-group">
-                  <label className="form-label">Observações</label>
+                  <label className="form-label">{modalTipo === "bloqueio" ? "Motivo" : "Observações"}</label>
                   <textarea
                     className="form-control"
-                    rows={3}
-                    placeholder="Anotações sobre a consulta..."
+                    rows={modalTipo === "bloqueio" ? 2 : 3}
+                    placeholder={modalTipo === "bloqueio" ? "Ex.: Almoço, Reunião, Férias…" : "Anotações sobre a consulta..."}
                     value={modalObs}
                     onChange={(e) => setModalObs(e.target.value)}
                   ></textarea>

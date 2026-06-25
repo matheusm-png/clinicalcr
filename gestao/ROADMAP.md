@@ -70,11 +70,11 @@ Reaproveita o cliente da **WhatsApp Cloud API oficial** já feito no projeto `al
 
 Após estudar o sistema do Capim print a print, estes são os **gaps** que viram feature. Já estamos em paridade (ou à frente, por sermos **AI-first**: OCR de anamnese, assistente IA, análise de risco) em agenda, pacientes, prontuário, orçamentos, a receber, financeiro, estoque, comissões, relatórios e documentos. Legenda: 🟢 pequeno · 🟡 médio · 🔴 grande · 🔌 conta externa · ✅ depende de F1 (feito).
 
-### C1 — Agenda PRO 🟡 ✅
-- **Horário de funcionamento configurável** (acaba a grade fixa 7–18h) + fuso horário.
-- **Marcadores coloridos + cadeiras/salas** nos eventos (ex.: "Cadeira 1", "Cirurgia").
-- **Bloqueio de agenda** como tipo de criação (almoço/reunião/férias), recorrência opcional.
-- Menu "Criar" com Consulta / Bloqueio / Link de agendamento (como Capim).
+### C1 — Agenda PRO 🟡 ✅ *(concluído — 2026-06-25, migration 0014)*
+- ✅ **Horário de funcionamento configurável** (acaba a grade fixa 7–18h): aba Agenda no Config (abre/fecha às) → grade e opções de horário dinâmicas.
+- ✅ **Marcadores coloridos** (cadeiras/salas/tipo) nos eventos: CRUD na aba Agenda do Config + seletor no modal + bolinha colorida no bloco.
+- ✅ **Bloqueio de agenda** como tipo de criação (botão "Bloquear horário"; sem paciente/procedimento, campo Motivo).
+- *(Link de agendamento fica no S8 — agendamento online.)*
 
 ### C2 — Catálogo odontológico completo 🟢 ✅ *(concluído — 2026-06-24)*
 - ✅ Botão **"Importar catálogo padrão"** na tela de Catálogo (e no estado vazio): insere ~61 procedimentos curados em 12 especialidades com **preço sugerido** (editável), pulando os que já existem por nome. Lista em `src/lib/catalogo/padrao.ts`; insert em lote `DB.catalogo.importarMuitos` (clinica_id carimbado pelo banco, multi-tenant, sem migration). Idempotente.
