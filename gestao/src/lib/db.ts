@@ -32,6 +32,22 @@ import {
 
 const sb = () => createClient();
 
+// Usuário logado (perfil) — usado para carimbar autor em evoluções, anexos,
+// documentos e anamneses no lugar do nome fixo antigo. Retorna null no modo
+// demonstração ou se não houver sessão.
+export async function usuarioAtual(): Promise<{ id: string; nome: string; papel: string } | null> {
+  if (!isSupabaseConfigured()) return null;
+  const supabase = sb();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("nome, papel")
+    .eq("id", user.id)
+    .maybeSingle();
+  return { id: user.id, nome: profile?.nome || user.email || "", papel: profile?.papel || "" };
+}
+
 // "" não é uma data válida no Postgres — normaliza para null.
 const orNull = (v: unknown) => (v === "" || v === undefined ? null : v);
 
@@ -521,7 +537,7 @@ export const DB = {
       return this.get(header.id!);
     },
     // Aprova e gera procedimentos (Pendente) no prontuário do paciente.
-    async aprovar(id: number | string): Promise<Orcamento | null> {
+    async aprovar(id: number | string, profissionalId?: number | null): Promise<Orcamento | null> {
       if (semBackend()) throw new Error("Supabase não configurado.");
       const { error } = await sb()
         .from("orcamentos")
@@ -536,6 +552,7 @@ export const DB = {
           procedimento: it.descricao,
           custo: it.valorUnitario * (it.quantidade || 1),
           status: "Pendente",
+          profissional_id: profissionalId ?? null,
         }));
         await sb().from("procedimentos").insert(procs);
       }

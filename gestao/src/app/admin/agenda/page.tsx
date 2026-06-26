@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { DB } from "@/lib/db";
-import { Agendamento, Paciente, Profissional, Marcador } from "@/lib/types";
+import { Agendamento, Paciente, Profissional, Marcador, ProcedimentoCatalogo } from "@/lib/types";
 import Topbar from "@/components/Topbar";
 import { useToast } from "@/components/Toast";
 
@@ -19,6 +19,7 @@ export default function AgendaPage() {
   const [patients, setPatients] = useState<Paciente[]>([]);
   const [profissionais, setProfissionais] = useState<Profissional[]>([]);
   const [marcadores, setMarcadores] = useState<Marcador[]>([]);
+  const [catalogo, setCatalogo] = useState<ProcedimentoCatalogo[]>([]);
   const [horaInicio, setHoraInicio] = useState(7);
   const [horaFim, setHoraFim] = useState(19);
   const [filtroProf, setFiltroProf] = useState<number | "todos">("todos");
@@ -49,17 +50,19 @@ export default function AgendaPage() {
   }, []);
 
   const loadData = async () => {
-    const [ags, pacs, profs, marcs, clinica] = await Promise.all([
+    const [ags, pacs, profs, marcs, clinica, cat] = await Promise.all([
       DB.agendamentos.list(),
       DB.pacientes.list(),
       DB.profissionais.list(true),
       DB.marcadores.list(),
       DB.clinica.get(),
+      DB.catalogo.list(true),
     ]);
     setAppointments(ags);
     setPatients(pacs);
     setProfissionais(profs);
     setMarcadores(marcs);
+    setCatalogo(cat);
     if (clinica?.agendaHoraInicio != null) setHoraInicio(clinica.agendaHoraInicio);
     if (clinica?.agendaHoraFim != null) setHoraFim(clinica.agendaHoraFim);
   };
@@ -571,16 +574,24 @@ export default function AgendaPage() {
                       onChange={(e) => setModalProcedimento(e.target.value)}
                     >
                       <option value="">Selecionar procedimento...</option>
-                      <option value="Consulta de Avaliação">Consulta de Avaliação</option>
-                      <option value="Consulta de Retorno">Consulta de Retorno</option>
-                      <option value="Extração">Extração</option>
-                      <option value="Clareamento">Clareamento</option>
-                      <option value="Ortodontia">Ortodontia</option>
-                      <option value="Implante">Implante</option>
-                      <option value="Limpeza / Profilaxia">Limpeza / Profilaxia</option>
-                      <option value="Canal (Endodontia)">Canal (Endodontia)</option>
-                      <option value="Restauração">Restauração</option>
-                      <option value="Prótese">Prótese</option>
+                      {/* preserva valor legado fora do catálogo (ao editar) */}
+                      {modalProcedimento &&
+                        modalProcedimento !== "Consulta de Avaliação" &&
+                        modalProcedimento !== "Consulta de Retorno" &&
+                        !catalogo.some((c) => c.nome === modalProcedimento) && (
+                          <option value={modalProcedimento}>{modalProcedimento}</option>
+                        )}
+                      <optgroup label="Consultas">
+                        <option value="Consulta de Avaliação">Consulta de Avaliação</option>
+                        <option value="Consulta de Retorno">Consulta de Retorno</option>
+                      </optgroup>
+                      {catalogo.length > 0 && (
+                        <optgroup label="Catálogo de procedimentos">
+                          {catalogo.map((c) => (
+                            <option key={c.id} value={c.nome}>{c.nome}</option>
+                          ))}
+                        </optgroup>
+                      )}
                     </select>
                   </div>
                 )}

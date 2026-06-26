@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { DB } from "@/lib/db";
+import { DB, usuarioAtual } from "@/lib/db";
 import { Paciente, Anamnese } from "@/lib/types";
 import Topbar from "@/components/Topbar";
 import { useToast } from "@/components/Toast";
@@ -51,6 +51,7 @@ function AnamneseContent() {
   // State for wizard view
   const [currentStep, setCurrentStep] = useState(1);
   const [paciente, setPaciente] = useState<Paciente | null>(null);
+  const [autorAtual, setAutorAtual] = useState("");
 
   // Wizard Form State
   const [nome, setNome] = useState("");
@@ -189,6 +190,13 @@ function AnamneseContent() {
     loadData();
   }, [patientId]);
 
+  useEffect(() => {
+    (async () => {
+      const u = await usuarioAtual();
+      if (u?.nome) setAutorAtual(u.nome);
+    })();
+  }, []);
+
   const loadData = async () => {
     const allPatients = await DB.pacientes.list();
     setPatients(allPatients);
@@ -299,6 +307,7 @@ function AnamneseContent() {
       ...saudeRespostas,
       ...dentalRespostas,
       autorizacaoFoto: checkFoto,
+      ...(autorAtual ? { _autor: autorAtual } : {}),
     };
 
     const payload: Anamnese = {
@@ -520,8 +529,7 @@ function AnamneseContent() {
               <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Anamnese Odontológica Padrão</div>
             </div>
             <div style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "right" }}>
-              <div>Dra. Lara Camila</div>
-              <div>CRO-BA 15247</div>
+              <div>{autorAtual || "—"}</div>
             </div>
           </div>
 

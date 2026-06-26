@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { DB } from "@/lib/db";
+import { DB, usuarioAtual } from "@/lib/db";
 import { ModeloAnamnese, Paciente } from "@/lib/types";
 import Topbar from "@/components/Topbar";
 import { useToast } from "@/components/Toast";
@@ -42,10 +42,11 @@ function PreencherModelo() {
     if (!assinatura) return showToast("Peça para o paciente assinar antes de salvar.", "error");
     setSalvando(true);
     try {
+      const u = await usuarioAtual();
       await DB.anamneses.save({
         pacienteId: paciente.id as number,
         pacienteNome: paciente.nome,
-        respostas: { ...respostas, _modelo: modelo.nome },
+        respostas: { ...respostas, _modelo: modelo.nome, ...(u?.nome ? { _autor: u.nome } : {}) },
         assinatura,
         status: "Assinado",
         data: new Date().toISOString().split("T")[0],

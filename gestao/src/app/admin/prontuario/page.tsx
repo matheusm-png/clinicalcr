@@ -3,8 +3,8 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { DB } from "@/lib/db";
-import { Paciente, Procedimento, Anamnese, Profissional, ModeloAnamnese } from "@/lib/types";
+import { DB, usuarioAtual } from "@/lib/db";
+import { Paciente, Procedimento, Anamnese, Profissional, ModeloAnamnese, ProcedimentoCatalogo } from "@/lib/types";
 import Topbar from "@/components/Topbar";
 import Odontograma from "@/components/Odontograma";
 import { useToast } from "@/components/Toast";
@@ -22,6 +22,8 @@ function ProntuarioContent() {
   const [procedimentos, setProcedimentos] = useState<Procedimento[]>([]);
   const [anamneses, setAnamneses] = useState<Anamnese[]>([]);
   const [profissionais, setProfissionais] = useState<Profissional[]>([]);
+  const [catalogo, setCatalogo] = useState<ProcedimentoCatalogo[]>([]);
+  const [autorAtual, setAutorAtual] = useState("");
   const [modelosAnamnese, setModelosAnamnese] = useState<ModeloAnamnese[]>([]);
   const [selectedTeeth, setSelectedTeeth] = useState<Set<string>>(new Set());
 
@@ -42,6 +44,7 @@ function ProntuarioContent() {
   const [procDente, setProcDente] = useState("");
   const [procEstado, setProcEstado] = useState<"a-realizar" | "realizado" | "pre-existente">("a-realizar");
   const [procProfId, setProcProfId] = useState<string>("");
+  const [procCusto, setProcCusto] = useState<string>("");
   const [procObs, setProcObs] = useState("");
 
   // Profile Edit Form State
@@ -56,7 +59,12 @@ function ProntuarioContent() {
   }, [searchParams]);
 
   useEffect(() => {
-    (async () => setProfissionais(await DB.profissionais.list(true)))();
+    (async () => {
+      setProfissionais(await DB.profissionais.list(true));
+      setCatalogo(await DB.catalogo.list(true));
+      const u = await usuarioAtual();
+      if (u?.nome) setAutorAtual(u.nome);
+    })();
   }, []);
 
   const loadPaciente = async () => {
@@ -129,6 +137,7 @@ function ProntuarioContent() {
     setProcObs("");
     setProcEstado("a-realizar");
     setProcProfId(profissionais.length === 1 ? String(profissionais[0].id) : "");
+    setProcCusto("");
 
     if (denteNum) {
       setProcDente(denteNum);
@@ -153,7 +162,7 @@ function ProntuarioContent() {
       procedimento: procNome,
       dente: procDente,
       status: procEstado === "realizado" ? "Concluído" : procEstado === "a-realizar" ? "Pendente" : "Cancelado",
-      custo: 150, // valor default
+      custo: procCusto ? Number(procCusto) : 0,
       profissionalId: procProfId ? Number(procProfId) : undefined,
       obs: procObs,
     };
@@ -175,6 +184,7 @@ function ProntuarioContent() {
     setProcDente(p.dente);
     setProcEstado(p.estado || (p.status === "Concluído" ? "realizado" : "a-realizar"));
     setProcProfId(p.profissionalId ? String(p.profissionalId) : "");
+    setProcCusto(p.custo != null ? String(p.custo) : "");
     setProcObs(p.obs || "");
     setIsFichaDenteOpen(false);
     setIsProcModalOpen(true);
@@ -398,19 +408,19 @@ function ProntuarioContent() {
 
           {activeTab === "evolucoes" && (
             <div className="tab-panel active">
-              <EvolucoesTab pacienteId={paciente.id!} autor="Dra. Lara Camila" />
+              <EvolucoesTab pacienteId={paciente.id!} autor={autorAtual} />
             </div>
           )}
 
           {activeTab === "anexos" && (
             <div className="tab-panel active">
-              <AnexosTab pacienteId={paciente.id!} autor="Dra. Lara Camila" />
+              <AnexosTab pacienteId={paciente.id!} autor={autorAtual} />
             </div>
           )}
 
           {activeTab === "documentos" && (
             <div className="tab-panel active">
-              <DocumentosTab paciente={paciente} autor="Dra. Lara Camila" />
+              <DocumentosTab paciente={paciente} autor={autorAtual} />
             </div>
           )}
 
@@ -547,8 +557,8 @@ function ProntuarioContent() {
                       {anamneses.map((a: any) => (
                         <tr key={a.id}>
                           <td>{a.criadoEm ? new Date(a.criadoEm).toLocaleDateString("pt-BR") : "—"}</td>
-                          <td>Anamnese Odontológica Padrão</td>
-                          <td>Dra. Lara Camila</td>
+                          <td>{a.respostas?._modelo || "Anamnese Odontológica Padrão"}</td>
+                          <td>{a.respostas?._autor || a.autor || "—"}</td>
                           <td>
                             <AnaliseRiscoIA respostas={a.respostas} pacienteNome={paciente.nome} />
                           </td>
@@ -575,16 +585,41 @@ function ProntuarioContent() {
               <div className="modal-body">
                 <div className="form-group">
                   <label className="form-label">Procedimento *</label>
-                  <select className="form-control" value={procNome} onChange={(e) => setProcNome(e.target.value)}>
+                  <select
+                    className="form-control"
+                    value={procNome}
+                    onChange={(e) => {
+                      const nome = e.target.value;
+                      setProcNome(nome);
+                      const item = catalogo.find((c) => c.nome === nome);
+                      if (item) setProcCusto(String(item.preco));
+                    }}
+                  >
                     <option value="">Selecionar...</option>
-                    <option value="Restauração">Restauração</option>
-                    <option value="Extração">Extração</option>
-                    <option value="Canal">Canal (Endodontia)</option>
-                    <option value="Implante">Implante</option>
-                    <option value="Ortodontia">Ortodontia</option>
-                    <option value="Prótese">Prótese</option>
-                    <option value="Clareamento">Clareamento</option>
+                    {/* preserva valor legado que não esteja no catálogo (ao editar) */}
+                    {procNome && !catalogo.some((c) => c.nome === procNome) && (
+                      <option value={procNome}>{procNome}</option>
+                    )}
+                    {catalogo.length > 0
+                      ? catalogo.map((c) => (
+                          <option key={c.id} value={c.nome}>
+                            {c.nome}
+                            {c.preco ? ` — R$ ${c.preco.toLocaleString("pt-BR")}` : ""}
+                          </option>
+                        ))
+                      : ["Restauração", "Extração", "Canal (Endodontia)", "Implante", "Ortodontia", "Prótese", "Clareamento"].map(
+                          (n) => (
+                            <option key={n} value={n}>
+                              {n}
+                            </option>
+                          ),
+                        )}
                   </select>
+                  {catalogo.length === 0 && (
+                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                      Importe o catálogo padrão em Catálogo para ter preços sugeridos.
+                    </span>
+                  )}
                 </div>
                 <div className="form-row form-row-2">
                   <div className="form-group">
@@ -609,6 +644,21 @@ function ProntuarioContent() {
                       <option value="pre-existente">Pré-existente</option>
                     </select>
                   </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Valor (R$)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="form-control"
+                    placeholder="0,00"
+                    value={procCusto}
+                    onChange={(e) => setProcCusto(e.target.value)}
+                  />
+                  <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                    Sugerido pelo catálogo ao escolher o procedimento; ajuste se necessário. Usado em relatórios e comissões.
+                  </span>
                 </div>
                 <div className="form-group">
                   <label className="form-label">Profissional responsável</label>

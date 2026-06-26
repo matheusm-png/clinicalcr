@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { DB } from "@/lib/db";
-import { Orcamento, OrcamentoItem, Paciente, ProcedimentoCatalogo } from "@/lib/types";
+import { Orcamento, OrcamentoItem, Paciente, ProcedimentoCatalogo, Profissional } from "@/lib/types";
 import Topbar from "@/components/Topbar";
 import { useToast } from "@/components/Toast";
 import EmptyState from "@/components/EmptyState";
@@ -27,6 +27,11 @@ export default function OrcamentosPage() {
   const [orcamentos, setOrcamentos] = useState<Orcamento[]>([]);
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [catalogo, setCatalogo] = useState<ProcedimentoCatalogo[]>([]);
+  const [profissionais, setProfissionais] = useState<Profissional[]>([]);
+
+  // Aprovação (atribui profissional aos procedimentos gerados)
+  const [aprovando, setAprovando] = useState<Orcamento | null>(null);
+  const [aprovarProfId, setAprovarProfId] = useState("");
 
   // Builder
   const [isOpen, setIsOpen] = useState(false);
@@ -52,14 +57,16 @@ export default function OrcamentosPage() {
   }, []);
 
   const load = async () => {
-    const [orcs, pacs, cat] = await Promise.all([
+    const [orcs, pacs, cat, profs] = await Promise.all([
       DB.orcamentos.list(),
       DB.pacientes.list(),
       DB.catalogo.list(true),
+      DB.profissionais.list(true),
     ]);
     setOrcamentos(orcs);
     setPacientes(pacs);
     setCatalogo(cat);
+    setProfissionais(profs);
   };
 
   const nomePaciente = (id: number) => pacientes.find((p) => p.id === id)?.nome ?? "—";
@@ -128,15 +135,18 @@ export default function OrcamentosPage() {
     }
   };
 
-  const aprovar = async (orc: Orcamento) => {
+  const abrirAprovar = (orc: Orcamento) => {
     if (orc.id == null) return;
-    const ok = await confirm(
-      "Aprovar este orçamento? Os procedimentos serão lançados como pendentes no prontuário do paciente.",
-      { okLabel: "Aprovar" },
-    );
-    if (!ok) return;
+    // default = único profissional ativo
+    setAprovarProfId(profissionais.length === 1 ? String(profissionais[0].id) : "");
+    setAprovando(orc);
+  };
+
+  const confirmarAprovar = async () => {
+    if (!aprovando?.id) return;
     try {
-      await DB.orcamentos.aprovar(orc.id);
+      await DB.orcamentos.aprovar(aprovando.id, aprovarProfId ? Number(aprovarProfId) : null);
+      setAprovando(null);
       await load();
       showToast("Orçamento aprovado e procedimentos lançados no prontuário.", "success");
     } catch {
@@ -257,7 +267,7 @@ export default function OrcamentosPage() {
                           <button className="btn btn-outline btn-sm" onClick={() => explicarIA(o)}>Explicar (IA)</button>
                           <button className="btn btn-outline btn-sm" onClick={() => abrirEdit(o.id)}>Abrir</button>
                           {o.status !== "aprovado" && (
-                            <button className="btn btn-primary btn-sm" onClick={() => aprovar(o)}>Aprovar</button>
+                            <button className="btn btn-primary btn-sm" onClick={() => abrirAprovar(o)}>Aprovar</button>
                           )}
                           {o.status === "aprovado" && (
                             <button className="btn btn-outline btn-sm" onClick={() => { setCobranca(o); setCobParcelas("1"); setCobVenc(new Date().toISOString().split("T")[0]); }}>
@@ -383,6 +393,38 @@ export default function OrcamentosPage() {
         )}
 
         {/* Gerar cobrança */}
+        {aprovando && (
+          <div className="modal-overlay open" onClick={(e) => e.target === e.currentTarget && setAprovando(null)}>
+            <div className="modal" style={{ maxWidth: 420 }}>
+              <div className="modal-header">
+                <span className="modal-title">Aprovar orçamento — {nomePaciente(aprovando.pacienteId)}</span>
+                <button className="modal-close" onClick={() => setAprovando(null)}>×</button>
+              </div>
+              <div className="modal-body">
+                <p style={{ fontSize: 14, color: "var(--text-muted)", marginBottom: 16 }}>
+                  Os procedimentos serão lançados como <strong style={{ color: "var(--text)" }}>pendentes</strong> no prontuário do paciente.
+                </p>
+                <div className="form-group">
+                  <label className="form-label">Profissional responsável</label>
+                  <select className="form-control" value={aprovarProfId} onChange={(e) => setAprovarProfId(e.target.value)}>
+                    <option value="">Não atribuir agora</option>
+                    {profissionais.map((pr) => (
+                      <option key={pr.id} value={String(pr.id)}>{pr.nome}</option>
+                    ))}
+                  </select>
+                  <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                    Atribua para que a produção entre no relatório de comissões. Pode ajustar depois no prontuário.
+                  </span>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-outline" onClick={() => setAprovando(null)}>Cancelar</button>
+                <button className="btn btn-primary" onClick={confirmarAprovar}>Aprovar</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {cobranca && (
           <div className="modal-overlay open" onClick={(e) => e.target === e.currentTarget && setCobranca(null)}>
             <div className="modal" style={{ maxWidth: 420 }}>

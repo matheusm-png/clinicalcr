@@ -33,7 +33,7 @@ function periodoPreset(preset: string): { de: string; ate: string } {
 }
 
 export default function RelacionamentoPage() {
-  const { showToast } = useToast();
+  const { showToast, confirm } = useToast();
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [profissionais, setProfissionais] = useState<Profissional[]>([]);
@@ -69,6 +69,20 @@ export default function RelacionamentoPage() {
       await load();
     } catch {
       showToast("Não foi possível atualizar.", "error");
+    } finally {
+      setSalvandoId(null);
+    }
+  };
+
+  const reabrir = async (a: Agendamento) => {
+    if (!(await confirm("Reabrir esta consulta? Ela volta a aparecer na agenda como agendada.", { okLabel: "Reabrir" }))) return;
+    setSalvandoId(a.id ?? null);
+    try {
+      await DB.agendamentos.save({ ...a, cancelado: false, presenca: "agendado", recuperacao: undefined });
+      await load();
+      showToast("Consulta reaberta na agenda.", "success");
+    } catch {
+      showToast("Não foi possível reabrir.", "error");
     } finally {
       setSalvandoId(null);
     }
@@ -134,6 +148,17 @@ export default function RelacionamentoPage() {
                               <button className="btn btn-outline btn-sm" style={{ padding: "4px 8px" }} disabled={idx === STAGE_KEYS.length - 1 || salvandoId === a.id} onClick={() => mover(a, +1)} title="Avançar etapa">→</button>
                             </div>
                           </div>
+                          {tipo === "desmarcou" && (
+                            <button
+                              className="btn btn-outline btn-sm"
+                              style={{ width: "100%", marginTop: 6, padding: "4px 8px", fontSize: 12 }}
+                              disabled={salvandoId === a.id}
+                              onClick={() => reabrir(a)}
+                              title="Voltar a consulta para a agenda"
+                            >
+                              ↺ Reabrir na agenda
+                            </button>
+                          )}
                         </div>
                       );
                     })}
