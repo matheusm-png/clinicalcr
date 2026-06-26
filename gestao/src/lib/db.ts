@@ -21,6 +21,7 @@ import {
   ModeloDoc,
   Medicamento,
   ModeloAnamnese,
+  Protese,
 } from "./types";
 
 // ============================================================
@@ -311,6 +312,36 @@ const fromConta = (r: any): ContaReceber => ({
   valorTotal: Number(r.valor_total),
   status: r.status,
   criadoEm: r.created_at,
+});
+const fromProtese = (r: any): Protese => ({
+  id: r.id,
+  pacienteId: r.paciente_id,
+  tipo: r.tipo,
+  dente: r.dente ?? "",
+  laboratorio: r.laboratorio ?? "",
+  cor: r.cor ?? "",
+  material: r.material ?? "",
+  valor: r.valor != null ? Number(r.valor) : 0,
+  status: r.status,
+  enviadoEm: r.enviado_em ?? undefined,
+  previsaoRetorno: r.previsao_retorno ?? undefined,
+  instaladoEm: r.instalado_em ?? undefined,
+  obs: r.obs ?? "",
+  criadoEm: r.created_at,
+});
+const toProtese = (p: Protese): Record<string, unknown> => ({
+  paciente_id: p.pacienteId,
+  tipo: p.tipo,
+  dente: p.dente ?? "",
+  laboratorio: p.laboratorio ?? "",
+  cor: p.cor ?? "",
+  material: p.material ?? "",
+  valor: p.valor ?? 0,
+  status: p.status,
+  enviado_em: orNull(p.enviadoEm),
+  previsao_retorno: orNull(p.previsaoRetorno),
+  instalado_em: orNull(p.instaladoEm),
+  obs: p.obs ?? "",
 });
 
 const fromDocumento = (r: any): Documento => ({
@@ -713,6 +744,14 @@ export const DB = {
       }).eq("id", c.id);
       if (error) throw error;
     },
+  },
+
+  proteses: {
+    list: () =>
+      listTable<Protese>("proteses", fromProtese),
+    save: (p: Protese) =>
+      saveTable<Protese>("proteses", toProtese, fromProtese, p),
+    remove: (id: number | string) => removeTable("proteses", id),
   },
 
   marcadores: {

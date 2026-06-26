@@ -221,6 +221,25 @@ export interface Usuario {
   papel: 'admin' | 'dentista' | 'secretaria';
 }
 
+export type StatusProtese = 'solicitada' | 'laboratorio' | 'retornou' | 'instalada';
+
+export interface Protese {
+  id?: number;
+  pacienteId: number;
+  tipo: string;            // coroa, PPR, prótese total, faceta…
+  dente?: string;          // elemento(s) dentário(s)
+  laboratorio?: string;
+  cor?: string;            // escala de cor (ex.: A2)
+  material?: string;       // zircônia, metalocerâmica…
+  valor?: number;          // custo do laboratório
+  status: StatusProtese;
+  enviadoEm?: string;
+  previsaoRetorno?: string;
+  instaladoEm?: string;
+  obs?: string;
+  criadoEm?: string;
+}
+
 export interface Parcela {
   id?: number;
   contaId?: number;

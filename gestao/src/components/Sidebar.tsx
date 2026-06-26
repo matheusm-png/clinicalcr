@@ -175,6 +175,15 @@ export default function Sidebar() {
             </Link>
           </li>
           <li>
+            <Link href="/admin/proteses" className={isActive("/admin/proteses") ? "active" : ""}>
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
+                <path d="M12 2c-2.5 0-4 1.5-4 4 0 1.2.4 2.3.4 4 0 4 .6 8 1.6 12 .3 1 1.7 1 2 0 1-4 1.6-8 1.6-12 0-1.7.4-2.8.4-4 0-2.5-1.5-4-4-4z" />
+                <path d="M9 9c1-1 5-1 6 0" />
+              </svg>
+              Próteses
+            </Link>
+          </li>
+          <li>
             <Link href="/admin/orcamentos" className={isActive("/admin/orcamentos") ? "active" : ""}>
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
                 <path d="M9 14l2 2 4-4M5 3h14a2 2 0 0 1 2 2v16l-3-2-2 2-2-2-2 2-2-2-3 2V5a2 2 0 0 1 2-2z" />
