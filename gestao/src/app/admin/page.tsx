@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { DB } from "@/lib/db";
-import { Paciente, Agendamento, TransacaoFinanceira, ContaReceber } from "@/lib/types";
+import { Paciente, Agendamento, TransacaoFinanceira, ContaReceber, Protese, ItemEstoque } from "@/lib/types";
 import Topbar from "@/components/Topbar";
 import EmptyState from "@/components/EmptyState";
 
@@ -31,19 +31,25 @@ export default function DashboardPage() {
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [financeiro, setFinanceiro] = useState<TransacaoFinanceira[]>([]);
   const [contas, setContas] = useState<ContaReceber[]>([]);
+  const [proteses, setProteses] = useState<Protese[]>([]);
+  const [estoque, setEstoque] = useState<ItemEstoque[]>([]);
 
   useEffect(() => {
     (async () => {
-      const [pac, ag, fin, cts] = await Promise.all([
+      const [pac, ag, fin, cts, prot, est] = await Promise.all([
         DB.pacientes.list(),
         DB.agendamentos.list(),
         DB.financeiro.list(),
         DB.contas.list(),
+        DB.proteses.list(),
+        DB.estoque.list(),
       ]);
       setPacientes(pac);
       setAgendamentos(ag);
       setFinanceiro(fin);
       setContas(cts);
+      setProteses(prot);
+      setEstoque(est);
     })();
   }, []);
 
@@ -57,7 +63,18 @@ export default function DashboardPage() {
   // A Receber agora vem das contas/parcelas (mais fiel que os lançamentos pendentes)
   const parcelas = contas.filter((c) => c.status !== "cancelada").flatMap((c) => c.parcelas ?? []);
   const aReceber = parcelas.filter((p) => !p.pago).reduce((s, p) => s + p.valor, 0);
-  const emAtraso = parcelas.filter((p) => !p.pago && p.vencimento && p.vencimento < hoje()).reduce((s, p) => s + p.valor, 0);
+  const parcelasAtrasadas = parcelas.filter((p) => !p.pago && p.vencimento && p.vencimento < hoje());
+  const emAtraso = parcelasAtrasadas.reduce((s, p) => s + p.valor, 0);
+
+  // ── Pendências acionáveis (painel "Precisa de atenção") ──
+  const protesesAtrasadas = proteses.filter(
+    (p) => (p.status === "solicitada" || p.status === "laboratorio") && !!p.previsaoRetorno && p.previsaoRetorno < hoje(),
+  ).length;
+  const retornosVencidos = pacientes.filter((p) => !!p.proximaRevisao && p.proximaRevisao < hoje()).length;
+  const recuperacaoPendentes = agendamentos.filter(
+    (a) => ((a.presenca === "faltou" && !a.cancelado) || a.cancelado) && a.recuperacao !== "recuperado",
+  ).length;
+  const estoqueBaixo = estoque.filter((i) => i.quantidade <= i.minimo).length;
 
   // Próximos: confirmados de hoje em diante, ordenados por data e horário.
   const proximosAgendamentos = agendamentos
@@ -90,6 +107,34 @@ export default function DashboardPage() {
       router.push("/admin/prontuario");
     }
   };
+
+  const alertas = [
+    parcelasAtrasadas.length > 0 && {
+      href: "/admin/receber", cor: "var(--danger)",
+      titulo: `${brl(emAtraso)} em atraso`, sub: `${parcelasAtrasadas.length} parcela${parcelasAtrasadas.length === 1 ? "" : "s"} vencida${parcelasAtrasadas.length === 1 ? "" : "s"}`,
+      d: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
+    },
+    protesesAtrasadas > 0 && {
+      href: "/admin/proteses", cor: "#ea580c",
+      titulo: `${protesesAtrasadas} prótese${protesesAtrasadas === 1 ? "" : "s"} atrasada${protesesAtrasadas === 1 ? "" : "s"}`, sub: "Passou da previsão de retorno do laboratório",
+      d: "M12 2c-2.5 0-4 1.5-4 4 0 1.2.4 2.3.4 4 0 4 .6 8 1.6 12 .3 1 1.7 1 2 0 1-4 1.6-8 1.6-12 0-1.7.4-2.8.4-4 0-2.5-1.5-4-4-4z",
+    },
+    recuperacaoPendentes > 0 && {
+      href: "/admin/relacionamento", cor: "var(--warning)",
+      titulo: `${recuperacaoPendentes} paciente${recuperacaoPendentes === 1 ? "" : "s"} a recuperar`, sub: "Faltas/desmarcações aguardando contato",
+      d: "M22 11l-3 3-2-2M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8z",
+    },
+    retornosVencidos > 0 && {
+      href: "/admin/retornos", cor: "#0ea5e9",
+      titulo: `${retornosVencidos} retorno${retornosVencidos === 1 ? "" : "s"} vencido${retornosVencidos === 1 ? "" : "s"}`, sub: "Pacientes com revisão atrasada",
+      d: "M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5",
+    },
+    estoqueBaixo > 0 && {
+      href: "/admin/estoque", cor: "var(--danger)",
+      titulo: `${estoqueBaixo} item${estoqueBaixo === 1 ? "" : "ns"} em falta`, sub: "Estoque no mínimo ou abaixo",
+      d: "M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16",
+    },
+  ].filter(Boolean) as { href: string; cor: string; titulo: string; sub: string; d: string }[];
 
   return (
     <>
@@ -171,6 +216,34 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Precisa de atenção */}
+        <div className="card" style={{ marginTop: 24, marginBottom: 24, padding: "16px 20px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: alertas.length ? 12 : 0 }}>
+            <svg fill="none" viewBox="0 0 24 24" stroke="var(--primary)" strokeWidth="2" style={{ width: 18, height: 18 }}>
+              <path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            </svg>
+            <span style={{ fontWeight: 700, fontSize: 15 }}>Precisa de atenção</span>
+            {alertas.length > 0 && <span className="badge badge-warning">{alertas.length}</span>}
+          </div>
+          {alertas.length === 0 ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--text-muted)", fontSize: 14 }}>
+              <span style={{ fontSize: 18 }} aria-hidden>✅</span> Tudo em dia — sem pendências no momento.
+            </div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 10 }}>
+              {alertas.map((a) => (
+                <Link key={a.href} href={a.href} style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", color: "inherit", background: "var(--bg2)", borderRadius: 10, borderLeft: `4px solid ${a.cor}`, padding: "10px 14px" }}>
+                  <svg fill="none" viewBox="0 0 24 24" stroke={a.cor} strokeWidth="2" style={{ width: 20, height: 20, flexShrink: 0 }}><path d={a.d} /></svg>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13 }}>{a.titulo}</div>
+                    <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{a.sub}</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
 
         {aniversariantes.length > 0 && (
