@@ -23,6 +23,7 @@ const pct = (v: number) => `${(v || 0).toLocaleString("pt-BR", { maximumFraction
 const isoDia = (d: Date) => d.toISOString().split("T")[0];
 const primeiroDiaMes = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
 const ultimoDiaMes = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0);
+const ymKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 
 // Converte qualquer string de data (yyyy-mm-dd ou ISO timestamp) p/ Date local "no início do dia".
 function paraData(s?: string): Date | null {
@@ -266,12 +267,94 @@ export default function RelatoriosPage() {
     });
     const semProf = agValidos.filter((a) => !a.profissionalId).length;
 
+    // ── C7: Financeiro avançado ───────────────────────────
+    // Fluxo de caixa por mês: entradas = receitas pagas (financeiro) + parcelas
+    // pagas (pagoEm no mês); saídas = despesas pagas; previsto = parcelas a vencer no mês.
+    let acumulado = 0;
+    const fluxo = meses.map((ym) => {
+      const finMes = financeiro.filter((f) => {
+        const d = paraData(f.data);
+        return d && ymKey(d) === ym && f.status === "pago";
+      });
+      const entradasFin = finMes.filter((f) => f.tipo === "receita").reduce((s, f) => s + f.valor, 0);
+      const saidas = finMes.filter((f) => f.tipo === "despesa").reduce((s, f) => s + f.valor, 0);
+      const entradasParc = parcelas
+        .filter((p) => p.pago && p.pagoEm && ymKey(paraData(p.pagoEm)!) === ym)
+        .reduce((s, p) => s + p.valor, 0);
+      const entradas = entradasFin + entradasParc;
+      const previsto = parcelas
+        .filter((p) => !p.pago && p.vencimento && ymKey(paraData(p.vencimento)!) === ym)
+        .reduce((s, p) => s + p.valor, 0);
+      const saldoMes = entradas - saidas;
+      acumulado += saldoMes;
+      return { ym, entradas, saidas, saldo: saldoMes, previsto, acumulado };
+    });
+
+    // Previsão de recebimentos: próximos 6 meses a partir do mês corrente.
+    const hojeD = new Date();
+    const mesesFuturos: string[] = [];
+    const cur = new Date(hojeD.getFullYear(), hojeD.getMonth(), 1);
+    for (let i = 0; i < 6; i++) {
+      mesesFuturos.push(ymKey(cur));
+      cur.setMonth(cur.getMonth() + 1);
+    }
+    const previsao = mesesFuturos.map((ym) => ({
+      ym,
+      valor: parcelas
+        .filter((p) => !p.pago && p.vencimento && ymKey(paraData(p.vencimento)!) === ym)
+        .reduce((s, p) => s + p.valor, 0),
+    }));
+    const previsaoTotal = previsao.reduce((s, p) => s + p.valor, 0);
+
+    // Inadimplência (aging) — snapshot atual das parcelas não pagas por dias de atraso.
+    const naoPagas = parcelas.filter((p) => !p.pago);
+    const diasAtraso = (venc?: string) => {
+      const d = paraData(venc);
+      if (!d) return -1;
+      return Math.floor((hojeD.getTime() - d.getTime()) / 86400000);
+    };
+    const aging = { aVencer: 0, d1_30: 0, d31_60: 0, d61_90: 0, d90: 0 };
+    naoPagas.forEach((p) => {
+      const dd = diasAtraso(p.vencimento);
+      if (dd <= 0) aging.aVencer += p.valor;
+      else if (dd <= 30) aging.d1_30 += p.valor;
+      else if (dd <= 60) aging.d31_60 += p.valor;
+      else if (dd <= 90) aging.d61_90 += p.valor;
+      else aging.d90 += p.valor;
+    });
+    const totalInadimplente = aging.d1_30 + aging.d31_60 + aging.d61_90 + aging.d90;
+    const totalEmAberto = totalInadimplente + aging.aVencer;
+    const taxaInadimplencia = totalEmAberto > 0 ? (totalInadimplente / totalEmAberto) * 100 : 0;
+
+    // Ticket médio (produção do período).
+    const qtdProc = procPeriodo.length;
+    const ticketProcedimento = qtdProc > 0 ? producaoTotal / qtdProc : 0;
+    const pacientesAtendidos = new Set(procPeriodo.map((p) => p.pacienteId)).size;
+    const producaoPorPaciente = pacientesAtendidos > 0 ? producaoTotal / pacientesAtendidos : 0;
+
+    // Distribuição da receita recebida no período, por forma de pagamento.
+    const formaMap: Record<string, number> = {};
+    finPeriodo
+      .filter((f) => f.tipo === "receita" && f.status === "pago")
+      .forEach((f) => { const k = f.formaPagto || "Não informado"; formaMap[k] = (formaMap[k] || 0) + f.valor; });
+    parcelas
+      .filter((p) => p.pago && noPeriodo(p.pagoEm, de, ate))
+      .forEach((p) => { const k = p.formaPagamento || "Não informado"; formaMap[k] = (formaMap[k] || 0) + p.valor; });
+    const totalDist = Object.values(formaMap).reduce((s, v) => s + v, 0);
+    const distForma = Object.entries(formaMap)
+      .map(([rotulo, valor]) => ({ rotulo, valor, pct: totalDist > 0 ? (valor / totalDist) * 100 : 0 }))
+      .sort((a, b) => b.valor - a.valor);
+
     return {
       receitaPaga, despesaPaga, saldo, recebidoParcelas, aReceber, emAtraso,
       novosPacientes, meses, serieMensal, novosPorMes,
       producao, producaoTotal, procPendentes,
       compareceu, faltou, agendado, taxaComparecimento, baseComp,
       porProf, semProf,
+      fluxo, previsao, previsaoTotal,
+      aging, totalInadimplente, totalEmAberto, taxaInadimplencia,
+      ticketProcedimento, qtdProc, pacientesAtendidos, producaoPorPaciente,
+      distForma, totalDist,
     };
   }, [financeiro, contas, pacientes, procedimentos, agendamentos, profissionais, de, ate]);
 
@@ -299,6 +382,24 @@ export default function RelatoriosPage() {
     linhas.push([]);
     linhas.push(["Profissional", "Agendamentos", "Compareceu", "Faltou", "Taxa (%)"]);
     m.porProf.forEach((p) => linhas.push([p.nome, p.total, p.compareceu, p.faltou, p.taxa.toFixed(1)]));
+    linhas.push([]);
+    linhas.push(["Fluxo de caixa por mês", "Entradas", "Saídas", "Saldo", "Acumulado", "A receber (previsto)"]);
+    m.fluxo.forEach((f) => linhas.push([rotuloMes(f.ym), f.entradas.toFixed(2), f.saidas.toFixed(2), f.saldo.toFixed(2), f.acumulado.toFixed(2), f.previsto.toFixed(2)]));
+    linhas.push([]);
+    linhas.push(["Inadimplência (atual)", "Valor"]);
+    linhas.push(["A vencer", m.aging.aVencer.toFixed(2)]);
+    linhas.push(["1–30 dias", m.aging.d1_30.toFixed(2)]);
+    linhas.push(["31–60 dias", m.aging.d31_60.toFixed(2)]);
+    linhas.push(["61–90 dias", m.aging.d61_90.toFixed(2)]);
+    linhas.push(["+90 dias", m.aging.d90.toFixed(2)]);
+    linhas.push(["Total vencido", m.totalInadimplente.toFixed(2)]);
+    linhas.push(["Taxa de inadimplência (%)", m.taxaInadimplencia.toFixed(1)]);
+    linhas.push([]);
+    linhas.push(["Distribuição da receita por forma de pagamento", "Valor", "%"]);
+    m.distForma.forEach((d) => linhas.push([d.rotulo, d.valor.toFixed(2), d.pct.toFixed(1)]));
+    linhas.push([]);
+    linhas.push(["Ticket médio por procedimento", m.ticketProcedimento.toFixed(2)]);
+    linhas.push(["Produção média por paciente", m.producaoPorPaciente.toFixed(2)]);
     baixarCSV(`relatorio-${de}-a-${ate}.csv`, linhas);
     showToast("CSV exportado.", "success");
   };
@@ -312,6 +413,12 @@ export default function RelatoriosPage() {
       .join("");
     const linhasMes = m.meses
       .map((ym, i) => `<tr><td>${rotuloMes(ym)}</td><td style="text-align:right;color:#059669">${brl(m.serieMensal[i].receita)}</td><td style="text-align:right;color:#dc2626">${brl(m.serieMensal[i].despesa)}</td></tr>`)
+      .join("");
+    const linhasFluxo = m.fluxo
+      .map((f) => `<tr><td>${rotuloMes(f.ym)}</td><td style="text-align:right;color:#059669">${brl(f.entradas)}</td><td style="text-align:right;color:#dc2626">${brl(f.saidas)}</td><td style="text-align:right;font-weight:700">${brl(f.saldo)}</td><td style="text-align:right">${brl(f.acumulado)}</td><td style="text-align:right;color:#d97706">${f.previsto > 0 ? brl(f.previsto) : "—"}</td></tr>`)
+      .join("");
+    const linhasDist = m.distForma
+      .map((d) => `<tr><td>${d.rotulo}</td><td style="text-align:right">${brl(d.valor)}</td><td style="text-align:right">${pct(d.pct)}</td></tr>`)
       .join("");
     const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
 <title>Relatório — ${clinica?.nome ?? "Clínica"}</title>
@@ -339,7 +446,24 @@ export default function RelatoriosPage() {
 </div>
 <h2>Faturamento por mês</h2>
 <table><thead><tr><th>Mês</th><th style="text-align:right">Receita</th><th style="text-align:right">Despesa</th></tr></thead><tbody>${linhasMes || '<tr><td colspan="3">Sem dados</td></tr>'}</tbody></table>
-<h2>Produção (procedimentos concluídos)</h2>
+<h2>Fluxo de caixa por mês</h2>
+<table><thead><tr><th>Mês</th><th style="text-align:right">Entradas</th><th style="text-align:right">Saídas</th><th style="text-align:right">Saldo</th><th style="text-align:right">Acumulado</th><th style="text-align:right">A receber</th></tr></thead><tbody>${linhasFluxo || '<tr><td colspan="6">Sem dados</td></tr>'}</tbody></table>
+<h2>Inadimplência <span style="font-weight:400;color:#94a3b8;font-size:11px">(situação atual)</span></h2>
+<div class="kpis">
+  <div class="kpi"><div class="l">Total vencido</div><div class="v" style="color:#dc2626">${brl(m.totalInadimplente)}</div></div>
+  <div class="kpi"><div class="l">Em aberto</div><div class="v">${brl(m.totalEmAberto)}</div></div>
+  <div class="kpi"><div class="l">Taxa de inadimplência</div><div class="v">${pct(m.taxaInadimplencia)}</div></div>
+</div>
+<table><thead><tr><th>Faixa</th><th style="text-align:right">Valor</th></tr></thead><tbody>
+  <tr><td>A vencer</td><td style="text-align:right">${brl(m.aging.aVencer)}</td></tr>
+  <tr><td>1–30 dias</td><td style="text-align:right">${brl(m.aging.d1_30)}</td></tr>
+  <tr><td>31–60 dias</td><td style="text-align:right">${brl(m.aging.d31_60)}</td></tr>
+  <tr><td>61–90 dias</td><td style="text-align:right">${brl(m.aging.d61_90)}</td></tr>
+  <tr><td>+90 dias</td><td style="text-align:right">${brl(m.aging.d90)}</td></tr>
+</tbody></table>
+<h2>Distribuição da receita <span style="font-weight:400;color:#94a3b8;font-size:11px">(por forma de pagamento)</span></h2>
+<table><thead><tr><th>Forma de pagamento</th><th style="text-align:right">Valor</th><th style="text-align:right">%</th></tr></thead><tbody>${linhasDist || '<tr><td colspan="3">Sem dados</td></tr>'}</tbody></table>
+<h2>Produção (procedimentos concluídos) <span style="font-weight:400;color:#94a3b8;font-size:11px">(ticket médio ${m.qtdProc > 0 ? brl(m.ticketProcedimento) : "—"})</span></h2>
 <table><thead><tr><th>Procedimento</th><th style="text-align:center">Qtd</th><th style="text-align:right">Valor</th></tr></thead><tbody>${linhasProd || '<tr><td colspan="3">Sem dados</td></tr>'}<tr><th>TOTAL</th><th style="text-align:center">${m.producao.reduce((s, p) => s + p.qtd, 0)}</th><th style="text-align:right">${brl(m.producaoTotal)}</th></tr></tbody></table>
 <h2>Desempenho por profissional <span style="font-weight:400;color:#94a3b8;font-size:11px">(comparecimento no período)</span></h2>
 <table><thead><tr><th>Profissional</th><th style="text-align:center">Agend.</th><th style="text-align:center">Compareceu</th><th style="text-align:center">Faltou</th><th style="text-align:right">Taxa</th></tr></thead><tbody>${linhasProf || '<tr><td colspan="5">Sem dados</td></tr>'}</tbody></table>
@@ -432,6 +556,128 @@ export default function RelatoriosPage() {
               ) : (
                 <EmptyState compact icon={<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.7" style={{ width: 26, height: 26 }}><path d="M3 3v18h18M7 16l4-4 4 4 5-6" /></svg>} title="Sem lançamentos no período" hint="Registre recebimentos e despesas no Financeiro." />
               )}
+            </div>
+
+            {/* ── C7: Financeiro avançado ───────────────────── */}
+            <h2 style={{ fontSize: 15, fontWeight: 700, margin: "8px 2px 14px", color: "var(--text)" }}>Financeiro avançado</h2>
+
+            {/* Fluxo de caixa */}
+            <div className="card mb-6">
+              <div className="card-header">
+                <h3 className="card-title">Fluxo de caixa por mês</h3>
+                <span style={{ fontSize: 12, color: "var(--text-muted)" }}>entradas (caixa) − saídas, com saldo acumulado</span>
+              </div>
+              {m.fluxo.some((f) => f.entradas > 0 || f.saidas > 0 || f.previsto > 0) ? (
+                <div className="table-wrapper">
+                  <table>
+                    <thead>
+                      <tr><th>Mês</th><th style={{ textAlign: "right" }}>Entradas</th><th style={{ textAlign: "right" }}>Saídas</th><th style={{ textAlign: "right" }}>Saldo</th><th style={{ textAlign: "right" }}>Acumulado</th><th style={{ textAlign: "right" }}>A receber (previsto)</th></tr>
+                    </thead>
+                    <tbody>
+                      {m.fluxo.map((f) => (
+                        <tr key={f.ym}>
+                          <td><strong>{rotuloMes(f.ym)}</strong></td>
+                          <td style={{ textAlign: "right", color: "var(--success)" }}>{brl(f.entradas)}</td>
+                          <td style={{ textAlign: "right", color: "var(--danger)" }}>{brl(f.saidas)}</td>
+                          <td style={{ textAlign: "right", fontWeight: 700, color: f.saldo >= 0 ? "var(--text)" : "var(--danger)" }}>{brl(f.saldo)}</td>
+                          <td style={{ textAlign: "right", color: f.acumulado >= 0 ? "var(--primary)" : "var(--danger)" }}>{brl(f.acumulado)}</td>
+                          <td style={{ textAlign: "right", color: "var(--warning)" }}>{f.previsto > 0 ? brl(f.previsto) : "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <EmptyState compact title="Sem movimentação no período" hint="Registre recebimentos/despesas e cobranças para ver o fluxo." />
+              )}
+            </div>
+
+            <div className="dashboard-cols">
+              {/* Previsão de recebimentos */}
+              <div className="card">
+                <div className="card-header">
+                  <h3 className="card-title">Previsão de recebimentos</h3>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--primary)" }}>{brl(m.previsaoTotal)}</span>
+                </div>
+                {m.previsaoTotal > 0 ? (
+                  <>
+                    <BarrasHorizontais itens={m.previsao.map((p) => ({ rotulo: rotuloMes(p.ym), valor: p.valor, sub: brl(p.valor) }))} />
+                    <p style={{ fontSize: 11, color: "var(--text-muted)", margin: "10px 0 0" }}>Parcelas em aberto pelos próximos 6 meses (por vencimento).</p>
+                  </>
+                ) : (
+                  <EmptyState compact title="Nada a receber à frente" hint="Sem parcelas em aberto com vencimento futuro." />
+                )}
+              </div>
+
+              {/* Inadimplência */}
+              <div className="card">
+                <div className="card-header">
+                  <h3 className="card-title">Inadimplência</h3>
+                  <span className={`badge ${m.taxaInadimplencia >= 30 ? "badge-danger" : m.taxaInadimplencia >= 10 ? "badge-warning" : "badge-success"}`}>{pct(m.taxaInadimplencia)} em atraso</span>
+                </div>
+                {m.totalEmAberto > 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                      <span style={{ fontSize: 26, fontWeight: 800, color: "var(--danger)" }}>{brl(m.totalInadimplente)}</span>
+                      <span style={{ fontSize: 13, color: "var(--text-muted)" }}>vencido de {brl(m.totalEmAberto)} em aberto</span>
+                    </div>
+                    {([["A vencer", m.aging.aVencer, "var(--text-muted)"], ["1–30 dias", m.aging.d1_30, "var(--warning)"], ["31–60 dias", m.aging.d31_60, "#ea580c"], ["61–90 dias", m.aging.d61_90, "var(--danger)"], ["+90 dias", m.aging.d90, "#991b1b"]] as [string, number, string][]).map(([rot, val, cor]) => (
+                      <div key={rot} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <span style={{ width: 80, fontSize: 12, color: "var(--text-muted)", flexShrink: 0 }}>{rot}</span>
+                        <div style={{ flex: 1, background: "var(--bg2)", borderRadius: 5, height: 16, minWidth: 40 }}>
+                          <div style={{ width: `${m.totalEmAberto > 0 ? (val / m.totalEmAberto) * 100 : 0}%`, height: "100%", background: cor, borderRadius: 5, minWidth: val > 0 ? 2 : 0 }} />
+                        </div>
+                        <span style={{ width: 100, textAlign: "right", fontSize: 12, fontWeight: 600, flexShrink: 0 }}>{brl(val)}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState compact title="Nenhuma cobrança em aberto" hint="Todas as parcelas estão quitadas." />
+                )}
+              </div>
+            </div>
+
+            {/* Ticket médio + distribuição por forma de pagamento */}
+            <div className="dashboard-cols mb-6">
+              <div className="card">
+                <div className="card-header">
+                  <h3 className="card-title">Ticket médio (período)</h3>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  <div>
+                    <div style={{ fontSize: 11, textTransform: "uppercase", color: "var(--text-muted)", letterSpacing: 0.3 }}>Por procedimento concluído</div>
+                    <div style={{ fontSize: 24, fontWeight: 800, color: "var(--primary)" }}>{m.qtdProc > 0 ? brl(m.ticketProcedimento) : "—"}</div>
+                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{m.qtdProc} procedimento{m.qtdProc === 1 ? "" : "s"} · {brl(m.producaoTotal)}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, textTransform: "uppercase", color: "var(--text-muted)", letterSpacing: 0.3 }}>Produção média por paciente</div>
+                    <div style={{ fontSize: 24, fontWeight: 800 }}>{m.pacientesAtendidos > 0 ? brl(m.producaoPorPaciente) : "—"}</div>
+                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{m.pacientesAtendidos} paciente{m.pacientesAtendidos === 1 ? "" : "s"} atendido{m.pacientesAtendidos === 1 ? "" : "s"}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="card">
+                <div className="card-header">
+                  <h3 className="card-title">Distribuição da receita</h3>
+                  <span style={{ fontSize: 12, color: "var(--text-muted)" }}>por forma de pagamento</span>
+                </div>
+                {m.distForma.length > 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {m.distForma.map((d) => (
+                      <div key={d.rotulo} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <span style={{ width: 120, fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flexShrink: 0 }}>{d.rotulo}</span>
+                        <div style={{ flex: 1, background: "var(--bg2)", borderRadius: 6, height: 18, minWidth: 40 }}>
+                          <div style={{ width: `${d.pct}%`, height: "100%", background: "linear-gradient(90deg, var(--primary), var(--primary-darker))", borderRadius: 6, minWidth: 2 }} />
+                        </div>
+                        <span style={{ width: 130, textAlign: "right", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{brl(d.valor)} · {pct(d.pct)}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState compact title="Sem receita recebida no período" hint="Registre recebimentos no Financeiro ou em A Receber." />
+                )}
+              </div>
             </div>
 
             <div className="dashboard-cols">
