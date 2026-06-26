@@ -335,6 +335,25 @@ export default function ConfigPage() {
               </div>
             </div>
 
+            <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
+              <h4 style={{ margin: "0 0 4px", fontSize: 14 }}>Agendamento online</h4>
+              <p style={{ fontSize: 12, color: "var(--text-muted)", margin: "0 0 12px" }}>
+                Página pública onde o paciente pede um horário (sem login). Os pedidos chegam em “Solicitações”.
+              </p>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, cursor: "pointer", marginBottom: 12 }}>
+                <input type="checkbox" checked={clinica.agendamentoOnline ?? true} onChange={(e) => setClinica((c) => (c ? { ...c, agendamentoOnline: e.target.checked } : c))} />
+                Aceitar solicitações de agendamento online
+              </label>
+              <div className="form-group" style={{ maxWidth: 420 }}>
+                <label className="form-label">Link para compartilhar</label>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <input className="form-control" readOnly value={typeof window !== "undefined" ? `${window.location.origin}/agendar` : "/agendar"} onFocus={(e) => e.target.select()} />
+                  <button className="btn btn-outline" type="button" onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/agendar`); showToast("Link copiado.", "success"); }}>Copiar</button>
+                </div>
+                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Coloque no Instagram, WhatsApp, Google Meu Negócio etc.</span>
+              </div>
+            </div>
+
             <div style={{ marginTop: 8 }}>
               <button className="btn btn-primary" onClick={salvarClinica}>Salvar dados da clínica</button>
             </div>

@@ -213,6 +213,23 @@ export interface Clinica {
   agendaHoraInicio?: number; // hora de abertura da agenda (default 7)
   agendaHoraFim?: number;    // hora de fechamento da agenda (default 19)
   infinitepayHandle?: string; // InfiniteTag (sem $) p/ gerar links de pagamento (S9)
+  agendamentoOnline?: boolean; // liga/desliga o agendamento online público (S8)
+}
+
+export type PeriodoPreferido = 'manha' | 'tarde' | 'qualquer';
+
+export interface SolicitacaoAgendamento {
+  id?: number;
+  nome: string;
+  telefone: string;
+  email?: string;
+  procedimento?: string;
+  dataPreferida?: string;
+  periodo: PeriodoPreferido;
+  obs?: string;
+  status: 'pendente' | 'aceita' | 'recusada';
+  agendamentoId?: number;
+  criadoEm?: string;
 }
 
 export interface Usuario {

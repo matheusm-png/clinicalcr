@@ -22,6 +22,7 @@ import {
   Medicamento,
   ModeloAnamnese,
   Protese,
+  SolicitacaoAgendamento,
 } from "./types";
 
 // ============================================================
@@ -327,6 +328,19 @@ const fromProtese = (r: any): Protese => ({
   previsaoRetorno: r.previsao_retorno ?? undefined,
   instaladoEm: r.instalado_em ?? undefined,
   obs: r.obs ?? "",
+  criadoEm: r.created_at,
+});
+const fromSolicitacao = (r: any): SolicitacaoAgendamento => ({
+  id: r.id,
+  nome: r.nome,
+  telefone: r.telefone,
+  email: r.email ?? "",
+  procedimento: r.procedimento ?? "",
+  dataPreferida: r.data_preferida ?? undefined,
+  periodo: r.periodo ?? "qualquer",
+  obs: r.obs ?? "",
+  status: r.status,
+  agendamentoId: r.agendamento_id ?? undefined,
   criadoEm: r.created_at,
 });
 const toProtese = (p: Protese): Record<string, unknown> => ({
@@ -730,6 +744,7 @@ export const DB = {
         uf: data.uf ?? "", logoUrl: data.logo_url ?? "",
         agendaHoraInicio: data.agenda_hora_inicio ?? 7, agendaHoraFim: data.agenda_hora_fim ?? 19,
         infinitepayHandle: data.infinitepay_handle ?? "",
+        agendamentoOnline: data.agendamento_online ?? true,
       };
     },
     async update(c: Clinica): Promise<void> {
@@ -741,6 +756,7 @@ export const DB = {
         ...(c.agendaHoraInicio != null ? { agenda_hora_inicio: c.agendaHoraInicio } : {}),
         ...(c.agendaHoraFim != null ? { agenda_hora_fim: c.agendaHoraFim } : {}),
         ...(c.infinitepayHandle !== undefined ? { infinitepay_handle: orNull(c.infinitepayHandle) } : {}),
+        ...(c.agendamentoOnline !== undefined ? { agendamento_online: c.agendamentoOnline } : {}),
       }).eq("id", c.id);
       if (error) throw error;
     },
@@ -752,6 +768,52 @@ export const DB = {
     save: (p: Protese) =>
       saveTable<Protese>("proteses", toProtese, fromProtese, p),
     remove: (id: number | string) => removeTable("proteses", id),
+  },
+
+  solicitacoes: {
+    // Caixa de entrada do agendamento online (mais recentes primeiro).
+    async list(): Promise<SolicitacaoAgendamento[]> {
+      if (semBackend()) return [];
+      const { data, error } = await sb().from("solicitacoes_agendamento").select("*").order("id", { ascending: false });
+      if (error) {
+        console.error("[DB] listar solicitações:", error.message);
+        return [];
+      }
+      return (data ?? []).map(fromSolicitacao);
+    },
+    async recusar(id: number): Promise<void> {
+      if (semBackend()) return;
+      const { error } = await sb().from("solicitacoes_agendamento").update({ status: "recusada" }).eq("id", id);
+      if (error) throw error;
+    },
+    // Aceita a solicitação: cria a consulta na agenda e marca a solicitação como aceita.
+    async aceitar(
+      sol: SolicitacaoAgendamento,
+      ag: { data: string; hora: number; min: number; dur: number; proc: string; profissionalId?: number },
+    ): Promise<void> {
+      if (semBackend()) throw new Error("Supabase não configurado.");
+      const { data: novo, error: e1 } = await sb()
+        .from("agendamentos")
+        .insert({
+          paciente: sol.nome,
+          proc: ag.proc || sol.procedimento || "Consulta",
+          data: ag.data,
+          hora: ag.hora,
+          min: ag.min,
+          dur: ag.dur,
+          status: "pendente",
+          profissional_id: ag.profissionalId ?? null,
+          obs: `Solicitado online${sol.telefone ? ` · ${sol.telefone}` : ""}${sol.obs ? ` · ${sol.obs}` : ""}`,
+        })
+        .select("id")
+        .single();
+      if (e1) throw e1;
+      const { error: e2 } = await sb()
+        .from("solicitacoes_agendamento")
+        .update({ status: "aceita", agendamento_id: novo.id })
+        .eq("id", sol.id!);
+      if (e2) throw e2;
+    },
   },
 
   marcadores: {

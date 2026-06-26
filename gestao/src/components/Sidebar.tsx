@@ -138,6 +138,15 @@ export default function Sidebar() {
             </Link>
           </li>
           <li>
+            <Link href="/admin/solicitacoes" className={isActive("/admin/solicitacoes") ? "active" : ""}>
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                <path d="M8 9h8M8 13h5" />
+              </svg>
+              Solicitações
+            </Link>
+          </li>
+          <li>
             <Link href="/admin/pacientes" className={isActive("/admin/pacientes") ? "active" : ""}>
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
