@@ -226,6 +226,8 @@ export interface SolicitacaoAgendamento {
   procedimento?: string;
   dataPreferida?: string;
   periodo: PeriodoPreferido;
+  horaPreferida?: number;
+  minPreferida?: number;
   obs?: string;
   status: 'pendente' | 'aceita' | 'recusada';
   agendamentoId?: number;

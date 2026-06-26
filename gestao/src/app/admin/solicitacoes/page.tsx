@@ -10,6 +10,8 @@ import EmptyState from "@/components/EmptyState";
 const PERIODO_LABEL: Record<string, string> = { manha: "Manhã", tarde: "Tarde", qualquer: "Qualquer" };
 const fmtData = (s?: string) => (s ? new Date(s + "T00:00:00").toLocaleDateString("pt-BR") : "—");
 const fmtDataHora = (s?: string) => (s ? new Date(s).toLocaleString("pt-BR") : "—");
+const fmtHora = (h?: number, m?: number) =>
+  h == null ? "" : `${String(h).padStart(2, "0")}:${String(m ?? 0).padStart(2, "0")}`;
 
 export default function SolicitacoesPage() {
   const { showToast, confirm } = useToast();
@@ -39,7 +41,7 @@ export default function SolicitacoesPage() {
 
   const abrirAceitar = (s: SolicitacaoAgendamento) => {
     setAData(s.dataPreferida || new Date().toISOString().split("T")[0]);
-    setAHora(s.periodo === "tarde" ? "14:00" : "09:00");
+    setAHora(s.horaPreferida != null ? fmtHora(s.horaPreferida, s.minPreferida) : s.periodo === "tarde" ? "14:00" : "09:00");
     setADur(30);
     setAProc(s.procedimento || "Consulta");
     setAProf(profissionais.length === 1 ? String(profissionais[0].id) : "");
@@ -119,7 +121,7 @@ export default function SolicitacoesPage() {
                       {s.telefone}{s.email ? ` · ${s.email}` : ""}
                     </div>
                     <div style={{ fontSize: 13, marginTop: 4 }}>
-                      {s.procedimento || "Consulta"} · preferência: <strong>{fmtData(s.dataPreferida)}</strong> ({PERIODO_LABEL[s.periodo]})
+                      {s.procedimento || "Consulta"} · preferência: <strong>{fmtData(s.dataPreferida)}</strong>{s.horaPreferida != null ? <> às <strong>{fmtHora(s.horaPreferida, s.minPreferida)}</strong></> : ` (${PERIODO_LABEL[s.periodo]})`}
                     </div>
                     {s.obs && <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>“{s.obs}”</div>}
                     <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>Recebido em {fmtDataHora(s.criadoEm)}</div>
@@ -149,7 +151,7 @@ export default function SolicitacoesPage() {
               </div>
               <div className="modal-body">
                 <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 14 }}>
-                  Preferência do paciente: {fmtData(aceitando.dataPreferida)} ({PERIODO_LABEL[aceitando.periodo]}). A consulta entra na agenda como <strong>pendente</strong>.
+                  Preferência do paciente: {fmtData(aceitando.dataPreferida)}{aceitando.horaPreferida != null ? ` às ${fmtHora(aceitando.horaPreferida, aceitando.minPreferida)}` : ` (${PERIODO_LABEL[aceitando.periodo]})`}. A consulta entra na agenda como <strong>pendente</strong>.
                 </p>
                 <div className="form-row form-row-2">
                   <div className="form-group">

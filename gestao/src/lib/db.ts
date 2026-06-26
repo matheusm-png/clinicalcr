@@ -338,6 +338,8 @@ const fromSolicitacao = (r: any): SolicitacaoAgendamento => ({
   procedimento: r.procedimento ?? "",
   dataPreferida: r.data_preferida ?? undefined,
   periodo: r.periodo ?? "qualquer",
+  horaPreferida: r.hora_preferida ?? undefined,
+  minPreferida: r.min_preferida ?? undefined,
   obs: r.obs ?? "",
   status: r.status,
   agendamentoId: r.agendamento_id ?? undefined,

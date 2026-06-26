@@ -22,6 +22,12 @@ export async function POST(req: Request) {
   const periodo = ["manha", "tarde", "qualquer"].includes(periodoRaw) ? periodoRaw : "qualquer";
   const obs = str(body.obs, 500);
 
+  // Horário específico escolhido na grade (opcional).
+  const num = (v: unknown, lo: number, hi: number) =>
+    typeof v === "number" && Number.isInteger(v) && v >= lo && v <= hi ? v : null;
+  const horaPreferida = num(body.hora, 0, 23);
+  const minPreferida = horaPreferida === null ? null : (num(body.min, 0, 59) ?? 0);
+
   if (!nome || telefone.replace(/\D/g, "").length < 8) {
     return NextResponse.json({ error: "Informe seu nome e um telefone válido." }, { status: 400 });
   }
@@ -49,6 +55,8 @@ export async function POST(req: Request) {
     data_preferida: dataPreferida || null,
     periodo,
     obs,
+    hora_preferida: horaPreferida,
+    min_preferida: minPreferida,
     status: "pendente",
   });
   if (error) {
