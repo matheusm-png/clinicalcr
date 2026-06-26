@@ -212,6 +212,7 @@ export interface Clinica {
   logoUrl?: string;
   agendaHoraInicio?: number; // hora de abertura da agenda (default 7)
   agendaHoraFim?: number;    // hora de fechamento da agenda (default 19)
+  infinitepayHandle?: string; // InfiniteTag (sem $) p/ gerar links de pagamento (S9)
 }
 
 export interface Usuario {
@@ -229,6 +230,10 @@ export interface Parcela {
   pago: boolean;
   pagoEm?: string;
   formaPagamento?: string;
+  // Link de pagamento InfinitePay (S9)
+  pagtoLink?: string;      // URL do checkout gerado
+  pagtoOrderNsu?: string;  // order_nsu enviado (= id da parcela)
+  pagtoSlug?: string;      // invoice_slug confirmado pelo webhook
 }
 
 export interface ContaReceber {

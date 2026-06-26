@@ -35,6 +35,9 @@ export default function ReceberPage() {
   const [iaTexto, setIaTexto] = useState("");
   const [iaLoading, setIaLoading] = useState(false);
 
+  // Geração de link de pagamento InfinitePay
+  const [gerandoLink, setGerandoLink] = useState<number | null>(null);
+
   useEffect(() => { load(); }, []);
 
   const load = async () => {
@@ -99,6 +102,47 @@ export default function ReceberPage() {
     } catch {
       showToast("Não foi possível registrar o pagamento.", "error");
     }
+  };
+
+  const telPaciente = (id: number) => (pacientes.find((p) => p.id === id)?.tel ?? "").replace(/\D/g, "");
+
+  // Gera (ou regenera) o link de pagamento InfinitePay da parcela.
+  const gerarLink = async (parcela: Parcela): Promise<string | null> => {
+    if (parcela.id == null) return null;
+    setGerandoLink(parcela.id);
+    try {
+      const res = await fetch("/api/pagamentos/link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ parcelaId: parcela.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Falha ao gerar link.");
+      await load();
+      if (!data.configurado) {
+        showToast("Link de DEMONSTRAÇÃO gerado. Cadastre a InfiniteTag em Configurações para cobrar de verdade.", "info");
+      } else {
+        showToast("Link de pagamento gerado.", "success");
+      }
+      return data.url as string;
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Falha ao gerar link.", "error");
+      return null;
+    } finally {
+      setGerandoLink(null);
+    }
+  };
+
+  // Gera o link (se preciso) e abre o WhatsApp do paciente com a mensagem + link.
+  const enviarLinkWhatsApp = async (conta: ContaReceber, parcela: Parcela) => {
+    const url = parcela.pagtoLink || (await gerarLink(parcela));
+    if (!url) return;
+    const tel = telPaciente(conta.pacienteId);
+    if (!tel) return showToast("Paciente sem telefone cadastrado.", "error");
+    const primeiro = nomePaciente(conta.pacienteId).split(" ")[0];
+    const msg = `Olá ${primeiro}! Segue o link para o pagamento da parcela ${parcela.numero} (${brl(parcela.valor)}): ${url}`;
+    const fone = tel.length >= 11 ? `55${tel}` : tel;
+    window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msg)}`, "_blank", "noopener,noreferrer");
   };
 
   const cancelar = async (c: ContaReceber) => {
@@ -273,9 +317,21 @@ export default function ReceberPage() {
                           </td>
                           <td>
                             {!p.pago && (
-                              <button className="btn btn-primary btn-sm" onClick={() => marcarPaga(detalhe, p)}>
-                                Marcar pago
-                              </button>
+                              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                                {p.pagtoLink ? (
+                                  <>
+                                    <button className="btn btn-outline btn-sm" title="Copiar link" onClick={() => { navigator.clipboard?.writeText(p.pagtoLink!); showToast("Link copiado.", "success"); }}>Copiar link</button>
+                                    <button className="btn btn-sm" style={{ background: "#25D366", color: "#fff" }} title="Enviar no WhatsApp" onClick={() => enviarLinkWhatsApp(detalhe, p)}>WhatsApp</button>
+                                  </>
+                                ) : (
+                                  <button className="btn btn-outline btn-sm" disabled={gerandoLink === p.id} onClick={() => gerarLink(p)}>
+                                    {gerandoLink === p.id ? "Gerando…" : "Gerar link"}
+                                  </button>
+                                )}
+                                <button className="btn btn-primary btn-sm" onClick={() => marcarPaga(detalhe, p)}>
+                                  Marcar pago
+                                </button>
+                              </div>
                             )}
                           </td>
                         </tr>

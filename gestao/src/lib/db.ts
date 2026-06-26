@@ -299,6 +299,9 @@ const fromParcela = (r: any): Parcela => ({
   pago: r.pago,
   pagoEm: r.pago_em ?? undefined,
   formaPagamento: r.forma_pagamento ?? "",
+  pagtoLink: r.pagto_link ?? undefined,
+  pagtoOrderNsu: r.pagto_order_nsu ?? undefined,
+  pagtoSlug: r.pagto_slug ?? undefined,
 });
 const fromConta = (r: any): ContaReceber => ({
   id: r.id,
@@ -665,6 +668,16 @@ export const DB = {
       }
     },
 
+    // Guarda o link de pagamento InfinitePay gerado para a parcela.
+    async salvarLinkParcela(parcelaId: number, link: string, orderNsu: string): Promise<void> {
+      if (semBackend()) return;
+      const { error } = await sb()
+        .from("parcelas")
+        .update({ pagto_link: link, pagto_order_nsu: orderNsu })
+        .eq("id", parcelaId);
+      if (error) throw error;
+    },
+
     async cancelar(contaId: number): Promise<void> {
       if (semBackend()) return;
       await sb().from("contas_receber").update({ status: "cancelada" }).eq("id", contaId);
@@ -685,6 +698,7 @@ export const DB = {
         numero: data.numero ?? "", bairro: data.bairro ?? "", cidade: data.cidade ?? "",
         uf: data.uf ?? "", logoUrl: data.logo_url ?? "",
         agendaHoraInicio: data.agenda_hora_inicio ?? 7, agendaHoraFim: data.agenda_hora_fim ?? 19,
+        infinitepayHandle: data.infinitepay_handle ?? "",
       };
     },
     async update(c: Clinica): Promise<void> {
@@ -695,6 +709,7 @@ export const DB = {
         bairro: orNull(c.bairro), cidade: orNull(c.cidade), uf: orNull(c.uf), logo_url: orNull(c.logoUrl),
         ...(c.agendaHoraInicio != null ? { agenda_hora_inicio: c.agendaHoraInicio } : {}),
         ...(c.agendaHoraFim != null ? { agenda_hora_fim: c.agendaHoraFim } : {}),
+        ...(c.infinitepayHandle !== undefined ? { infinitepay_handle: orNull(c.infinitepayHandle) } : {}),
       }).eq("id", c.id);
       if (error) throw error;
     },

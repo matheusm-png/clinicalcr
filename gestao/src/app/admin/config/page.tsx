@@ -314,6 +314,27 @@ export default function ConfigPage() {
                 <input className="form-control" value={clinica.uf ?? ""} onChange={(e) => setCampo("uf", e.target.value)} maxLength={2} />
               </div>
             </div>
+
+            <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
+              <h4 style={{ margin: "0 0 4px", fontSize: 14 }}>Pagamentos online (InfinitePay)</h4>
+              <p style={{ fontSize: 12, color: "var(--text-muted)", margin: "0 0 12px" }}>
+                Informe sua InfiniteTag para gerar links de pagamento (Pix/cartão) nas cobranças, em "A Receber". Sem isso, os links são apenas demonstração.
+              </p>
+              <div className="form-group" style={{ maxWidth: 320 }}>
+                <label className="form-label">InfiniteTag</label>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontSize: 18, color: "var(--text-muted)" }}>$</span>
+                  <input
+                    className="form-control"
+                    placeholder="suaclinica"
+                    value={clinica.infinitepayHandle ?? ""}
+                    onChange={(e) => setCampo("infinitepayHandle", e.target.value)}
+                  />
+                </div>
+                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>É o seu @ na InfinitePay (sem o "$"), encontrado no app InfinitePay.</span>
+              </div>
+            </div>
+
             <div style={{ marginTop: 8 }}>
               <button className="btn btn-primary" onClick={salvarClinica}>Salvar dados da clínica</button>
             </div>
