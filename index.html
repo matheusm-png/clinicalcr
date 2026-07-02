@@ -17,7 +17,7 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="assets/logo-lcr.png">
   <link rel="apple-touch-icon" href="assets/logo-lcr.png">
-  <meta name="theme-color" content="#3dbdbd">
+  <meta name="theme-color" content="#16403D">
 
   <!-- Open Graph (compartilhamento WhatsApp/Facebook/Instagram) -->
   <meta property="og:type" content="website">
@@ -37,7 +37,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@300;400;700;900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=Hanken+Grotesk:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
 
   <!-- Dados estruturados: ajuda a clínica a aparecer no Google/Maps de Irecê -->
   <script type="application/ld+json">
@@ -81,87 +81,122 @@
   }
   </script>
   <style>
+    /* ============ IDENTIDADE LCR — Petróleo & Sálvia ============ */
     :root {
-      --accent: #3dbdbd;
-      --accent-dark: #2a8f8f;
-      --dark: #0f172a;
-      --darker: #000000;
-      --light: #f8fafc;
-      --white: #ffffff;
-      --text-dark: #1e293b;
-      --text-light: #f1f5f9;
-      --text-muted: #64748b;
-      --font-title: 'Outfit', sans-serif;
-      --font-body: 'Inter', sans-serif;
+      --petroleo: #16403D;        /* principal · fundos */
+      --petroleo-deep: #0E2B29;   /* fundos profundos (hero, footer) */
+      --petroleo-soft: #1D4F4B;   /* superfícies sobre petróleo */
+      --salvia: #8FAFA8;          /* secundária */
+      --salvia-deep: #5F837C;     /* sálvia p/ texto sobre claro */
+      --creme: #EDE6D8;           /* fundo claro */
+      --paper: #F6F1E7;           /* papel, mais claro que o creme */
+      --terracota: #C0694B;       /* acento ~5%: um itálico, um traço, um botão */
+      --terracota-dark: #A85539;
+      --tinta: #1B1F1D;           /* textos */
+      --tinta-suave: #4A5350;     /* textos secundários sobre claro */
+      --creme-muted: rgba(237,230,216,0.62); /* texto secundário sobre petróleo */
+
+      --font-serif: 'Newsreader', Georgia, serif;
+      --font-sans: 'Hanken Grotesk', -apple-system, sans-serif;
+      --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', 'Roboto Mono', monospace;
+
+      --line: rgba(22,64,61,0.14);        /* linha sobre claro */
+      --line-dark: rgba(237,230,216,0.14); /* linha sobre escuro */
     }
 
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family: var(--font-body); color: var(--text-dark); background: var(--light); overflow-x: hidden; scroll-behavior: smooth; }
-
-    h1, h2, h3, h4 { font-family: var(--font-title); line-height: 1.2; }
-    a { text-decoration: none; transition: 0.3s; }
-    img { max-width: 100%; display: block; }
-    
-    .container { max-width: 1200px; margin: 0 auto; padding: 0 5%; }
-    section { padding: 100px 0; }
-
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      padding: 18px 36px; border-radius: 50px; font-weight: 600; font-family: var(--font-body);
-      font-size: 16px; cursor: pointer; transition: 0.3s; text-align: center;
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-sans); color: var(--tinta);
+      background: var(--paper); overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
     }
-    .btn-primary { background: var(--accent); color: var(--white); box-shadow: 0 10px 20px rgba(61,189,189,0.3); }
-    .btn-primary:hover { background: var(--accent-dark); transform: translateY(-3px); box-shadow: 0 15px 25px rgba(26,112,112,0.4); }
-    .btn-outline { border: 2px solid var(--white); color: var(--white); }
-    .btn-outline:hover { background: rgba(255,255,255,0.1); }
-    .btn-outline-dark { border: 2px solid var(--accent); color: var(--accent); }
-    .btn-outline-dark:hover { background: var(--accent); color: var(--white); }
 
-    /* Theme Sections */
-    .bg-dark { background: var(--darker); color: var(--text-light); }
-    .bg-dark .text-muted { color: #94a3b8; }
-    .bg-light { background: var(--light); color: var(--text-dark); }
-    .bg-white { background: var(--white); color: var(--text-dark); }
+    h1, h2, h3 { font-family: var(--font-serif); font-weight: 500; line-height: 1.12; letter-spacing: -0.01em; }
+    h1 em, h2 em, h3 em { font-style: italic; font-weight: 400; }
+    a { text-decoration: none; transition: 0.3s; color: inherit; }
+    img { max-width: 100%; display: block; }
 
-    /* Header */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 5%; }
+    section { padding: 110px 0; }
+
+    /* Eyebrow editorial em mono — "01 — SEÇÃO" */
+    .eyebrow {
+      display: inline-block; font-family: var(--font-mono);
+      font-size: 11.5px; font-weight: 500; letter-spacing: 2.5px;
+      text-transform: uppercase; color: var(--terracota); margin-bottom: 20px;
+    }
+    .bg-petroleo .eyebrow, .on-dark .eyebrow { color: var(--salvia); }
+
+    /* Botões */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 17px 34px; border-radius: 3px; font-weight: 600; font-family: var(--font-sans);
+      font-size: 15.5px; cursor: pointer; transition: 0.3s; text-align: center;
+      letter-spacing: 0.2px; border: 1px solid transparent;
+    }
+    .btn-terracota { background: var(--terracota); color: var(--paper); }
+    .btn-terracota:hover { background: var(--terracota-dark); transform: translateY(-2px); box-shadow: 0 14px 28px rgba(192,105,75,0.25); }
+    .btn-petroleo { background: var(--petroleo); color: var(--paper); }
+    .btn-petroleo:hover { background: var(--petroleo-deep); transform: translateY(-2px); box-shadow: 0 14px 28px rgba(22,64,61,0.22); }
+    .btn-outline-creme { border-color: rgba(237,230,216,0.35); color: var(--creme); }
+    .btn-outline-creme:hover { background: rgba(237,230,216,0.08); border-color: rgba(237,230,216,0.6); }
+    .btn-outline-petroleo { border-color: rgba(22,64,61,0.35); color: var(--petroleo); }
+    .btn-outline-petroleo:hover { background: rgba(22,64,61,0.06); border-color: var(--petroleo); }
+
+    /* Temas de seção */
+    .bg-petroleo { background: var(--petroleo); color: var(--creme); }
+    .bg-petroleo-deep { background: var(--petroleo-deep); color: var(--creme); }
+    .bg-creme { background: var(--creme); color: var(--tinta); }
+    .bg-paper { background: var(--paper); color: var(--tinta); }
+
+    /* ============ HEADER ============ */
     header {
       position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
-      padding: 12px 0; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.4s;
+      padding: 16px 0; background: transparent;
+      border-bottom: 1px solid transparent; transition: 0.4s ease;
+    }
+    header.scrolled {
+      background: rgba(246,241,231,0.92); backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom-color: var(--line); padding: 12px 0;
     }
     header .container { display: flex; justify-content: space-between; align-items: center; }
-    .logo-wrapper { display: flex; flex-direction: column; align-items: flex-start; gap: 0px; }
-    .logo-handwritten { font-family: 'Caveat', cursive; font-size: 20px; color: var(--accent); line-height: 0.9; margin-bottom: -1px; transform: rotate(-2deg); margin-left: 2px; }
-    .logo { color: var(--white); font-weight: 900; font-size: 26px; font-family: var(--font-title); display: flex; align-items: center; gap: 10px; }
-    .logo img { height: 30px; filter: brightness(0) invert(1); }
-    .admin-link { font-size: 11px; opacity: 0.5; color: var(--white); text-transform: uppercase; font-weight: 600; }
-    .admin-link:hover { opacity: 1; color: var(--accent); }
-
-    /* 1. Cinematic Hero — máscara de recorte do gradiente: LOGO (zoom in) → TEXTO (zoom out).
-       O gradiente é a "tinta" fixa; a máscara troca de forma. */
-    #cinematic-hero {
-      position: relative; height: 100vh; background: #000;
+    .wordmark { display: flex; align-items: baseline; gap: 14px; color: var(--creme); transition: color 0.4s; }
+    header.scrolled .wordmark { color: var(--petroleo); }
+    .wordmark-lcr { font-family: var(--font-serif); font-weight: 600; font-size: 27px; letter-spacing: 0.01em; line-height: 1; }
+    .wordmark-divider { width: 1px; height: 20px; background: currentColor; opacity: 0.35; align-self: center; }
+    .wordmark-desc { font-family: var(--font-serif); font-style: italic; font-size: 15px; opacity: 0.85; }
+    .admin-link {
+      font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px;
+      opacity: 0.45; color: var(--creme); text-transform: uppercase; transition: 0.3s;
     }
+    header.scrolled .admin-link { color: var(--petroleo); }
+    .admin-link:hover { opacity: 1; }
+
+    /* ============ 1. HERO CINEMÁTICO ============
+       A mecânica que já funciona: a "tinta" (agora creme→sálvia) é fixa;
+       a máscara troca de forma — LOGO (zoom in) → HEADLINE (zoom out).
+       Começa no petróleo profundo e revela a capa editorial da marca. */
+    #cinematic-hero { position: relative; height: 100vh; padding: 0; background: var(--petroleo-deep); }
     .cinema-sticky {
-      position: relative; height: 100vh; overflow: hidden; background: #000;
+      position: relative; height: 100vh; overflow: hidden; background: var(--petroleo-deep);
       display: flex; align-items: center; justify-content: center;
     }
-
-    /* Luz azul de fundo atrás do logotipo */
-    #hero-glow {
-      position: absolute;
-      width: 80vmax;
-      height: 80vmax;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(61,189,189,0.3) 0%, rgba(61,189,189,0.05) 55%, transparent 75%);
-      filter: blur(50px);
-      z-index: 2;
-      pointer-events: none;
-      transform-origin: center center;
-      will-change: transform, opacity;
+    /* Altura estável no mobile (barra de endereço dinâmica) */
+    @supports (height: 100svh) {
+      #cinematic-hero, .cinema-sticky { height: 100svh; }
     }
 
-    /* FASE 1 — gradiente recortado DENTRO da logo; dá zoom IN até virar tudo azul */
+    /* Luz sálvia difusa atrás da logo */
+    #hero-glow {
+      position: absolute; width: 80vmax; height: 80vmax; border-radius: 50%;
+      background: radial-gradient(circle, rgba(143,175,168,0.22) 0%, rgba(143,175,168,0.05) 55%, transparent 75%);
+      filter: blur(50px); z-index: 2; pointer-events: none;
+      transform-origin: center center; will-change: transform, opacity;
+    }
+
+    /* FASE 1 — a tinta creme recortada DENTRO da logo; zoom IN até preencher a tela */
     #mask-logo {
       position: absolute; inset: 0; z-index: 10; will-change: transform, opacity;
       transform-origin: center center;
@@ -170,1202 +205,566 @@
     }
     .fixed-gradient-bg {
       position: absolute; inset: 0; width: 100%; height: 100%;
-      background: linear-gradient(125deg, #c7f0f0 0%, #7ad0d0 22%, #3dbdbd 48%, #2a9d9d 70%, #1a7070 100%);
+      background: linear-gradient(125deg, #F9F5EC 0%, #F6F1E7 30%, #EDE6D8 55%, #D3DED7 80%, #AFC6BF 100%);
       transform-origin: center center; will-change: transform;
     }
-    /* Gradiente de fundo para transição suave */
+    /* Tinta em tela cheia para o handoff invisível no meio do scroll */
     #hero-bg-grad {
       position: absolute; inset: 0; z-index: 5; opacity: 0; will-change: opacity;
-      background: linear-gradient(125deg, #c7f0f0 0%, #7ad0d0 22%, #3dbdbd 48%, #2a9d9d 70%, #1a7070 100%);
+      background: linear-gradient(125deg, #F9F5EC 0%, #F6F1E7 30%, #EDE6D8 55%, #D3DED7 80%, #AFC6BF 100%);
     }
-    /* FASE 2 — o MESMO gradiente recortado pelo texto grosso; dá zoom OUT */
+    /* FASE 2 — a MESMA tinta recortada pela headline serifada; zoom OUT sobre o petróleo */
     #mask-text {
       position: absolute; inset: 0; z-index: 20; opacity: 0;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       text-align: center; padding: 0 5%; will-change: opacity, transform;
     }
     #mask-text h1 {
-      font-size: clamp(2.8rem, 7vw, 5.6rem); font-weight: 900; line-height: 1.06; letter-spacing: -2px;
+      font-size: clamp(3rem, 7.5vw, 6.2rem); font-weight: 500; line-height: 1.04;
       transform-origin: center center; will-change: transform;
-      background: linear-gradient(125deg, #c7f0f0 0%, #7ad0d0 22%, #3dbdbd 48%, #2a9d9d 70%, #1a7070 100%);
+      background: linear-gradient(125deg, #F9F5EC 0%, #F6F1E7 30%, #EDE6D8 55%, #D3DED7 80%, #AFC6BF 100%);
       -webkit-background-clip: text; background-clip: text;
       color: transparent; -webkit-text-fill-color: transparent;
     }
-    /* subtexto + botões: entram no fim, sem zoom */
-    #hero-rest { margin-top: 28px; opacity: 0; will-change: opacity, transform; }
+    #hero-rest { margin-top: 30px; opacity: 0; will-change: opacity, transform; }
     #hero-rest p {
-      font-size: 20px; font-weight: 400; line-height: 1.6; color: #cbd5e1; max-width: 700px; margin: 0 auto 36px;
+      font-size: 19px; font-weight: 400; line-height: 1.65; color: var(--creme-muted);
+      max-width: 640px; margin: 0 auto 38px;
     }
+    #hero-rest p em { font-family: var(--font-serif); font-style: italic; color: var(--salvia); font-size: 1.06em; }
+    .hero-buttons { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
 
-    /* Elementos flutuantes de órbita no Hero */
-    .hero-orbit {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      z-index: 8;
-      overflow: hidden;
-      will-change: opacity, transform;
-    }
-    .orbit-item {
-      position: absolute;
-      will-change: transform, opacity;
-      transition: opacity 0.5s ease;
-    }
+    /* Cards flutuantes de órbita (somem no scroll) */
+    .hero-orbit { position: absolute; inset: 0; pointer-events: none; z-index: 8; overflow: hidden; will-change: opacity, transform; }
+    .orbit-item { position: absolute; will-change: transform, opacity; }
     .orbit-card {
-      background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 14px 22px;
-      border-radius: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-      animation: float-orbit 6s ease-in-out infinite;
-      white-space: nowrap;
+      background: rgba(237,230,216,0.03);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(237,230,216,0.1);
+      padding: 15px 24px; border-radius: 3px;
+      display: flex; flex-direction: column; gap: 4px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+      animation: float-orbit 6s ease-in-out infinite; white-space: nowrap;
     }
-    .orbit-number {
-      font-family: var(--font-title);
-      font-size: 19px;
-      font-weight: 900;
-      color: var(--accent);
-      letter-spacing: -0.5px;
-    }
+    .orbit-number { font-family: var(--font-serif); font-size: 22px; font-weight: 500; color: var(--salvia); }
     .orbit-label {
-      font-size: 10.5px;
-      color: #94a3b8;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      font-family: var(--font-mono); font-size: 9.5px; color: var(--creme-muted);
+      text-transform: uppercase; letter-spacing: 1.5px;
     }
     .orbit-note {
-      font-family: 'Caveat', cursive;
-      font-size: 28px;
-      color: var(--accent);
-      transform: rotate(-6deg);
-      text-shadow: 0 10px 20px rgba(61,189,189,0.25);
-      animation: float-orbit 5s ease-in-out infinite alternate;
-      white-space: nowrap;
+      font-family: var(--font-serif); font-style: italic; font-size: 26px;
+      color: var(--salvia); transform: rotate(-4deg);
+      animation: float-orbit 5s ease-in-out infinite alternate; white-space: nowrap;
     }
-
-    /* Posições dos cards (5 elementos equilibrados) */
     .orbit-item.item-1 { top: 18%; left: 12%; animation-delay: 0s; }
     .orbit-item.item-2 { top: 22%; right: 12%; animation-delay: 1.5s; }
     .orbit-item.item-3 { bottom: 22%; left: 14%; animation-delay: 3s; }
     .orbit-item.item-4 { bottom: 18%; right: 16%; animation-delay: 0.5s; }
     .orbit-item.item-5 { top: 48%; left: 8%; animation-delay: 2s; }
-
     @keyframes float-orbit {
       0% { transform: translateY(0px) rotate(0deg); }
       50% { transform: translateY(-10px) rotate(1deg); }
       100% { transform: translateY(0px) rotate(0deg); }
     }
 
-    /* Indicador de Scroll */
+    /* Indicador de scroll */
     .scroll-indicator {
-      position: absolute;
-      bottom: 35px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 15;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      opacity: 0.75;
-      transition: opacity 0.3s, transform 0.3s;
-      will-change: opacity, transform;
+      position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%);
+      z-index: 15; display: flex; flex-direction: column; align-items: center; gap: 10px;
+      opacity: 0.75; will-change: opacity, transform;
     }
     .scroll-text {
-      font-size: 10.5px;
-      color: rgba(255, 255, 255, 0.4);
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      font-weight: 700;
+      font-family: var(--font-mono); font-size: 10px; color: rgba(237,230,216,0.4);
+      text-transform: uppercase; letter-spacing: 2.5px;
     }
-    .scroll-mouse {
-      width: 22px;
-      height: 36px;
-      border: 2px solid rgba(255, 255, 255, 0.25);
-      border-radius: 12px;
-      position: relative;
-    }
+    .scroll-mouse { width: 22px; height: 36px; border: 1.5px solid rgba(237,230,216,0.25); border-radius: 12px; position: relative; }
     .scroll-wheel {
-      width: 4px;
-      height: 8px;
-      background: var(--accent);
-      border-radius: 2px;
-      position: absolute;
-      top: 6px;
-      left: 50%;
-      transform: translateX(-50%);
+      width: 4px; height: 8px; background: var(--salvia); border-radius: 2px;
+      position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
       animation: scroll-wheel-anim 1.8s ease-in-out infinite;
     }
     @keyframes scroll-wheel-anim {
-      0% { top: 6px; opacity: 1; }
-      50% { top: 14px; opacity: 0.2; }
-      100% { top: 6px; opacity: 1; }
+      0% { top: 6px; opacity: 1; } 50% { top: 14px; opacity: 0.2; } 100% { top: 6px; opacity: 1; }
     }
 
-    /* --- SEÇÃO 2: AUTORIDADE (Dra. Lara Camila) --- */
-    .doctor-section { 
-      padding: 120px 0; 
-      background: linear-gradient(180deg, var(--light) 0%, var(--white) 100%);
-      position: relative;
-      overflow: hidden;
+    /* ============ 2. QUEM CUIDA (Dra. Lara Camila) ============ */
+    .doctor-section { padding: 130px 0; position: relative; overflow: hidden; }
+    .doctor-grid {
+      display: grid; grid-template-columns: 1fr 1.1fr; gap: 90px;
+      align-items: center; position: relative; z-index: 2;
     }
-    .doctor-section::before {
-      content: '';
-      position: absolute;
-      width: 500px; height: 500px;
-      background: radial-gradient(circle, rgba(61,189,189,0.06) 0%, transparent 70%);
-      top: -100px; right: -100px;
-      z-index: 1;
-      pointer-events: none;
-    }
-    .doctor-grid { 
-      display: grid; 
-      grid-template-columns: 1fr 1.1fr; 
-      gap: 90px; 
-      align-items: center; 
-      position: relative;
-      z-index: 2;
-    }
-    .doctor-photo-wrapper {
-      position: relative;
-    }
+    .doctor-photo-wrapper { position: relative; }
     .doctor-photo-frame {
-      position: absolute;
-      inset: -15px 15px 15px -15px;
-      border: 1px solid rgba(61, 189, 189, 0.3);
-      border-radius: 40px;
-      z-index: 1;
-      pointer-events: none;
+      position: absolute; inset: -16px 16px 16px -16px;
+      border: 1px solid rgba(22,64,61,0.25); border-radius: 3px;
+      z-index: 1; pointer-events: none;
     }
-    .doctor-photo { 
-      border-radius: 32px; 
-      overflow: hidden; 
-      box-shadow: 0 30px 60px rgba(15,23,42,0.1); 
-      position: relative;
-      z-index: 2;
+    .doctor-photo {
+      border-radius: 3px; overflow: hidden; position: relative; z-index: 2;
+      box-shadow: 0 30px 60px rgba(22,64,61,0.12);
       transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .doctor-photo:hover {
-      transform: scale(1.01) translateY(-4px);
-    }
-    .doctor-photo img { 
-      width: 100%; height: auto; object-fit: cover; 
-    }
+    .doctor-photo:hover { transform: scale(1.005) translateY(-4px); }
+    .doctor-photo img { width: 100%; height: auto; object-fit: cover; }
     .quote-badge {
-      position: absolute;
-      bottom: -25px;
-      right: -15px;
-      background: var(--dark);
-      color: var(--white);
-      padding: 24px 30px;
-      border-radius: 20px;
-      max-width: 320px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-      border: 1px solid rgba(255,255,255,0.08);
-      font-size: 14.5px;
-      line-height: 1.5;
-      z-index: 10;
+      position: absolute; bottom: -28px; right: -16px;
+      background: var(--petroleo); color: var(--creme);
+      padding: 26px 30px; border-radius: 3px; max-width: 330px;
+      box-shadow: 0 20px 40px rgba(14,43,41,0.25); z-index: 10;
+      font-size: 15px; line-height: 1.55;
     }
-    .quote-badge p {
-      margin: 0;
-      font-style: italic;
-      color: #e2e8f0;
-      font-weight: 400;
-    }
+    .quote-badge p { margin: 0; font-family: var(--font-serif); font-style: italic; font-size: 16.5px; color: var(--creme); }
     .quote-badge span {
-      display: block;
-      margin-top: 10px;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--accent);
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
+      display: block; margin-top: 12px; font-family: var(--font-mono);
+      font-size: 10px; color: var(--salvia); text-transform: uppercase; letter-spacing: 2px;
     }
-    .doctor-eyebrow {
-      display: inline-block; font-size: 13px; font-weight: 700; letter-spacing: 2.5px;
-      text-transform: uppercase; color: var(--accent-dark); margin-bottom: 14px;
-    }
-    .doctor-info h2 {
-      font-size: 48px; margin-bottom: 12px; color: var(--dark); font-weight: 900;
-      letter-spacing: -1.5px;
-    }
-    .doctor-specialties {
-      display: flex; flex-wrap: wrap; gap: 10px; margin-top: 36px;
-    }
-    .spec-chip {
-      padding: 8px 16px; border-radius: 50px; font-size: 13.5px; font-weight: 600;
-      background: rgba(61,189,189,0.08); color: var(--accent-dark);
-      border: 1px solid rgba(61,189,189,0.18);
-    }
-    .doctor-cro { 
+    .doctor-info h2 { font-size: clamp(2.6rem, 4.5vw, 3.4rem); margin-bottom: 14px; color: var(--petroleo); }
+    .doctor-cro {
       display: inline-flex; align-items: center; gap: 8px;
-      padding: 8px 18px; background: rgba(61,189,189,0.08); color: var(--accent-dark); 
-      border-radius: 50px; font-size: 13.5px; font-weight: 700; margin-bottom: 30px; 
-      border: 1px solid rgba(61,189,189,0.18);
+      padding: 8px 16px; border: 1px solid var(--line); border-radius: 3px;
+      font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px;
+      color: var(--petroleo); margin-bottom: 30px; text-transform: uppercase;
     }
-    .doctor-cro svg {
-      width: 16px; height: 16px; fill: currentColor;
-    }
-    .doctor-info p { 
-      font-size: 17px; line-height: 1.8; color: #475569; margin-bottom: 22px; 
-    }
+    .doctor-info > p { font-size: 17px; line-height: 1.8; color: var(--tinta-suave); margin-bottom: 22px; }
+    .doctor-info > p em { font-family: var(--font-serif); font-style: italic; color: var(--terracota); font-size: 1.05em; }
+
     .editorial-pillars {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 30px;
-      margin-top: 40px;
-      padding-top: 35px;
-      border-top: 1px solid rgba(0,0,0,0.06);
+      display: grid; grid-template-columns: 1fr 1fr; gap: 28px;
+      margin-top: 42px; padding-top: 38px; border-top: 1px solid var(--line);
     }
-    .editorial-item {
-      display: flex;
-      gap: 16px;
-    }
+    .editorial-item { display: flex; gap: 16px; }
     .editorial-num {
-      font-family: 'Playfair Display', serif;
-      font-size: 38px;
-      font-weight: 700;
-      color: var(--accent);
-      line-height: 0.9;
+      font-family: var(--font-mono); font-size: 12px; color: var(--terracota);
+      padding-top: 4px; letter-spacing: 1px;
     }
-    .editorial-content h4 {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--dark);
-      margin-bottom: 6px;
+    .editorial-content h4 { font-family: var(--font-sans); font-size: 15.5px; font-weight: 700; color: var(--petroleo); margin-bottom: 6px; }
+    .editorial-content p { font-size: 13.5px; color: var(--tinta-suave); margin: 0; line-height: 1.55; }
+
+    .doctor-specialties { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 36px; }
+    .spec-chip {
+      padding: 8px 16px; border-radius: 3px; font-size: 13px; font-weight: 600;
+      background: rgba(143,175,168,0.16); color: var(--petroleo);
+      border: 1px solid rgba(143,175,168,0.35);
     }
-    .editorial-content p {
-      font-size: 13.5px;
-      color: var(--text-muted);
-      margin: 0;
-      line-height: 1.5;
-    }
-    .signature-container {
-      margin-top: 36px;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 4px;
-    }
-    .signature-svg {
-      height: 50px;
-      width: auto;
-      opacity: 0.95;
-    }
+    .signature-container { margin-top: 38px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+    .signature-svg { height: 50px; width: auto; opacity: 0.95; }
     .signature-title {
-      font-size: 11px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      font-weight: 600;
-      margin-top: 4px;
+      font-family: var(--font-mono); font-size: 10px; color: var(--tinta-suave);
+      text-transform: uppercase; letter-spacing: 2.5px; margin-top: 4px;
     }
 
-    /* --- SEÇÃO 3: ANTES E DEPOIS (SHOWCASE CLÍNICO) --- */
-    .results-section { 
-      padding: 120px 0;
-      background: var(--light);
-      position: relative;
-    }
-    .section-header {
-      margin-bottom: 60px;
-      text-align: center;
-    }
-    .section-eyebrow {
-      display: inline-block; font-size: 13px; font-weight: 700; letter-spacing: 2.5px;
-      text-transform: uppercase; color: var(--accent-dark); margin-bottom: 14px;
-    }
-    .bento-glass .bento-outcome { margin-bottom: 16px; }
-    .section-header h2 {
-      font-size: 44px; margin-bottom: 16px; font-weight: 900; 
-      color: var(--dark); letter-spacing: -1.5px;
-    }
-    .section-header p { 
-      font-size: 18px; color: var(--text-muted); max-width: 600px; margin: 0 auto; 
-    }
-    .tabs-container {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-bottom: 45px;
-    }
+    /* ============ CABEÇALHOS DE SEÇÃO ============ */
+    .section-header { margin-bottom: 64px; text-align: center; }
+    .section-header h2 { font-size: clamp(2.4rem, 4.2vw, 3.2rem); margin-bottom: 18px; color: var(--petroleo); }
+    .on-dark .section-header h2, .bg-petroleo .section-header h2, .bg-petroleo-deep .section-header h2 { color: var(--creme); }
+    .section-header p { font-size: 17.5px; color: var(--tinta-suave); max-width: 580px; margin: 0 auto; line-height: 1.65; }
+    .bg-petroleo .section-header p, .bg-petroleo-deep .section-header p { color: var(--creme-muted); }
+
+    /* ============ 3. CASOS CLÍNICOS ============ */
+    .results-section { padding: 130px 0; }
+    .tabs-container { display: flex; justify-content: center; gap: 10px; margin-bottom: 48px; }
     .tab-btn {
-      background: var(--white);
-      border: 1px solid rgba(0,0,0,0.06);
-      padding: 12px 30px;
-      border-radius: 50px;
-      font-family: var(--font-body);
-      font-size: 14.5px;
-      font-weight: 600;
-      cursor: pointer;
-      color: var(--text-muted);
+      background: transparent; border: 1px solid var(--line);
+      padding: 12px 28px; border-radius: 3px;
+      font-family: var(--font-sans); font-size: 14px; font-weight: 600;
+      cursor: pointer; color: var(--tinta-suave);
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
     }
-    .tab-btn:hover {
-      border-color: var(--accent);
-      color: var(--accent-dark);
-    }
-    .tab-btn.active {
-      background: var(--dark);
-      color: var(--white);
-      border-color: var(--dark);
-      box-shadow: 0 10px 20px rgba(15,23,42,0.1);
-    }
-    .tab-content {
-      display: none;
-      animation: tabFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-    .tab-content.active {
-      display: block;
-    }
+    .tab-btn:hover { border-color: var(--petroleo); color: var(--petroleo); }
+    .tab-btn.active { background: var(--petroleo); color: var(--creme); border-color: var(--petroleo); }
+    .tab-content { display: none; animation: tabFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .tab-content.active { display: block; }
     @keyframes tabFadeIn {
       from { opacity: 0; transform: translateY(12px); }
       to { opacity: 1; transform: translateY(0); }
     }
     .case-card {
-      display: grid;
-      grid-template-columns: 1.25fr 1fr;
-      gap: 60px;
-      background: var(--white);
-      border-radius: 32px;
-      padding: 40px;
-      box-shadow: 0 20px 50px rgba(15,23,42,0.03);
-      border: 1px solid rgba(0,0,0,0.015);
-      align-items: center;
+      display: grid; grid-template-columns: 1.25fr 1fr; gap: 60px;
+      background: var(--paper); border-radius: 3px; padding: 48px;
+      border: 1px solid var(--line); align-items: center;
+      box-shadow: 0 20px 50px rgba(22,64,61,0.04);
     }
-    .case-narrative {
-      display: flex; flex-direction: column; justify-content: center; padding: 10px 0;
-    }
+    .case-narrative { display: flex; flex-direction: column; justify-content: center; padding: 10px 0; }
     .case-tag {
-      display: inline-flex; align-self: flex-start; align-items: center;
-      padding: 7px 16px; border-radius: 50px; font-size: 12px; font-weight: 700;
-      letter-spacing: 1px; text-transform: uppercase;
-      background: rgba(61,189,189,0.08); color: var(--accent-dark);
-      border: 1px solid rgba(61,189,189,0.18); margin-bottom: 26px;
+      display: inline-flex; align-self: flex-start;
+      font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--terracota); margin-bottom: 26px;
     }
     .case-quote {
-      font-size: 26px; line-height: 1.45; color: var(--dark); font-weight: 600;
-      letter-spacing: -0.5px; margin-bottom: 18px; position: relative; padding-left: 22px;
-      border-left: 4px solid var(--accent);
+      font-family: var(--font-serif); font-style: italic; font-weight: 450;
+      font-size: 27px; line-height: 1.42; color: var(--petroleo);
+      margin-bottom: 18px; padding-left: 24px;
+      border-left: 2px solid var(--terracota);
     }
-    .case-author { font-size: 15px; font-weight: 700; color: var(--accent-dark); margin-bottom: 30px; }
+    .case-author { font-size: 14px; font-weight: 700; color: var(--salvia-deep); margin-bottom: 30px; }
     .case-outcome {
       display: flex; gap: 12px; align-items: flex-start;
-      padding: 18px 20px; background: #f8fafc; border-radius: 16px;
-      border: 1px solid rgba(0,0,0,0.03); font-size: 14.5px; line-height: 1.6; color: #475569;
+      padding: 18px 20px; background: rgba(143,175,168,0.1); border-radius: 3px;
+      border: 1px solid rgba(143,175,168,0.25);
+      font-size: 14.5px; line-height: 1.6; color: var(--tinta-suave);
     }
-    .case-outcome svg { flex-shrink: 0; width: 20px; height: 20px; color: var(--accent); margin-top: 2px; }
-    /* slider antigo (removido) */
-    .before-after-slider {
-      position: relative; width: 100%; height: 400px; border-radius: 24px;
-      overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.08);
-      user-select: none; -webkit-user-select: none;
-    }
-    .slider-img { 
-      position: absolute; inset: 0; width: 100%; height: 100%; 
-      background-size: cover; background-position: center; 
-    }
-    .slider-img.before { 
-      z-index: 1; 
-    }
-    .slider-img.after { 
-      z-index: 2; 
-      width: 50%; 
-      border-right: 3px solid var(--white); 
-    }
-    .slider-line {
-      position: absolute; top: 0; bottom: 0; left: 50%;
-      width: 3px; background: var(--white); z-index: 3;
-      pointer-events: none; transform: translateX(-50%);
-    }
-    .slider-handle-button {
-      position: absolute; top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 48px; height: 48px;
-      background: var(--accent); color: var(--white);
-      border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      z-index: 4; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      pointer-events: none; border: 3px solid var(--white);
-      font-size: 18px; font-weight: 700;
-    }
-    .slider-handle-input {
-      position: absolute; inset: 0; width: 100%; height: 100%;
-      opacity: 0; cursor: ew-resize; z-index: 5; margin: 0;
-    }
-    .slider-label {
-      position: absolute; bottom: 20px;
-      background: rgba(15,23,42,0.8); backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      color: var(--white); padding: 6px 16px; border-radius: 20px;
-      font-size: 12px; font-weight: 700; z-index: 3;
-      pointer-events: none; border: 1px solid rgba(255,255,255,0.1);
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-    .slider-label.before-label { left: 20px; }
-    .slider-label.after-label { right: 20px; }
+    .case-outcome svg { flex-shrink: 0; width: 20px; height: 20px; color: var(--salvia-deep); margin-top: 2px; }
     .ficha-clinica {
-      background: #f8fafc;
-      border-radius: 24px;
-      padding: 35px;
-      border: 1px solid rgba(0,0,0,0.03);
+      background: var(--creme); border-radius: 3px; padding: 36px;
+      border: 1px solid var(--line);
     }
     .ficha-clinica h5 {
-      font-size: 12.5px;
-      color: var(--accent-dark);
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      font-weight: 800;
-      margin-bottom: 22px;
-      border-bottom: 2px solid rgba(61,189,189,0.1);
-      padding-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      font-family: var(--font-mono); font-size: 11px; color: var(--petroleo);
+      text-transform: uppercase; letter-spacing: 2px; font-weight: 600;
+      margin-bottom: 22px; border-bottom: 1px solid var(--line); padding-bottom: 14px;
+      display: flex; align-items: center; gap: 10px;
     }
-    .ficha-clinica h5 svg {
-      width: 16px; height: 16px; fill: currentColor;
-    }
+    .ficha-clinica h5 svg { width: 15px; height: 15px; fill: var(--terracota); }
     .ficha-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(0,0,0,0.04);
-      font-size: 14.5px;
+      display: flex; justify-content: space-between; gap: 20px;
+      padding: 12px 0; border-bottom: 1px solid rgba(22,64,61,0.08); font-size: 14.5px;
     }
-    .ficha-item:last-child {
-      border-bottom: none;
-      padding-bottom: 0;
-    }
-    .ficha-label {
-      font-weight: 700;
-      color: var(--dark);
-    }
-    .ficha-value {
-      color: var(--text-muted);
-      text-align: right;
-    }
+    .ficha-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .ficha-label { font-weight: 700; color: var(--petroleo); white-space: nowrap; }
+    .ficha-value { color: var(--tinta-suave); text-align: right; }
 
-    /* --- SEÇÃO 4: ESPECIALIDADES (BENTO GRID) --- */
-    .services-section {
-      padding: 120px 0;
-      background: var(--white);
-    }
+    /* ============ 4. ESPECIALIDADES (BENTO) ============ */
+    .services-section { padding: 130px 0; }
     .bento-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      grid-auto-rows: minmax(280px, auto);
-      gap: 25px;
-      margin-top: 50px;
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      grid-auto-rows: minmax(280px, auto); gap: 22px; margin-top: 50px;
     }
     .bento-item {
-      border-radius: 30px;
-      padding: 44px;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+      border-radius: 3px; padding: 44px; position: relative; overflow: hidden;
+      display: flex; flex-direction: column; justify-content: space-between;
       transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-      border: 1px solid rgba(0,0,0,0.03);
+      border: 1px solid var(--line); background: var(--paper);
     }
+    .bento-item:hover { transform: translateY(-5px); border-color: rgba(143,175,168,0.6); box-shadow: 0 30px 60px rgba(22,64,61,0.08); }
     .bento-large {
-      grid-column: span 2;
-      grid-row: span 2;
-      background: linear-gradient(135deg, var(--dark) 0%, var(--darker) 100%);
-      color: var(--white);
-      border-color: rgba(255,255,255,0.04);
-      padding: 55px;
+      grid-column: span 2; grid-row: span 2;
+      background: var(--petroleo); color: var(--creme);
+      border-color: var(--petroleo); padding: 55px;
     }
-    .bento-large::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image: radial-gradient(rgba(61, 189, 189, 0.12) 1px, transparent 1px);
-      background-size: 24px 24px;
-      opacity: 0.7;
-      pointer-events: none;
-      z-index: 1;
+    .bento-large:hover { border-color: var(--petroleo); box-shadow: 0 35px 70px rgba(14,43,41,0.3); }
+    /* marca d'água: o dente da marca no canto do card principal */
+    .bento-large::after {
+      content: ''; position: absolute; right: -60px; bottom: -70px;
+      width: 320px; height: 320px; opacity: 0.08; pointer-events: none;
+      background: var(--salvia);
+      -webkit-mask: url('assets/logo-lcr.svg') center / contain no-repeat;
+              mask: url('assets/logo-lcr.svg') center / contain no-repeat;
     }
-    .bento-large-content {
-      position: relative;
-      z-index: 2;
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      justify-content: space-between;
-    }
-    .bento-glass {
-      background: rgba(248, 250, 252, 0.85);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border: 1px solid rgba(0,0,0,0.04);
-    }
-    .bento-glass:hover {
-      background: var(--white);
-      border-color: var(--accent);
-      box-shadow: 0 30px 60px rgba(61,189,189,0.08);
-      transform: translateY(-5px);
-    }
-    .bento-large:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 35px 70px rgba(0,0,0,0.25);
-      border-color: rgba(61,189,189,0.25);
-    }
+    .bento-large-content { position: relative; z-index: 2; display: flex; flex-direction: column; height: 100%; justify-content: space-between; }
     .bento-icon {
-      width: 58px;
-      height: 58px;
-      background: rgba(61,189,189,0.08);
-      border-radius: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--accent-dark);
-      margin-bottom: 28px;
-      transition: transform 0.3s;
+      width: 54px; height: 54px; border: 1px solid rgba(143,175,168,0.4); border-radius: 3px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--salvia-deep); margin-bottom: 28px; transition: transform 0.3s;
     }
-    .bento-item:hover .bento-icon {
-      transform: scale(1.08) rotate(3deg);
-    }
-    .bento-large .bento-icon {
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--accent);
-      width: 68px; height: 68px;
-      border-radius: 20px;
-    }
-    .bento-item h3 {
-      font-size: 23px;
-      margin-bottom: 12px;
-      font-weight: 800;
-      color: var(--dark);
-      letter-spacing: -0.5px;
-    }
-    .bento-large h3 {
-      font-size: 34px;
-      color: var(--white);
-      letter-spacing: -1px;
-      margin-bottom: 16px;
-    }
-    .bento-item p {
-      font-size: 14.5px;
-      line-height: 1.6;
-      margin-bottom: 24px;
-    }
-    .bento-glass p {
-      color: var(--text-muted);
-    }
-    .bento-large p {
-      color: #cbd5e1;
-      font-size: 16.5px;
-      max-width: 90%;
-      margin-bottom: 28px;
-    }
+    .bento-item:hover .bento-icon { transform: scale(1.06); }
+    .bento-large .bento-icon { border-color: rgba(237,230,216,0.25); color: var(--salvia); width: 62px; height: 62px; }
     .bento-outcome {
-      display: inline-flex;
-      font-size: 12.5px;
-      font-weight: 700;
-      padding: 6px 14px;
-      background: rgba(61,189,189,0.06);
-      color: var(--accent-dark);
-      border-radius: 50px;
-      margin-bottom: 20px;
-      align-self: flex-start;
+      display: inline-flex; font-family: var(--font-mono); font-size: 10px;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--terracota); margin-bottom: 14px; align-self: flex-start;
     }
-    .bento-large .bento-outcome {
-      background: rgba(61,189,189,0.2);
-      color: #e2f8f8;
-    }
+    .bento-large .bento-outcome { color: var(--salvia); }
+    .bento-item h3 { font-size: 25px; margin-bottom: 12px; color: var(--petroleo); }
+    .bento-large h3 { font-size: 36px; color: var(--creme); margin-bottom: 16px; }
+    .bento-item p { font-size: 14.5px; line-height: 1.65; margin-bottom: 24px; color: var(--tinta-suave); }
+    .bento-large p { color: var(--creme-muted); font-size: 16.5px; max-width: 90%; margin-bottom: 28px; }
     .bento-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--accent-dark);
-      margin-top: auto;
-      transition: gap 0.3s;
-      align-self: flex-start;
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 14px; font-weight: 700; color: var(--terracota);
+      margin-top: auto; transition: gap 0.3s; align-self: flex-start;
     }
-    .bento-large .bento-link {
-      color: var(--accent);
-    }
-    .bento-link:hover {
-      gap: 12px;
-    }
-    .bento-link svg {
-      width: 16px;
-      height: 16px;
-      fill: currentColor;
-    }
+    .bento-large .bento-link { color: var(--salvia); }
+    .bento-link:hover { gap: 12px; }
+    .bento-link svg { width: 16px; height: 16px; fill: currentColor; }
 
-    /* --- SEÇÃO 5: DIFERENCIAIS (LAYOUT LATERAL DIVIDIDO) --- */
-    .diff-section {
-      padding: 120px 0;
-      background: var(--light);
-    }
-    .diff-container {
-      display: grid;
-      grid-template-columns: 1fr 1.25fr;
-      gap: 90px;
-      align-items: flex-start;
-    }
-    .diff-left {
-      position: sticky;
-      top: 120px;
-    }
-    .diff-left h2 {
-      font-size: 48px;
-      font-weight: 900;
-      color: var(--dark);
-      margin-bottom: 24px;
-      letter-spacing: -1.5px;
-    }
-    .diff-left p {
-      font-size: 18px;
-      color: var(--text-muted);
-      line-height: 1.7;
-    }
+    /* ============ 5. DIFERENCIAIS (petróleo) ============ */
+    .diff-section { padding: 130px 0; }
+    .diff-container { display: grid; grid-template-columns: 1fr 1.25fr; gap: 90px; align-items: flex-start; }
+    .diff-left { position: sticky; top: 120px; }
+    .diff-left h2 { font-size: clamp(2.5rem, 4.4vw, 3.3rem); color: var(--creme); margin-bottom: 24px; }
+    .diff-left h2 em { color: var(--salvia); }
+    .diff-left p { font-size: 17.5px; color: var(--creme-muted); line-height: 1.7; }
     .diff-cta { margin-top: 34px; }
-    .diff-right {
-      display: flex;
-      flex-direction: column;
-      gap: 25px;
-    }
+    .diff-right { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--line-dark); }
     .diff-card {
-      background: var(--white);
-      padding: 36px;
-      border-radius: 28px;
-      box-shadow: 0 15px 40px rgba(15,23,42,0.02);
-      border: 1px solid rgba(0,0,0,0.015);
-      display: flex;
-      gap: 24px;
+      padding: 36px 10px; display: flex; gap: 26px;
+      border-bottom: 1px solid var(--line-dark);
       transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-      position: relative;
     }
-    .diff-card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: 28px;
-      border: 1px solid transparent;
-      transition: all 0.4s ease;
-      pointer-events: none;
+    .diff-card:hover { transform: translateX(8px); }
+    .diff-num {
+      font-family: var(--font-mono); font-size: 12px; color: var(--salvia);
+      padding-top: 5px; letter-spacing: 1px; flex-shrink: 0;
     }
-    .diff-card:hover {
-      transform: translateX(8px);
-      box-shadow: inset 0 0 20px rgba(61,189,189,0.01), 0 20px 40px rgba(61,189,189,0.04);
-    }
-    .diff-card:hover::before {
-      border-color: rgba(61,189,189,0.25);
-    }
-    .diff-card-icon {
-      width: 58px;
-      height: 58px;
-      background: rgba(61,189,189,0.08);
-      border-radius: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--accent-dark);
-      flex-shrink: 0;
-      transition: transform 0.3s;
-    }
-    .diff-card:hover .diff-card-icon {
-      transform: scale(1.05);
-    }
-    .diff-card-icon svg {
-      width: 24px; height: 24px; fill: currentColor;
-    }
-    .diff-card-content h4 {
-      font-size: 18px;
-      font-weight: 800;
-      color: var(--dark);
-      margin-bottom: 8px;
-    }
-    .diff-card-content p {
-      font-size: 14.5px;
-      color: var(--text-muted);
-      line-height: 1.6;
-      margin: 0;
-    }
+    .diff-card-content h4 { font-family: var(--font-serif); font-size: 22px; font-weight: 500; color: var(--creme); margin-bottom: 10px; }
+    .diff-card-content p { font-size: 14.5px; color: var(--creme-muted); line-height: 1.65; margin: 0; }
 
-    /* --- SEÇÃO 6: PROVA SOCIAL (CARROSSEL PREMIUM) --- */
-    .reviews-section {
-      padding: 120px 0;
-      background: var(--white);
-    }
+    /* ============ 6. DEPOIMENTOS ============ */
+    .reviews-section { padding: 130px 0; }
     .google-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      background: var(--white);
-      padding: 12px 24px;
-      border-radius: 50px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.04);
-      margin-bottom: 30px;
-      border: 1px solid rgba(0,0,0,0.04);
-      text-decoration: none; color: inherit; cursor: pointer; transition: 0.3s;
+      display: inline-flex; align-items: center; gap: 12px;
+      background: var(--paper); padding: 12px 24px; border-radius: 3px;
+      border: 1px solid var(--line); margin-bottom: 34px;
+      cursor: pointer; transition: 0.3s;
     }
-    .google-badge:hover { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(0,0,0,0.08); }
-    .google-badge-stars {
-      color: #f59e0b;
-      font-weight: 700;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 3px;
+    .google-badge:hover { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(22,64,61,0.08); }
+    .google-badge-stars { color: var(--terracota); font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 3px; }
+    .google-badge-stars svg { width: 13px; height: 13px; fill: currentColor; }
+    .google-badge-text { font-size: 13px; font-weight: 600; color: var(--tinta); }
+    .google-logo { height: 16px; width: auto; }
+    .carousel-wrapper { position: relative; width: 100%; overflow: hidden; padding: 10px 0 30px; }
+    .carousel-track { display: flex; gap: 24px; transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1); will-change: transform; }
+    .carousel-slide { flex: 0 0 calc(33.333% - 16px); min-width: 320px; }
+    .testim-card {
+      background: var(--paper); border: 1px solid var(--line);
+      padding: 44px; border-radius: 3px; height: 100%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      position: relative; transition: all 0.3s ease; text-align: left;
     }
-    .google-badge-stars svg {
-      width: 14px; height: 14px; fill: currentColor;
+    .testim-card:hover { transform: translateY(-5px); box-shadow: 0 30px 60px rgba(22,64,61,0.07); border-color: rgba(143,175,168,0.6); }
+    .testim-card::before {
+      content: '“'; position: absolute; top: 18px; right: 32px;
+      font-size: 90px; color: rgba(143,175,168,0.25);
+      font-family: var(--font-serif); line-height: 1;
     }
-    .google-badge-text {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-dark);
+    .testim-stars-svg { display: flex; gap: 3px; color: var(--terracota); margin-bottom: 22px; }
+    .testim-stars-svg svg { width: 15px; height: 15px; fill: currentColor; }
+    .testim-text {
+      font-family: var(--font-serif); font-style: italic; font-size: 17.5px;
+      color: var(--tinta); margin-bottom: 30px; line-height: 1.65; position: relative; z-index: 2;
     }
-    .google-logo {
-      height: 16px;
-      width: auto;
-    }
-    .carousel-wrapper {
-      position: relative;
-      width: 100%;
-      overflow: hidden;
-      padding: 10px 0 30px;
-    }
-    .carousel-track {
-      display: flex;
-      gap: 30px;
-      transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
-      will-change: transform;
-    }
-    .carousel-slide {
-      flex: 0 0 calc(33.333% - 20px);
-      min-width: 320px;
-    }
-    .testim-card-premium {
-      background: linear-gradient(135deg, rgba(248,250,252,0.6) 0%, rgba(248,250,252,0.9) 100%);
-      border: 1px solid rgba(0,0,0,0.03);
-      padding: 44px;
-      border-radius: 28px;
-      box-shadow: 0 15px 40px rgba(15,23,42,0.02);
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      position: relative;
-      transition: all 0.3s ease;
-      text-align: left;
-    }
-    .testim-card-premium:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 30px 60px rgba(61,189,189,0.06);
-      border-color: rgba(61,189,189,0.2);
-      background: var(--white);
-    }
-    .testim-card-premium::before {
-      content: '“';
-      position: absolute;
-      top: 15px;
-      right: 35px;
-      font-size: 80px;
-      color: rgba(61,189,189,0.1);
-      font-family: var(--font-title);
-      line-height: 1;
-    }
-    .testim-stars-svg {
-      display: flex;
-      gap: 3px;
-      color: #f59e0b;
-      margin-bottom: 22px;
-    }
-    .testim-stars-svg svg {
-      width: 16px; height: 16px; fill: currentColor;
-    }
-    .testim-text { 
-      font-size: 15.5px; font-style: italic; color: #334155; 
-      margin-bottom: 30px; line-height: 1.7; position: relative; z-index: 2;
-    }
-    .testim-author { 
-      font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 14px; 
-    }
-    .testim-author-initials { 
-      width: 48px; height: 48px; border-radius: 50%; 
-      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%); 
-      color: var(--white); display: flex; align-items: center; justify-content: center;
-      font-weight: 800; font-size: 15px; box-shadow: 0 4px 12px rgba(61,189,189,0.25);
+    .testim-author { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 14px; }
+    .testim-author-initials {
+      width: 46px; height: 46px; border-radius: 50%;
+      background: var(--petroleo); color: var(--creme);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-serif); font-weight: 500; font-size: 15px;
     }
     .testim-google-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      font-weight: 600;
-      color: var(--text-muted);
-      letter-spacing: 0.5px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      margin-top: 2px;
+      font-family: var(--font-mono); font-size: 10px; text-transform: uppercase;
+      color: var(--tinta-suave); letter-spacing: 0.5px;
+      display: flex; align-items: center; gap: 4px; margin-top: 3px;
     }
-    .testim-google-label svg {
-      width: 10px; height: 10px; fill: currentColor;
-    }
-    .carousel-controls {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      margin-top: 35px;
-    }
+    .testim-google-label svg { width: 10px; height: 10px; fill: currentColor; }
+    .carousel-controls { display: flex; justify-content: center; gap: 12px; margin-top: 35px; }
     .carousel-btn {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      border: 1px solid rgba(0,0,0,0.08);
-      background: var(--white);
-      color: var(--dark);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+      width: 52px; height: 52px; border-radius: 3px;
+      border: 1px solid var(--line); background: var(--paper); color: var(--petroleo);
+      cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s;
     }
-    .carousel-btn:hover {
-      background: var(--dark);
-      color: var(--white);
-      border-color: var(--dark);
-    }
-    .carousel-btn svg {
-      width: 18px;
-      height: 18px;
-      fill: currentColor;
-    }
+    .carousel-btn:hover { background: var(--petroleo); color: var(--creme); border-color: var(--petroleo); }
+    .carousel-btn svg { width: 18px; height: 18px; fill: currentColor; }
 
-    /* --- SEÇÃO 7: EQUIPE DE APOIO --- */
-    .team-section {
-      padding: 120px 0;
-      background: var(--light);
+    /* ============ 7. EQUIPE ============ */
+    .team-section { padding: 130px 0; }
+    .team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
+    .team-card {
+      background: var(--paper); padding: 38px 35px; border-radius: 3px;
+      text-align: center; border: 1px solid var(--line); transition: 0.4s;
     }
-    .team-grid { 
-      display: grid; 
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); 
-      gap: 30px; 
+    .team-card:hover { transform: translateY(-4px); box-shadow: 0 24px 48px rgba(22,64,61,0.07); }
+    .team-avatar {
+      width: 124px; height: 124px; border-radius: 50%;
+      margin: 0 auto 24px; overflow: hidden;
+      border: 1px solid var(--line); padding: 5px;
     }
-    .team-card { 
-      background: var(--white); 
-      padding: 35px; 
-      border-radius: 28px; 
-      text-align: center; 
-      box-shadow: 0 10px 30px rgba(0,0,0,0.02);
-      border: 1px solid rgba(0,0,0,0.015); 
-    }
-    .team-avatar { 
-      width: 130px; height: 130px; border-radius: 50%; 
-      margin: 0 auto 24px; overflow: hidden; 
-      box-shadow: 0 10px 25px rgba(0,0,0,0.06);
-      border: 4px solid var(--white);
-    }
-    .team-avatar img { 
-      width: 100%; height: 100%; object-fit: cover; 
-      transition: transform 0.5s ease;
-    }
-    .team-card:hover .team-avatar img {
-      transform: scale(1.08);
-    }
-    .team-card h4 { 
-      font-size: 19px; margin-bottom: 6px; font-weight: 800; color: var(--dark);
-    }
-    .team-card p { 
-      font-size: 14.5px; color: var(--accent-dark); font-weight: 600;
-    }
+    .team-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; transition: transform 0.5s ease; }
+    .team-card:hover .team-avatar img { transform: scale(1.06); }
+    .team-card h4 { font-family: var(--font-serif); font-size: 21px; font-weight: 500; margin-bottom: 6px; color: var(--petroleo); }
+    .team-card p { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--salvia-deep); }
 
-    /* --- SEÇÃO 8: ESTRUTURA (MOSAICO INTERATIVO) & MAPA --- */
-    .clinic-section { 
-      padding: 0; display: grid; grid-template-columns: 1.2fr 1fr; 
-      background: var(--darker);
-    }
-    .mosaico-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-      padding: 20px;
-    }
+    /* ============ 8. ESTRUTURA & MAPA (petróleo profundo) ============ */
+    .clinic-section { padding: 0; display: grid; grid-template-columns: 1.2fr 1fr; }
+    .clinic-header { grid-column: 1 / -1; text-align: center; padding: 100px 6% 20px; }
+    .mosaico-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 20px; }
     .mosaico-item {
-      position: relative;
-      height: 230px;
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      cursor: pointer;
+      position: relative; height: 230px; border-radius: 3px; overflow: hidden;
+      cursor: pointer; border: 1px solid var(--line-dark);
     }
-    .mosaico-item img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
-    }
+    .mosaico-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1); filter: saturate(0.85); }
     .mosaico-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 60%);
-      opacity: 0;
-      transition: opacity 0.4s ease;
-      display: flex;
-      align-items: flex-end;
-      padding: 24px;
+      position: absolute; inset: 0;
+      background: linear-gradient(0deg, rgba(14,43,41,0.9) 0%, rgba(14,43,41,0) 60%);
+      opacity: 0; transition: opacity 0.4s ease;
+      display: flex; align-items: flex-end; padding: 24px;
     }
-    .mosaico-legend {
-      color: var(--white);
-      transform: translateY(12px);
-      transition: transform 0.4s ease;
-      text-align: left;
-    }
-    .mosaico-legend h4 {
-      font-size: 15px;
-      font-weight: 800;
-      margin-bottom: 4px;
-      letter-spacing: -0.3px;
-    }
-    .mosaico-legend p {
-      font-size: 12.5px;
-      color: rgba(255,255,255,0.7);
-      margin: 0;
-    }
-    .mosaico-item:hover img {
-      transform: scale(1.06);
-    }
-    .mosaico-item:hover .mosaico-overlay {
-      opacity: 1;
-    }
-    .mosaico-item:hover .mosaico-legend {
-      transform: translateY(0);
-    }
-    .clinic-header {
-      grid-column: 1 / -1; text-align: center; padding: 80px 6% 8px;
-    }
-    .clinic-header .section-eyebrow { color: var(--accent); }
-    .clinic-header h2 { font-size: 40px; font-weight: 900; color: #fff; letter-spacing: -1px; margin: 0 0 14px; }
-    .clinic-header p { font-size: 17px; color: #94a3b8; max-width: 560px; margin: 0 auto; line-height: 1.6; }
-    .clinic-map-container {
-      padding: 20px;
-      background: var(--darker);
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      justify-content: center;
-    }
-    .clinic-info-card { background: #fff; border-radius: 18px; padding: 24px 26px; }
-    .clinic-info-card h4 { font-size: 18px; font-weight: 800; color: var(--dark); margin-bottom: 16px; }
+    .mosaico-legend { color: var(--creme); transform: translateY(12px); transition: transform 0.4s ease; text-align: left; }
+    .mosaico-legend h4 { font-family: var(--font-serif); font-size: 18px; font-weight: 500; margin-bottom: 4px; }
+    .mosaico-legend p { font-size: 12.5px; color: var(--creme-muted); margin: 0; }
+    .mosaico-item:hover img { transform: scale(1.06); }
+    .mosaico-item:hover .mosaico-overlay { opacity: 1; }
+    .mosaico-item:hover .mosaico-legend { transform: translateY(0); }
+    .clinic-map-container { padding: 20px; display: flex; flex-direction: column; gap: 14px; justify-content: center; }
+    .clinic-info-card { background: var(--paper); color: var(--tinta); border-radius: 3px; padding: 26px 28px; }
+    .clinic-info-card h4 { font-family: var(--font-serif); font-size: 21px; font-weight: 500; color: var(--petroleo); margin-bottom: 16px; }
     .clinic-info-list { list-style: none; margin: 0 0 20px; padding: 0; display: flex; flex-direction: column; gap: 12px; }
-    .clinic-info-list li { display: flex; gap: 11px; font-size: 14.5px; color: #475569; line-height: 1.5; align-items: flex-start; }
-    .clinic-info-list svg { width: 18px; height: 18px; flex-shrink: 0; stroke: var(--accent); margin-top: 1px; }
+    .clinic-info-list li { display: flex; gap: 11px; font-size: 14.5px; color: var(--tinta-suave); line-height: 1.5; align-items: flex-start; }
+    .clinic-info-list svg { width: 18px; height: 18px; flex-shrink: 0; stroke: var(--terracota); margin-top: 1px; }
     .clinic-info-card .btn { width: 100%; padding: 14px; font-size: 15px; }
-    .clinic-map {
-      width: 100%; flex: 1; min-height: 320px;
-      border-radius: 20px; overflow: hidden;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    .clinic-map { width: 100%; flex: 1; min-height: 320px; border-radius: 3px; overflow: hidden; border: 1px solid var(--line-dark); }
+    .clinic-map iframe { filter: saturate(0.7); }
+
+    /* ============ 9. CTA FINAL ============ */
+    .cta-final {
+      padding: 140px 0; text-align: center; position: relative; overflow: hidden;
+    }
+    /* dente da marca como marca d'água na lateral, como na capa da identidade */
+    .cta-final::after {
+      content: ''; position: absolute; right: -8vw; top: 50%; transform: translateY(-50%) rotate(-6deg);
+      width: 46vmin; height: 46vmin; opacity: 0.07; pointer-events: none;
+      background: var(--salvia);
+      -webkit-mask: url('assets/logo-lcr.svg') center / contain no-repeat;
+              mask: url('assets/logo-lcr.svg') center / contain no-repeat;
+    }
+    .cta-final .container { position: relative; z-index: 2; }
+    .cta-welcome {
+      font-family: var(--font-serif); font-style: italic; font-size: 26px;
+      color: var(--terracota); display: block; margin-bottom: 22px;
+    }
+    .cta-final h2 { font-size: clamp(2.6rem, 5vw, 4rem); margin-bottom: 26px; color: var(--creme); }
+    .cta-final h2 em { color: var(--salvia); }
+    .cta-final .cta-sub {
+      font-size: 18.5px; color: var(--creme-muted); margin-bottom: 44px;
+      max-width: 560px; margin-left: auto; margin-right: auto; line-height: 1.65;
+    }
+    .cta-buttons { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .btn-pulse { animation: pulse 2.4s infinite; }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(192,105,75,0.4); }
+      70% { box-shadow: 0 0 0 16px rgba(192,105,75,0); }
+      100% { box-shadow: 0 0 0 0 rgba(192,105,75,0); }
     }
 
-    /* --- SEÇÃO 9: CTA FINAL --- */
-    .cta-final { 
-      background: radial-gradient(circle at 50% 50%, var(--dark) 0%, var(--darker) 100%); 
-      padding: 130px 0; text-align: center; color: var(--white); 
-      position: relative; overflow: hidden;
+    /* ============ RODAPÉ ============ */
+    footer { background: var(--petroleo-deep); color: var(--creme); padding: 90px 0 40px; border-top: 1px solid var(--line-dark); }
+    .footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 50px; margin-bottom: 60px; }
+    .footer-col h4 {
+      margin-bottom: 24px; font-family: var(--font-mono); font-size: 11px;
+      letter-spacing: 2.5px; text-transform: uppercase; color: var(--salvia); font-weight: 600;
     }
-    .cta-final::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image: radial-gradient(rgba(61, 189, 189, 0.15) 1px, transparent 1px);
-      background-size: 24px 24px;
-      opacity: 0.7;
-      z-index: 1;
-      pointer-events: none;
+    .footer-lockup { margin-bottom: 20px; }
+    .footer-lockup .lockup-clinica {
+      display: block; font-family: var(--font-mono); font-size: 10px;
+      letter-spacing: 5px; text-transform: uppercase; color: var(--creme-muted); margin-bottom: 2px;
     }
-    .cta-final .container {
-      position: relative;
-      z-index: 2;
+    .footer-lockup .lockup-lcr { display: block; font-family: var(--font-serif); font-weight: 600; font-size: 44px; line-height: 1; color: var(--creme); }
+    .footer-lockup .lockup-odonto { display: block; font-family: var(--font-serif); font-style: italic; font-size: 16px; color: var(--salvia); margin-top: 6px; }
+    .footer-social { display: flex; gap: 12px; margin-top: 24px; }
+    .footer-social a {
+      width: 40px; height: 40px; border-radius: 3px;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--line-dark); color: var(--creme-muted); transition: 0.3s;
     }
-    .cta-final h2 { 
-      font-size: 52px; margin-bottom: 24px; font-weight: 900; 
-      letter-spacing: -1.5px;
-    }
-    .urgency-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 10px 20px; background: rgba(61,189,189,0.12); color: #7ad0d0;
-      border-radius: 50px; font-size: 13.5px; font-weight: 700; margin-bottom: 36px;
-      border: 1px solid rgba(61,189,189,0.28);
-    }
-    .urgency-badge svg { width: 16px; height: 16px; fill: currentColor; }
-    .urgency-badge svg {
-      width: 14px; height: 14px; fill: currentColor;
-    }
-    .btn-pulse {
-      animation: pulse 2s infinite;
+    .footer-social a:hover { background: var(--salvia); color: var(--petroleo-deep); border-color: var(--salvia); transform: translateY(-2px); }
+    .footer-social svg { width: 18px; height: 18px; fill: currentColor; }
+    .footer-col p { color: var(--creme-muted); font-size: 15px; margin-bottom: 12px; line-height: 1.6; }
+    .copyright {
+      text-align: center; border-top: 1px solid var(--line-dark); padding-top: 30px;
+      font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.5px; color: rgba(237,230,216,0.4);
     }
 
-    /* --- WHATSAPP FLUTUANTE & BALÃO INTERATIVO --- */
-    /* Chat de pré-qualificação (simulação) */
+    /* ============ WHATSAPP FLUTUANTE & CHAT ============ */
     .wa-chat {
       position: fixed; bottom: 108px; right: 30px; z-index: 9998;
       width: 340px; max-width: calc(100vw - 40px);
-      background: #fff; border-radius: 20px; overflow: hidden;
-      box-shadow: 0 24px 60px rgba(15,23,42,0.28);
+      background: var(--paper); border-radius: 8px; overflow: hidden;
+      box-shadow: 0 24px 60px rgba(14,43,41,0.35);
       display: flex; flex-direction: column;
       opacity: 0; transform: translateY(20px) scale(0.96); transform-origin: bottom right;
       pointer-events: none; transition: all 0.35s cubic-bezier(0.16,1,0.3,1);
-      font-family: var(--font-body);
+      font-family: var(--font-sans);
     }
     .wa-chat.open { opacity: 1; transform: none; pointer-events: auto; }
-    .wa-chat-header {
-      background: linear-gradient(135deg, #128C7E, #075E54); color: #fff;
-      padding: 15px 18px; display: flex; align-items: center; gap: 12px;
-    }
+    .wa-chat-header { background: var(--petroleo); color: var(--creme); padding: 15px 18px; display: flex; align-items: center; gap: 12px; }
     .wa-chat-avatar {
-      width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,0.18);
-      display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; flex-shrink: 0;
+      width: 42px; height: 42px; border-radius: 50%; background: rgba(237,230,216,0.14);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-serif); font-weight: 600; font-size: 15px; flex-shrink: 0;
     }
     .wa-chat-headinfo { flex: 1; line-height: 1.35; }
     .wa-chat-headinfo strong { display: block; font-size: 15.5px; }
-    .wa-chat-status { font-size: 12px; opacity: 0.9; display: flex; align-items: center; gap: 6px; }
+    .wa-chat-status { font-size: 12px; opacity: 0.85; display: flex; align-items: center; gap: 6px; }
     .wa-chat-status i { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; display: inline-block; }
-    .wa-chat-close { background: none; border: none; color: #fff; font-size: 26px; line-height: 1; cursor: pointer; opacity: 0.85; padding: 0 2px; }
+    .wa-chat-close { background: none; border: none; color: var(--creme); font-size: 26px; line-height: 1; cursor: pointer; opacity: 0.85; padding: 0 2px; }
     .wa-chat-close:hover { opacity: 1; }
-    .wa-chat-body {
-      background: #ECE5DD; padding: 16px; height: 290px; overflow-y: auto;
-      display: flex; flex-direction: column; gap: 9px;
-    }
+    .wa-chat-body { background: var(--creme); padding: 16px; height: 290px; overflow-y: auto; display: flex; flex-direction: column; gap: 9px; }
     .wa-msg {
-      max-width: 84%; padding: 9px 13px; border-radius: 12px; font-size: 14px; line-height: 1.45;
-      box-shadow: 0 1px 1px rgba(0,0,0,0.08); animation: waIn 0.28s ease;
+      max-width: 84%; padding: 9px 13px; border-radius: 8px; font-size: 14px; line-height: 1.45;
+      box-shadow: 0 1px 1px rgba(0,0,0,0.06); animation: waIn 0.28s ease;
     }
-    .wa-msg.bot { align-self: flex-start; background: #fff; color: #1e293b; border-top-left-radius: 3px; }
-    .wa-msg.user { align-self: flex-end; background: #DCF8C6; color: #1e293b; border-top-right-radius: 3px; }
-    .wa-typing { align-self: flex-start; background: #fff; padding: 12px 14px; border-radius: 12px; border-top-left-radius: 3px; display: flex; gap: 4px; box-shadow: 0 1px 1px rgba(0,0,0,0.08); }
-    .wa-typing span { width: 7px; height: 7px; border-radius: 50%; background: #94a3b8; animation: waBlink 1s infinite; }
+    .wa-msg.bot { align-self: flex-start; background: var(--paper); color: var(--tinta); border-top-left-radius: 3px; }
+    .wa-msg.user { align-self: flex-end; background: #DCF8C6; color: var(--tinta); border-top-right-radius: 3px; }
+    .wa-typing {
+      align-self: flex-start; background: var(--paper); padding: 12px 14px; border-radius: 8px;
+      border-top-left-radius: 3px; display: flex; gap: 4px; box-shadow: 0 1px 1px rgba(0,0,0,0.06);
+    }
+    .wa-typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--salvia-deep); animation: waBlink 1s infinite; }
     .wa-typing span:nth-child(2){ animation-delay: 0.2s; }
     .wa-typing span:nth-child(3){ animation-delay: 0.4s; }
     @keyframes waIn { from { opacity:0; transform: translateY(6px);} to{opacity:1;transform:none;} }
     @keyframes waBlink { 0%,60%,100%{opacity:0.3;} 30%{opacity:1;} }
-    .wa-chat-actions {
-      background: #fff; padding: 12px; display: flex; flex-wrap: wrap; gap: 8px; border-top: 1px solid #eef2f2;
-    }
+    .wa-chat-actions { background: var(--paper); padding: 12px; display: flex; flex-wrap: wrap; gap: 8px; border-top: 1px solid var(--line); }
     .wa-opt {
-      border: 1.5px solid var(--accent); color: var(--accent-dark); background: #fff;
-      padding: 8px 14px; border-radius: 50px; font-size: 13.5px; font-weight: 600; cursor: pointer;
-      transition: 0.2s; font-family: var(--font-body);
+      border: 1px solid var(--petroleo); color: var(--petroleo); background: var(--paper);
+      padding: 8px 14px; border-radius: 3px; font-size: 13.5px; font-weight: 600; cursor: pointer;
+      transition: 0.2s; font-family: var(--font-sans);
     }
-    .wa-opt:hover { background: var(--accent); color: #fff; }
+    .wa-opt:hover { background: var(--petroleo); color: var(--creme); }
     .wa-cta-final {
-      width: 100%; background: #25d366; color: #fff; border: none; padding: 13px; border-radius: 12px;
-      font-weight: 700; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
-      text-decoration: none;
+      width: 100%; background: #25d366; color: #fff; border: none; padding: 13px; border-radius: 3px;
+      font-weight: 700; font-size: 15px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;
     }
     .wa-cta-final:hover { background: #1ebe5a; }
-
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(61,189,189,0.4); }
-      70% { box-shadow: 0 0 0 15px rgba(61,189,189,0); }
-      100% { box-shadow: 0 0 0 0 rgba(61,189,189,0); }
-    }
-
-    /* --- RODAPÉ E AJUSTES DE GRID --- */
-    footer { background: var(--darker); color: var(--white); padding: 80px 0 40px; border-top: 1px solid rgba(255,255,255,0.05); }
-    .footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 50px; margin-bottom: 60px; }
-    .footer-col h4 { margin-bottom: 24px; font-size: 18px; color: var(--accent); }
-    .footer-logo-img { height: 46px; width: auto; margin-bottom: 18px; display: block; }
-    .footer-social { display: flex; gap: 12px; margin-top: 20px; }
-    .footer-social a {
-      width: 40px; height: 40px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-      color: #94a3b8; transition: 0.3s;
-    }
-    .footer-social a:hover { background: var(--accent); color: #fff; border-color: var(--accent); transform: translateY(-2px); }
-    .footer-social svg { width: 18px; height: 18px; fill: currentColor; }
-    .footer-col p { color: #94a3b8; font-size: 15px; margin-bottom: 12px; line-height: 1.6; }
-    .copyright { text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px; font-size: 13px; color: #64748b; }
-
-    /* WhatsApp Flutuante */
     .whatsapp-btn {
       position: fixed; bottom: 30px; right: 30px; z-index: 9999;
-      width: 65px; height: 65px; background: #25d366; border-radius: 50%;
+      width: 62px; height: 62px; background: #25d366; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       box-shadow: 0 10px 30px rgba(37, 211, 102, 0.4);
       transition: 0.3s; color: white; border: none; cursor: pointer; padding: 0;
     }
     .whatsapp-btn:hover { transform: scale(1.08); }
-    .whatsapp-btn svg { width: 35px; height: 35px; fill: currentColor; }
+    .whatsapp-btn svg { width: 33px; height: 33px; fill: currentColor; }
     .whatsapp-btn .wa-icon-close { width: 26px; height: 26px; fill: none; stroke: currentColor; }
 
     /* Scroll reveal */
     .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
     .reveal.active { opacity: 1; transform: none; }
 
+    /* ============ RESPONSIVO ============ */
     @media (max-width: 1024px) {
-      .bento-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-      .bento-large {
-        grid-column: span 2;
-      }
-      .carousel-slide {
-        flex: 0 0 calc(50% - 15px);
-      }
-      .diff-container {
-        grid-template-columns: 1fr;
-        gap: 50px;
-      }
-      .diff-left {
-        position: static;
-      }
+      .bento-grid { grid-template-columns: 1fr 1fr; }
+      .bento-large { grid-column: span 2; }
+      .carousel-slide { flex: 0 0 calc(50% - 12px); }
+      .diff-container { grid-template-columns: 1fr; gap: 50px; }
+      .diff-left { position: static; }
     }
 
     @media (max-width: 968px) {
-      .hero .container, .doctor-grid { grid-template-columns: 1fr; text-align: center; }
-      .hero-buttons { justify-content: center; }
+      .doctor-grid { grid-template-columns: 1fr; gap: 70px; text-align: left; }
       .clinic-section { grid-template-columns: 1fr; }
       .footer-grid { grid-template-columns: 1fr; }
-      .case-card {
-        grid-template-columns: 1fr;
-        gap: 40px;
-        padding: 30px;
-      }
+      .case-card { grid-template-columns: 1fr; gap: 40px; padding: 30px; }
+      .quote-badge { right: 0; }
+      .wordmark-desc { display: none; }
+      .wordmark-divider { display: none; }
     }
 
     @media (max-width: 768px) {
-      #cinematic-hero { height: auto; }
-      .cinema-sticky { position: relative; height: auto; min-height: 100vh; padding: 120px 0 80px; }
-      #mask-logo { display: none; }
-      #mask-text { position: relative; opacity: 1 !important; }
-      #cine-title { transform: none !important; font-size: clamp(2.2rem, 9vw, 3.2rem); }
-      #hero-rest { opacity: 1 !important; }
+      /* O hero cinemático roda no mobile também — só escondemos os cards de
+         órbita (poluem a tela pequena) e ajustamos logo/headline pra portrait. */
+      #mask-logo { -webkit-mask-size: 74vmin; mask-size: 74vmin; }
+      #cine-title { font-size: clamp(2.4rem, 11vw, 3.4rem); }
+      #hero-rest p { font-size: 16.5px; }
       .hero-orbit { display: none; }
-      .doctor-info h2 { font-size: 38px; }
-      .bento-grid {
-        grid-template-columns: 1fr;
-      }
-      .bento-large {
-        grid-column: span 1;
-        grid-row: span 1;
-        padding: 35px;
-      }
-      .bento-large h3 { font-size: 26px; }
-      .carousel-slide {
-        flex: 0 0 100%;
-      }
-      .mosaico-grid {
-        grid-template-columns: 1fr;
-      }
-      .mosaico-item {
-        height: 250px;
-      }
+      .editorial-pillars { grid-template-columns: 1fr; }
+      .bento-grid { grid-template-columns: 1fr; }
+      .bento-large { grid-column: span 1; grid-row: span 1; padding: 38px; }
+      .bento-large h3 { font-size: 27px; }
+      .carousel-slide { flex: 0 0 100%; }
+      .mosaico-grid { grid-template-columns: 1fr; }
+      .mosaico-item { height: 250px; }
+      .tabs-container { flex-wrap: wrap; }
     }
 
     /* Acessibilidade */
@@ -1373,11 +772,12 @@
       * { scroll-behavior: auto !important; }
       .reveal { opacity: 1; transform: none; transition: none; }
       #cinematic-hero { height: auto; }
-      .cinema-sticky { position: relative; height: auto; min-height: 100vh; padding: 120px 0 80px; }
+      .cinema-sticky { position: relative; height: auto; min-height: 100vh; padding: 130px 0 90px; }
       #mask-logo { display: none; }
       #mask-text { position: relative; opacity: 1 !important; }
-      #cine-title { transform: none !important; }
+      #cine-title { transform: none !important; letter-spacing: normal !important; }
       #hero-rest { opacity: 1 !important; }
+      .orbit-card, .orbit-note, .btn-pulse, .scroll-wheel { animation: none !important; }
     }
   </style>
   <!-- GSAP & ScrollTrigger -->
@@ -1387,29 +787,28 @@
 <body>
 
   <!-- Header -->
-  <header>
+  <header id="site-header">
     <div class="container">
-      <div class="logo-wrapper">
-        <div class="logo">
-          <img src="assets/logo-lcr.svg" alt="Logo LCR">
-        </div>
-      </div>
+      <a href="#" class="wordmark" aria-label="Clínica LCR — início">
+        <span class="wordmark-lcr">LCR</span>
+        <span class="wordmark-divider" aria-hidden="true"></span>
+        <span class="wordmark-desc">Clínica Odontológica</span>
+      </a>
       <a href="pages/dashboard.html" class="admin-link">Acesso Restrito</a>
     </div>
   </header>
 
-  <!-- 1. Cinematic Hero — Portal (zoom através da logo) -->
+  <!-- 1. Hero Cinemático — Portal (zoom através da logo) -->
   <section id="cinematic-hero">
     <div class="cinema-sticky">
-      <!-- Gradiente de fundo que ativa no meio do scroll para garantir handoff 100% invisível -->
+      <!-- Tinta creme em tela cheia que ativa no meio do scroll (handoff invisível) -->
       <div id="hero-bg-grad"></div>
 
-      <!-- Luz de fundo azul para suavizar o contraste e dar o efeito glow -->
+      <!-- Luz sálvia difusa atrás da logo -->
       <div id="hero-glow"></div>
 
-      <!-- Elementos flutuantes de órbita (estilo alquimia) que somem ao dar scroll -->
+      <!-- Elementos flutuantes de órbita que somem ao dar scroll -->
       <div class="hero-orbit" aria-hidden="true">
-        <!-- Itens de Órbita (5 elementos minimalistas) -->
         <div class="orbit-item item-1">
           <div class="orbit-card">
             <span class="orbit-number">+1.200</span>
@@ -1432,31 +831,29 @@
           <div class="orbit-note">Odontologia sem medo</div>
         </div>
         <div class="orbit-item item-5">
-          <div class="orbit-note">Sua melhor experiência</div>
+          <div class="orbit-note">Simples como sorrir</div>
         </div>
       </div>
 
-      <!-- FASE 1: o gradiente recortado DENTRO da logo (dá zoom in) -->
+      <!-- FASE 1: a tinta recortada DENTRO da logo (zoom in) -->
       <div id="mask-logo">
         <div class="fixed-gradient-bg"></div>
       </div>
 
-      <!-- FASE 2: o MESMO gradiente recortado pelo texto grosso (dá zoom out) -->
+      <!-- FASE 2: a MESMA tinta recortada pela headline (zoom out) -->
       <div id="mask-text">
-        <h1 id="cine-title">Transforme seu sorriso com<br>segurança e naturalidade</h1>
+        <h1 id="cine-title">Feito pra você<br><em>voltar a sorrir</em>.</h1>
         <div id="hero-rest">
-          <p style="font-size: 22px; font-weight: 400; line-height: 1.6; color: rgba(255,255,255,0.7); margin-bottom: 36px; max-width: 700px; margin-left: auto; margin-right: auto;">
-            Volte a sorrir com confiança. Especialistas em implantes, estética e clínica geral com um atendimento humano e acolhedor em Irecê e região.
-          </p>
-          <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
-            <a href="https://app.clinicalcr.com.br/agendar" class="btn btn-primary" style="font-size: 18px; padding: 22px 50px; display: inline-flex; align-items: center; gap: 10px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agendar online</a>
-            <a href="https://wa.me/5574991266602" target="_blank" class="btn btn-primary" style="font-size: 18px; padding: 22px 50px;">Agendar avaliação</a>
-            <a href="#sobre" class="btn btn-outline" style="font-size: 18px; padding: 22px 50px; border-color: rgba(255,255,255,0.2);">Conhecer Clínica</a>
+          <p>Implantes, estética e clínica geral em Irecê — com um atendimento que <em>fala como gente</em> e cuida de você sem pressa.</p>
+          <div class="hero-buttons">
+            <a href="https://app.clinicalcr.com.br/agendar" class="btn btn-terracota"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agendar online</a>
+            <a href="https://wa.me/5574991266602" target="_blank" rel="noopener" class="btn btn-outline-creme">Falar no WhatsApp</a>
+            <a href="#sobre" class="btn btn-outline-creme">Conhecer a clínica</a>
           </div>
         </div>
       </div>
 
-      <!-- Indicador de Scroll -->
+      <!-- Indicador de scroll -->
       <div class="scroll-indicator" aria-hidden="true">
         <span class="scroll-text">Role para explorar</span>
         <div class="scroll-mouse">
@@ -1465,7 +862,9 @@
       </div>
     </div>
   </section>
-  <section class="doctor-section" id="sobre">
+
+  <!-- 2. Quem cuida do seu sorriso -->
+  <section class="doctor-section bg-paper" id="sobre">
     <div class="container doctor-grid">
       <div class="doctor-photo-wrapper">
         <div class="doctor-photo-frame"></div>
@@ -1479,15 +878,12 @@
       </div>
 
       <div class="doctor-info">
-        <span class="doctor-eyebrow">Quem cuida do seu sorriso</span>
-        <h2>Dra. Lara Camila</h2>
-        <span class="doctor-cro">
-          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
-          CRO-BA 15247 | Cirurgiã-Dentista
-        </span>
-        <p>Acredito que a odontologia vai muito além de tratar dentes; ela devolve a liberdade de sorrir, mastigar com firmeza e viver sem inseguranças.</p>
+        <span class="eyebrow">01 — Quem cuida de você</span>
+        <h2>Dra. Lara <em>Camila</em></h2>
+        <span class="doctor-cro">CRO-BA 15247 · Cirurgiã-Dentista</span>
+        <p>Acredito que a odontologia vai muito além de tratar dentes; ela devolve a <em>liberdade de sorrir</em>, mastigar com firmeza e viver sem inseguranças.</p>
         <p>Com anos de experiência e centenas de sorrisos transformados em Irecê e região, minha missão é ouvir você com paciência, entender suas necessidades e oferecer um atendimento acolhedor, seguro e focado no seu conforto absoluto.</p>
-        
+
         <div class="editorial-pillars">
           <div class="editorial-item">
             <span class="editorial-num">01</span>
@@ -1528,8 +924,8 @@
 
         <div class="signature-container">
           <svg class="signature-svg" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M15 42C35 38 52 14 62 18C72 22 48 50 68 45C88 40 115 22 125 27C135 32 105 48 140 42C175 35 185 25 190 22" stroke="var(--accent-dark)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M40 22C43 19 50 17 53 21C56 25 45 32 50 32" stroke="var(--accent-dark)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M15 42C35 38 52 14 62 18C72 22 48 50 68 45C88 40 115 22 125 27C135 32 105 48 140 42C175 35 185 25 190 22" stroke="var(--petroleo)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M40 22C43 19 50 17 53 21C56 25 45 32 50 32" stroke="var(--petroleo)" stroke-width="2" stroke-linecap="round"/>
           </svg>
           <span class="signature-title">Dra. Lara Camila</span>
         </div>
@@ -1537,12 +933,13 @@
     </div>
   </section>
 
-  <!-- 3. Antes e Depois (Showcase Clínico) -->
-  <section class="results-section" id="resultados">
+  <!-- 3. Casos Clínicos (sem antes/depois — compliance CFO) -->
+  <section class="results-section bg-creme" id="resultados">
     <div class="container">
       <div class="section-header">
-        <h2>Casos Clínicos de Sucesso</h2>
-        <p>Explore os resultados reais alcançados por nossos pacientes através de um planejamento personalizado.</p>
+        <span class="eyebrow">02 — Histórias reais</span>
+        <h2>Casos que <em>contam histórias</em></h2>
+        <p>Resultados alcançados por nossos pacientes através de um planejamento personalizado.</p>
       </div>
 
       <div class="tabs-container">
@@ -1630,78 +1027,78 @@
   </section>
 
   <!-- 4. Especialidades (Bento Grid) -->
-  <section class="services-section" id="especialidades">
+  <section class="services-section bg-paper" id="especialidades">
     <div class="container">
       <div class="section-header">
-        <span class="section-eyebrow">Tratamentos</span>
-        <h2>Nossas Especialidades</h2>
+        <span class="eyebrow">03 — Tratamentos</span>
+        <h2>Nossas <em>especialidades</em></h2>
         <p>Soluções completas com tecnologia integrada para reabilitar e harmonizar seu sorriso.</p>
       </div>
 
       <div class="bento-grid">
-        <!-- Bloco Principal Destaque: Implantes -->
+        <!-- Bloco Principal: Implantes -->
         <div class="bento-item bento-large">
           <div class="bento-large-content">
             <div>
               <div class="bento-icon">
-                <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M5 12h14M12 7c2.5 0 4.5 2 4.5 4.5S14.5 16 12 16s-4.5-2-4.5-4.5S9.5 7 12 7z" stroke-linecap="round"/></svg>
+                <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M5 12h14M12 7c2.5 0 4.5 2 4.5 4.5S14.5 16 12 16s-4.5-2-4.5-4.5S9.5 7 12 7z" stroke-linecap="round"/></svg>
               </div>
-              <span class="bento-outcome">Reabilitação Oral Permanente</span>
-              <h3>Implantes Dentários</h3>
+              <span class="bento-outcome">Reabilitação oral permanente</span>
+              <h3>Implantes <em>Dentários</em></h3>
               <p>Volte a mastigar seus alimentos favoritos com segurança total. Substitua dentes perdidos por próteses fixas e seguras sobre implantes de alta precisão que parecem e funcionam como dentes naturais.</p>
             </div>
-            <a href="https://wa.me/5574991266602?text=Olá! Gostaria de saber mais sobre Implantes Dentários" target="_blank" class="bento-link">
+            <a href="https://wa.me/5574991266602?text=Olá! Gostaria de saber mais sobre Implantes Dentários" target="_blank" rel="noopener" class="bento-link">
               Falar no WhatsApp
-              <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
           </div>
         </div>
 
-        <!-- Bloco 2: Lentes em Porcelana -->
-        <div class="bento-item bento-glass">
+        <!-- Lentes em Porcelana -->
+        <div class="bento-item">
           <div>
             <div class="bento-icon">
-              <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 12h18M12 3a9 9 0 019 9 9 9 0 01-9 9 9 9 0 01-9-9 9 9 0 019-9z"/></svg>
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v18M3 12h18M12 3a9 9 0 019 9 9 9 0 01-9 9 9 9 0 01-9-9 9 9 0 019-9z"/></svg>
             </div>
             <span class="bento-outcome">Sorriso harmônico</span>
             <h3>Lentes em Porcelana</h3>
             <p>Corrija imperfeições de formato, alinhamento ou coloração com facetas ultra-finas de alta resistência.</p>
           </div>
-          <a href="https://wa.me/5574991266602?text=Olá! Gostaria de saber mais sobre Lentes de Porcelana" target="_blank" class="bento-link">
+          <a href="https://wa.me/5574991266602?text=Olá! Gostaria de saber mais sobre Lentes de Porcelana" target="_blank" rel="noopener" class="bento-link">
             Falar no WhatsApp
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </a>
         </div>
 
-        <!-- Bloco 3: Alinhamento Invisalign -->
-        <div class="bento-item bento-glass">
+        <!-- Alinhadores Invisíveis -->
+        <div class="bento-item">
           <div>
             <div class="bento-icon">
-              <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2zm0 18c3.31 0 6-2.69 6-6s-2.69-6-6-6-6 2.69-6 6 2.69 6 6 6z"/></svg>
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2zm0 18c3.31 0 6-2.69 6-6s-2.69-6-6-6-6 2.69-6 6 2.69 6 6 6z"/></svg>
             </div>
             <span class="bento-outcome">Sem aparelho fixo</span>
             <h3>Alinhadores Invisíveis</h3>
             <p>Conquiste dentes alinhados utilizando placas transparentes, confortáveis e totalmente removíveis.</p>
           </div>
-          <a href="https://wa.me/5574991266602?text=Olá! Gostaria de saber mais sobre Alinhadores Invisíveis" target="_blank" class="bento-link">
+          <a href="https://wa.me/5574991266602?text=Olá! Gostaria de saber mais sobre Alinhadores Invisíveis" target="_blank" rel="noopener" class="bento-link">
             Falar no WhatsApp
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </a>
         </div>
 
-        <!-- Bloco 4: Clínica Geral e Prevenção -->
-        <div class="bento-item bento-glass">
+        <!-- Clínica Geral e Prevenção -->
+        <div class="bento-item">
           <div>
             <div class="bento-icon">
-              <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             </div>
             <span class="bento-outcome">Saúde bucal em dia</span>
-            <h3>Clínica & Prevenção</h3>
+            <h3>Clínica &amp; Prevenção</h3>
             <p>Tratamentos essenciais, limpezas periódicas e cuidados preventivos para manter sua saúde bucal sempre em dia.</p>
           </div>
-          <a href="https://wa.me/5574991266602?text=Olá! Gostaria de agendar uma consulta de Clínica Geral ou Limpeza" target="_blank" class="bento-link">
+          <a href="https://wa.me/5574991266602?text=Olá! Gostaria de agendar uma consulta de Clínica Geral ou Limpeza" target="_blank" rel="noopener" class="bento-link">
             Falar no WhatsApp
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </a>
         </div>
       </div>
@@ -1709,56 +1106,44 @@
   </section>
 
   <!-- 5. Diferenciais -->
-  <section class="diff-section">
+  <section class="diff-section bg-petroleo">
     <div class="container diff-container">
       <div class="diff-left">
-        <span class="section-eyebrow">Por que a LCR</span>
-        <h2>Por que escolher a Clínica LCR?</h2>
-        <p>Acreditamos que ir ao dentista deve ser uma experiência tranquila, acolhedora e totalmente livre de estresse.</p>
-        <a href="https://wa.me/5574991266602?text=Olá! Vim pelo site e gostaria de agendar uma avaliação" target="_blank" class="btn btn-primary diff-cta">Agendar avaliação</a>
+        <span class="eyebrow">04 — Por que a LCR</span>
+        <h2>Ir ao dentista pode ser <em>leve</em>.</h2>
+        <p>Acreditamos que cuidar do sorriso deve ser uma experiência tranquila, acolhedora e totalmente livre de estresse.</p>
+        <a href="https://wa.me/5574991266602?text=Olá! Vim pelo site e gostaria de agendar uma avaliação" target="_blank" rel="noopener" class="btn btn-terracota diff-cta">Agendar avaliação</a>
       </div>
 
       <div class="diff-right">
-        <!-- Diferencial 1 -->
         <div class="diff-card">
-          <div class="diff-card-icon">
-            <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-          </div>
+          <span class="diff-num">01</span>
           <div class="diff-card-content">
-            <h4>Odontologia sem Medo</h4>
+            <h4>Odontologia sem medo</h4>
             <p>Ambiente humanizado e protocolos específicos para garantir um tratamento confortável e sem dores físicas ou emocionais.</p>
           </div>
         </div>
 
-        <!-- Diferencial 2 -->
         <div class="diff-card">
-          <div class="diff-card-icon">
-            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-          </div>
+          <span class="diff-num">02</span>
           <div class="diff-card-content">
-            <h4>Diagnóstico Personalizado</h4>
+            <h4>Diagnóstico personalizado</h4>
             <p>Tratamentos sob medida. Analisamos detalhadamente sua saúde bucal e seu estilo de vida antes de propor qualquer intervenção.</p>
           </div>
         </div>
 
-        <!-- Diferencial 3 -->
         <div class="diff-card">
-          <div class="diff-card-icon">
-            <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
-          </div>
+          <span class="diff-num">03</span>
           <div class="diff-card-content">
-            <h4>Tecnologia de Ponta</h4>
-            <p>Utilização de scanners digitais avançados e planejamento 3D, dispensando os antigos moldes desconfortáveis de massinha.</p>
+            <h4>Tecnologia de ponta</h4>
+            <p>Scanners digitais avançados e planejamento 3D, dispensando os antigos moldes desconfortáveis de massinha.</p>
           </div>
         </div>
 
-        <!-- Diferencial 4 -->
         <div class="diff-card">
-          <div class="diff-card-icon">
-            <svg viewBox="0 0 24 24"><path d="M20 8h-2V5h2v3zm0-5h-2V1.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5V3zm-6 15h-2v-3h2v3zm0-5h-2V1.5C12 .67 12.67 0 13.5 0s1.5.67 1.5 1.5V13zm-6 5H6v-3h2v3zm0-5H6v-3h2v3zM2 21h18v-2H2v2z"/></svg>
-          </div>
+          <span class="diff-num">04</span>
           <div class="diff-card-content">
-            <h4>Ambiente Premium & Acolhedor</h4>
+            <h4>Ambiente premium &amp; acolhedor</h4>
             <p>Instalações modernas e projetadas para oferecer o máximo de privacidade, bem-estar e relaxamento para você.</p>
           </div>
         </div>
@@ -1767,9 +1152,9 @@
   </section>
 
   <!-- 6. Prova Social (Depoimentos) -->
-  <section class="reviews-section">
+  <section class="reviews-section bg-creme">
     <div class="container" style="text-align: center;">
-      
+
       <a href="https://maps.app.goo.gl/RV3zCA5skEBB8r4Y6" target="_blank" rel="noopener" class="google-badge" aria-label="Ver avaliações da Clínica LCR no Google">
         <div class="google-badge-stars">
           <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
@@ -1784,7 +1169,8 @@
       </a>
 
       <div class="section-header">
-        <h2>O Depoimento de Nossos Pacientes</h2>
+        <span class="eyebrow">05 — Quem já sorriu</span>
+        <h2>O depoimento de <em>nossos pacientes</em></h2>
         <p>A satisfação de quem transformou o sorriso e a mastigação com a equipe da Clínica LCR.</p>
       </div>
 
@@ -1793,7 +1179,7 @@
         <div class="carousel-track" id="testimonial-track">
           <!-- Depoimento 1 -->
           <div class="carousel-slide">
-            <div class="testim-card-premium">
+            <div class="testim-card">
               <div>
                 <div class="testim-stars-svg">
                   <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
@@ -1819,7 +1205,7 @@
 
           <!-- Depoimento 2 -->
           <div class="carousel-slide">
-            <div class="testim-card-premium">
+            <div class="testim-card">
               <div>
                 <div class="testim-stars-svg">
                   <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
@@ -1845,7 +1231,7 @@
 
           <!-- Depoimento 3 -->
           <div class="carousel-slide">
-            <div class="testim-card-premium">
+            <div class="testim-card">
               <div>
                 <div class="testim-stars-svg">
                   <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
@@ -1883,17 +1269,18 @@
   </section>
 
   <!-- 7. Equipe de Apoio -->
-  <section class="team-section">
+  <section class="team-section bg-paper">
     <div class="container">
       <div class="section-header">
-        <h2>Equipe Clínica</h2>
+        <span class="eyebrow">06 — Equipe clínica</span>
+        <h2>Quem trabalha <em>com a gente</em></h2>
         <p>Especialistas altamente capacitados atuando de forma integrada para o sucesso do seu caso.</p>
       </div>
       <div class="team-grid">
         <div class="team-card">
           <div class="team-avatar"><img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=200" alt="Dr. Ricardo Alves"></div>
           <h4>Dr. Ricardo Alves</h4>
-          <p>Implantodontia & Reabilitação</p>
+          <p>Implantodontia &amp; Reabilitação</p>
         </div>
         <div class="team-card">
           <div class="team-avatar"><img src="https://images.unsplash.com/photo-1559839734-2b71f1536780?auto=format&fit=crop&q=80&w=200" alt="Dra. Sofia Mendes"></div>
@@ -1910,14 +1297,13 @@
   </section>
 
   <!-- 8. Mosaico Interativo da Clínica & Localização -->
-  <section class="clinic-section">
+  <section class="clinic-section bg-petroleo-deep">
     <div class="clinic-header">
-      <span class="section-eyebrow">A Clínica</span>
-      <h2>Conheça nossa estrutura</h2>
-      <p>Um ambiente moderno, acolhedor e preparado para o seu conforto e segurança em cada visita.</p>
+      <span class="eyebrow">07 — A clínica</span>
+      <h2 style="font-size: clamp(2.3rem, 4vw, 3rem); color: var(--creme); margin-bottom: 14px;">Conheça nossa <em>estrutura</em></h2>
+      <p style="font-size: 17px; color: var(--creme-muted); max-width: 560px; margin: 0 auto; line-height: 1.6;">Um ambiente moderno, acolhedor e preparado para o seu conforto e segurança em cada visita.</p>
     </div>
     <div class="mosaico-grid">
-      <!-- Item Mosaico 1 -->
       <div class="mosaico-item">
         <img src="https://images.unsplash.com/photo-1629131726692-1accd0c9970f?auto=format&fit=crop&w=800" alt="Consultório Odontológico Clínica LCR">
         <div class="mosaico-overlay">
@@ -1928,7 +1314,6 @@
         </div>
       </div>
 
-      <!-- Item Mosaico 2 -->
       <div class="mosaico-item">
         <img src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=800" alt="Recepção Clínica LCR">
         <div class="mosaico-overlay">
@@ -1939,18 +1324,16 @@
         </div>
       </div>
 
-      <!-- Item Mosaico 3 -->
       <div class="mosaico-item">
         <img src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=800" alt="Equipamento de Escaneamento 3D">
         <div class="mosaico-overlay">
           <div class="mosaico-legend">
-            <h4>Biossegurança & Tecnologia</h4>
+            <h4>Biossegurança &amp; Tecnologia</h4>
             <p>Escaneamento 3D e esterilização hospitalar.</p>
           </div>
         </div>
       </div>
 
-      <!-- Item Mosaico 4 -->
       <div class="mosaico-item">
         <img src="https://images.unsplash.com/photo-1606811971618-4486d14f3f99?auto=format&fit=crop&w=800" alt="Sala de Esterilização LCR">
         <div class="mosaico-overlay">
@@ -1979,7 +1362,7 @@
             <span>(74) 99126-6602</span>
           </li>
         </ul>
-        <a href="https://www.google.com/maps/dir/?api=1&destination=LCR%20Cl%C3%ADnica%20Odontol%C3%B3gica%2C%20Irec%C3%AA%20-%20BA" target="_blank" rel="noopener" class="btn btn-primary">Como chegar</a>
+        <a href="https://www.google.com/maps/dir/?api=1&destination=LCR%20Cl%C3%ADnica%20Odontol%C3%B3gica%2C%20Irec%C3%AA%20-%20BA" target="_blank" rel="noopener" class="btn btn-petroleo">Como chegar</a>
       </div>
       <div class="clinic-map">
         <iframe width="100%" height="100%" style="border:0;" loading="lazy" allowfullscreen src="https://maps.google.com/maps?q=LCR%20Cl%C3%ADnica%20Odontol%C3%B3gica,%20R.%20R%C3%A9gio%20Em%C3%ADlia,%20Irec%C3%AA,%20Bahia&t=&z=16&ie=UTF8&iwloc=&output=embed" aria-label="Mapa de Localização da Clínica LCR"></iframe>
@@ -1987,20 +1370,15 @@
     </div>
   </section>
 
-  <!-- 9. CTA Final c/ Urgência -->
-  <section class="cta-final">
+  <!-- 9. CTA Final -->
+  <section class="cta-final bg-petroleo">
     <div class="container">
-      <div class="urgency-badge">
-        <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-        Atendimento humanizado · Resposta rápida no WhatsApp
-      </div>
-      <h2>Dê o primeiro passo para o seu novo sorriso</h2>
-      <p style="font-size: 20px; color: #cbd5e1; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">
-        Fale com nossa equipe agora no WhatsApp e garanta seu horário de avaliação com a Dra. Lara Camila.
-      </p>
-      <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
-        <a href="https://app.clinicalcr.com.br/agendar" class="btn btn-primary" style="padding: 22px 44px; font-size: 18px; display: inline-flex; align-items: center; gap: 10px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agendar online</a>
-        <a href="https://wa.me/5574991266602?text=Olá! Vim pelo site e gostaria de agendar uma avaliação" target="_blank" class="btn btn-primary btn-pulse" style="padding: 22px 44px; font-size: 18px;">Agende sua avaliação agora</a>
+      <span class="cta-welcome">Seja bem-vindo.</span>
+      <h2>O primeiro passo pro seu <em>novo sorriso</em> começa aqui</h2>
+      <p class="cta-sub">Fale com nossa equipe agora no WhatsApp e garanta seu horário de avaliação com a Dra. Lara Camila.</p>
+      <div class="cta-buttons">
+        <a href="https://app.clinicalcr.com.br/agendar" class="btn btn-terracota btn-pulse"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agendar online</a>
+        <a href="https://wa.me/5574991266602?text=Olá! Vim pelo site e gostaria de agendar uma avaliação" target="_blank" rel="noopener" class="btn btn-outline-creme">Agendar pelo WhatsApp</a>
       </div>
     </div>
   </section>
@@ -2010,7 +1388,11 @@
     <div class="container">
       <div class="footer-grid">
         <div class="footer-col">
-          <img src="assets/logo-lcr.svg" alt="Clínica LCR" class="footer-logo-img">
+          <div class="footer-lockup">
+            <span class="lockup-clinica">Clínica</span>
+            <span class="lockup-lcr">LCR</span>
+            <span class="lockup-odonto">Odontologia.</span>
+          </div>
           <p>Nós cuidamos do seu sorriso com excelência técnica e atenção em cada detalhe.</p>
           <div class="footer-social">
             <a href="https://www.instagram.com/clinica.lcr/" target="_blank" rel="noopener" aria-label="Instagram da Clínica LCR">
@@ -2029,8 +1411,8 @@
         </div>
         <div class="footer-col">
           <h4>Contato</h4>
-          <p>📞 (74) 99126-6602</p>
-          <p>✉️ atendimento@clinicalcr.com</p>
+          <p>(74) 99126-6602</p>
+          <p>atendimento@clinicalcr.com</p>
           <p>Resp. Técnica: Dra. Lara Camila<br>CRO-BA 15247</p>
         </div>
       </div>
@@ -2062,10 +1444,16 @@
 
   <script>
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const isMobile = window.matchMedia('(max-width: 768px)').matches;
-    const cinematicEnabled = !prefersReducedMotion && !isMobile;
+    let heroInited = false;
 
-    if (cinematicEnabled && window.gsap && window.ScrollTrigger) {
+    // Tenta iniciar o hero cinemático (desktop E mobile). Condições reavaliadas a
+    // cada chamada: GSAP pode chegar depois (CDN async) e a viewport pode começar
+    // em 0 (pré-render).
+    function initHero() {
+      if (heroInited) return true;
+      if (prefersReducedMotion || window.innerWidth === 0) return false;
+      if (!(window.gsap && window.ScrollTrigger)) return false;
+      heroInited = true;
       gsap.registerPlugin(ScrollTrigger);
 
       // Garante o estado inicial correto das camadas e efeitos
@@ -2074,7 +1462,7 @@
       gsap.set('.fixed-gradient-bg', { scale: 1, rotate: 3 });
       gsap.set('#hero-bg-grad', { opacity: 0 });
       gsap.set('#hero-glow', { autoAlpha: 0.8, scale: 0.8 });
-      gsap.set('#cine-title', { scale: 15, rotate: 2.5, letterSpacing: '-6px' });
+      gsap.set('#cine-title', { scale: 15, rotate: 2.5, letterSpacing: '-0.06em' });
       gsap.set('#hero-rest', { autoAlpha: 0, y: 40 });
       gsap.set('.hero-orbit', { autoAlpha: 1, scale: 1 });
       gsap.set('.scroll-indicator', { autoAlpha: 1, y: 0 });
@@ -2083,22 +1471,22 @@
         scrollTrigger: {
           trigger: "#cinematic-hero",
           start: "top top",
-          end: "+=120%", // Estendemos um pouco mais o scroll para apreciar o movimento suave
-          scrub: 1.5, // Adiciona inércia/suavidade cinematográfica ao scroll!
+          end: "+=120%",
+          scrub: 1.5, // inércia cinematográfica no scroll
           pin: true,
           anticipatePin: 1
         }
       });
 
-      // Objeto auxiliar para controle linear e preciso da animação de escala e rotação compensadas
+      // Objeto auxiliar para controle linear da escala e rotação compensadas
       const logoAnim = { scale: 1, rotation: -3 };
 
       tl
-        // FASE 1: Logo cresce (zoom in) e gira levemente. O gradiente interno compensa a rotação e escala para ficar fixo.
-        // A luz azul de fundo (#hero-glow) se expande e dissipa. O gradiente geral de fundo surge.
-        // Os elementos de órbita (.hero-orbit) disparam zoom out/fade out acelerado.
+        // FASE 1: a logo cresce (zoom in) e gira levemente. A tinta interna compensa
+        // a transformação para ficar fixa. A luz sálvia se dissipa e a tinta em tela
+        // cheia surge — no fim da fase, a tela é toda creme.
         .to(logoAnim, {
-          scale: 15, // Aumentado para garantir cobertura total incluindo concavidades
+          scale: 15, // cobre a tela toda, incluindo concavidades da logo
           rotation: 0,
           ease: 'power2.in',
           duration: 1,
@@ -2111,24 +1499,28 @@
         .to('#hero-bg-grad', { opacity: 1, ease: 'power2.inOut', duration: 1 }, 0)
         .to('.hero-orbit', { autoAlpha: 0, scale: 1.4, ease: 'power2.in', duration: 0.8 }, 0)
         .to('.scroll-indicator', { autoAlpha: 0, y: 20, ease: 'power2.in', duration: 0.6 }, 0)
-        
-        // Handoff invisível em t = 1:
-        // Desligamos a logo e ligamos o texto. A troca é imperceptível devido ao preenchimento do gradiente.
+
+        // Handoff invisível em t = 1: desligamos a logo e ligamos a headline.
+        // A troca é imperceptível porque a headline usa a MESMA tinta do fundo.
         .set('#mask-logo', { autoAlpha: 0 }, 1)
         .set('#mask-text', { autoAlpha: 1 }, 1)
-        
-        // FASE 2: O texto começa gigante, rotacionado e com letras próximas, e diminui (zoom out),
-        // endireitando-se e ajustando o espaçamento das letras, enquanto o gradiente de fundo se dissipa.
-        .to('#cine-title', { 
-          scale: 1, 
-          rotate: 0, 
-          letterSpacing: '-2px', 
-          ease: 'power2.out', 
-          duration: 1 
+
+        // FASE 2: a headline diminui (zoom out) e se endireita, enquanto a tinta de
+        // fundo se dissipa e revela o petróleo — a capa editorial da marca.
+        .to('#cine-title', {
+          scale: 1,
+          rotate: 0,
+          letterSpacing: '-0.01em',
+          ease: 'power2.out',
+          duration: 1
         }, 1)
         .to('#hero-bg-grad', { opacity: 0, ease: 'power2.inOut', duration: 1 }, 1)
         .to('#hero-rest', { autoAlpha: 1, y: 0, ease: 'power3.out', duration: 0.5 }, 1.5);
-    } else {
+
+      return true;
+    }
+
+    function staticHeroFallback() {
       // Fallback (mobile, reduced-motion ou GSAP indisponível): hero estático
       const ml = document.getElementById('mask-logo');
       const mt = document.getElementById('mask-text');
@@ -2150,7 +1542,7 @@
       const title = document.getElementById('cine-title');
       if (title) {
         title.style.transform = 'none';
-        title.style.letterSpacing = '-2px';
+        title.style.letterSpacing = 'normal';
       }
       if (hr) {
         hr.style.opacity = '1';
@@ -2159,11 +1551,36 @@
       }
     }
 
+    if (!initHero()) {
+      if (prefersReducedMotion) {
+        staticHeroFallback();
+      } else {
+        // Espera GSAP e/ou uma viewport com largura conhecida (até ~8s)
+        let heroTries = 0;
+        const heroPoll = setInterval(() => {
+          if (initHero()) { clearInterval(heroPoll); return; }
+          if (++heroTries > 80) {
+            clearInterval(heroPoll);
+            staticHeroFallback();
+          }
+        }, 100);
+      }
+    }
+
+    // Header: transparente sobre o hero, creme depois
+    const siteHeader = document.getElementById('site-header');
+    const updateHeader = () => {
+      const heroEnd = (window.innerHeight || 800) * (heroInited ? 2.0 : 0.7);
+      siteHeader.classList.toggle('scrolled', window.scrollY > heroEnd);
+    };
+    window.addEventListener('scroll', updateHeader, { passive: true });
+    updateHeader();
+
     // Alternância de Abas (Lentes vs Implantes)
     window.switchTab = function(tabId) {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-      
+
       const eventBtn = event ? event.currentTarget : null;
       if (eventBtn) {
         eventBtn.classList.add('active');
@@ -2171,14 +1588,14 @@
         const fallbackBtn = document.querySelector(`.tab-btn[onclick*="${tabId}"]`);
         if (fallbackBtn) fallbackBtn.classList.add('active');
       }
-      
+
       const activeTab = document.getElementById(`tab-${tabId}`);
       if (activeTab) {
         activeTab.classList.add('active');
       }
     };
 
-    // Carrossel de Depoimentos Premium
+    // Carrossel de Depoimentos
     const track = document.getElementById('testimonial-track');
     const slides = document.querySelectorAll('.carousel-slide');
     const prevBtn = document.getElementById('prev-review');
@@ -2197,16 +1614,15 @@
       const updateCarousel = () => {
         const slidesPerView = getSlidesPerView();
         const maxSlide = totalSlides - slidesPerView;
-        
+
         if (currentSlide > maxSlide) currentSlide = maxSlide;
         if (currentSlide < 0) currentSlide = 0;
-        
-        const gap = 30; // 30px gap
+
+        const gap = 24;
         const slideWidth = slides[0].offsetWidth;
         const offset = currentSlide * (slideWidth + gap);
         track.style.transform = `translateX(-${offset}px)`;
 
-        // Controla habilitado/desabilitado visual dos botões
         prevBtn.style.opacity = currentSlide === 0 ? '0.4' : '1';
         nextBtn.style.opacity = currentSlide === maxSlide ? '0.4' : '1';
       };
@@ -2227,7 +1643,6 @@
       });
 
       window.addEventListener('resize', updateCarousel);
-      // Inicialização precoce para ajustar posições corretas
       setTimeout(updateCarousel, 300);
     }
 
@@ -2322,7 +1737,7 @@
     })();
 
     // Scroll reveal: marca elementos e revela ao entrar na tela
-    document.querySelectorAll('.section-header, .bento-item, .diff-card, .testim-card-premium, .team-card, .mosaico-item, .doctor-grid, .editorial-item, .case-card')
+    document.querySelectorAll('.section-header, .bento-item, .diff-card, .testim-card, .team-card, .mosaico-item, .doctor-grid, .editorial-item, .case-card')
       .forEach(el => el.classList.add('reveal'));
 
     const observer = new IntersectionObserver((entries) => {
