@@ -38,6 +38,7 @@ function AnamneseContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const patientId = searchParams.get("id");
+  const novoParam = searchParams.get("novo"); // modo "novo paciente": a ficha cria o paciente + a anamnese
   const { showToast } = useToast();
 
   // State for list view
@@ -61,6 +62,11 @@ function AnamneseContent() {
   const [cpf, setCpf] = useState("");
   const [endereco, setEndereco] = useState("");
   const [queixa, setQueixa] = useState("");
+  // Campos extras que o OCR extrai (antes sem input no wizard)
+  const [profissao, setProfissao] = useState("");
+  const [identidade, setIdentidade] = useState("");
+  const [habitos, setHabitos] = useState("");
+  const [observacoes, setObservacoes] = useState("");
 
   // Step 2 Questionario Saúde State
   const [saudeRespostas, setSaudeRespostas] = useState<Record<string, any>>({
@@ -125,7 +131,10 @@ function AnamneseContent() {
 
   // Pré-preenche o formulário com o que a IA extraiu. NADA é salvo aqui — só preenche para revisão humana.
   const aplicarOCR = (dados: Record<string, any>, revisar: string[]) => {
-    const pessoais = new Set(["nome", "nascimento", "sexo", "tel", "endereco", "cpf", "queixa", "numero", "autoriza_fotos"]);
+    const pessoais = new Set([
+      "nome", "nascimento", "sexo", "tel", "endereco", "cpf", "queixa", "numero", "autoriza_fotos",
+      "profissao", "identidade", "habitos", "observacoes", "indicado_por", "local_data",
+    ]);
     if (dados.nome) setNome(String(dados.nome));
     if (dados.nascimento) setNascimento(normData(dados.nascimento));
     if (dados.tel) setTel(String(dados.tel));
@@ -134,6 +143,10 @@ function AnamneseContent() {
     const end = [dados.endereco, dados.numero].filter(Boolean).join(", ");
     if (end) setEndereco(end);
     if (dados.queixa) setQueixa(String(dados.queixa));
+    if (dados.profissao) setProfissao(String(dados.profissao));
+    if (dados.identidade) setIdentidade(String(dados.identidade));
+    if (dados.habitos) setHabitos(String(dados.habitos));
+    if (dados.observacoes) setObservacoes(String(dados.observacoes));
     if (dados.autoriza_fotos != null) setCheckFoto(dados.autoriza_fotos === "sim" || dados.autoriza_fotos === true);
 
     const saude = { ...saudeRespostas };
@@ -209,6 +222,9 @@ function AnamneseContent() {
         setNascimento(p.nascimento || "");
         setTel(p.tel);
         setCpf(p.cpf);
+        setSexo(p.sexo || "F");
+        setEndereco([p.endereco, p.numero].filter(Boolean).join(", "));
+        setIdentidade(p.rg || "");
         setCurrentStep(1);
       }
     } else {
@@ -297,6 +313,12 @@ function AnamneseContent() {
       showToast("Assine no campo de assinatura antes de finalizar.", "error");
       return;
     }
+    // A ficha cria/atualiza a ficha do paciente → Nome e Telefone são obrigatórios.
+    if (!nome || !tel) {
+      showToast("Preencha ao menos Nome e Telefone (passo 1).", "error");
+      setCurrentStep(1);
+      return;
+    }
 
     let assinaturaImagem = "";
     if (canvasRef.current) {
@@ -306,25 +328,43 @@ function AnamneseContent() {
     const answers = {
       ...saudeRespostas,
       ...dentalRespostas,
+      ...(queixa ? { queixa } : {}),
+      ...(profissao ? { profissao } : {}),
+      ...(identidade ? { identidade } : {}),
+      ...(habitos ? { habitos } : {}),
+      ...(observacoes ? { observacoes } : {}),
       autorizacaoFoto: checkFoto,
       ...(autorAtual ? { _autor: autorAtual } : {}),
     };
 
-    const payload: Anamnese = {
-      pacienteId: paciente?.id as number,
-      respostas: answers,
-      pacienteNome: nome,
-      data: new Date().toISOString().split("T")[0],
-      assinatura: assinaturaImagem,
-      status: "Assinado",
-    };
-
     try {
+      // Cria (modo "novo paciente") ou atualiza a ficha do paciente a partir da anamnese.
+      const base: Paciente = paciente ?? { nome: "", cpf: "", tel: "", plano: "Particular", status: "Ativo" };
+      const pacPayload: Paciente = {
+        ...base,
+        nome,
+        tel,
+        nascimento: nascimento || base.nascimento,
+        cpf: cpf || base.cpf,
+        sexo: sexo || base.sexo,
+        endereco: endereco || base.endereco,
+        rg: identidade || base.rg,
+      };
+      const savedPac = await DB.pacientes.save(pacPayload);
+
+      const payload: Anamnese = {
+        pacienteId: savedPac.id as number,
+        respostas: answers,
+        pacienteNome: nome,
+        data: new Date().toISOString().split("T")[0],
+        assinatura: assinaturaImagem,
+        status: "Assinado",
+      };
       await DB.anamneses.save(payload);
-      showToast("Anamnese finalizada com sucesso!", "success");
-      router.push(paciente ? `/admin/prontuario?id=${paciente.id}` : "/admin/anamnese");
+      showToast(paciente ? "Anamnese finalizada com sucesso!" : "Paciente criado e anamnese finalizada!", "success");
+      router.push(`/admin/prontuario?id=${savedPac.id}`);
     } catch {
-      showToast("Não foi possível salvar a anamnese. Tente novamente.", "error");
+      showToast("Não foi possível salvar. Tente novamente.", "error");
     }
   };
 
@@ -338,7 +378,7 @@ function AnamneseContent() {
   };
 
   // Renderizar view de Listagem de Anamneses
-  if (!patientId) {
+  if (!patientId && !novoParam) {
     const filteredAnamneses = anamneseList.filter((a) => {
       const matchesSearch = !searchTerm || a.pacienteNome.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = !statusFilter || a.status === statusFilter;
@@ -348,6 +388,13 @@ function AnamneseContent() {
     return (
       <>
         <Topbar title="Anamnese">
+          <button className="btn btn-outline" onClick={() => router.push("/admin/anamnese?novo=1")}>
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: 15, height: 15 }}>
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+            Nova ficha por foto
+          </button>
           <button className="btn btn-primary" onClick={() => setIsSelectPatientModalOpen(true)}>
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: 15, height: 15 }}>
               <path d="M12 5v14M5 12h14" />
@@ -523,10 +570,12 @@ function AnamneseContent() {
         <div style={{ maxWidth: "800px", margin: "0 auto" }}>
           {/* Paciente Header */}
           <div className="card mb-6" style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px" }}>
-            <div className="patient-avatar">{iniciais(nome)}</div>
+            <div className="patient-avatar">{iniciais(nome || "N P")}</div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 15, fontWeight: 700 }}>{nome}</div>
-              <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Anamnese Odontológica Padrão</div>
+              <div style={{ fontSize: 15, fontWeight: 700 }}>{nome || (novoParam ? "Novo paciente" : "")}</div>
+              <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                {novoParam && !paciente ? "A ficha vai criar o cadastro do paciente + a anamnese" : "Anamnese Odontológica Padrão"}
+              </div>
             </div>
             <div style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "right" }}>
               <div>{autorAtual || "—"}</div>
@@ -659,6 +708,30 @@ function AnamneseContent() {
                     onChange={(e) => setTel(e.target.value)}
                     placeholder="(00) 00000-0000"
                     style={revStyle("tel")}
+                  />
+                </div>
+              </div>
+              <div className="form-row form-row-2">
+                <div className="form-group">
+                  <label className="form-label">Profissão</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={profissao}
+                    onChange={(e) => setProfissao(e.target.value)}
+                    placeholder="Profissão do paciente"
+                    style={revStyle("profissao")}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Identidade / RG</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={identidade}
+                    onChange={(e) => setIdentidade(e.target.value)}
+                    placeholder="Nº do RG"
+                    style={revStyle("identidade")}
                   />
                 </div>
               </div>
@@ -828,6 +901,29 @@ function AnamneseContent() {
                     )}
                   </div>
                 ))}
+              </div>
+
+              <div className="form-group" style={{ marginTop: 16 }}>
+                <label className="form-label">Hábitos</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={habitos}
+                  onChange={(e) => setHabitos(e.target.value)}
+                  placeholder="Ex: fumante, roer unhas, apertar objetos…"
+                  style={revStyle("habitos")}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Observações</label>
+                <textarea
+                  className="form-control"
+                  rows={3}
+                  value={observacoes}
+                  onChange={(e) => setObservacoes(e.target.value)}
+                  placeholder="Outras observações clínicas relevantes…"
+                  style={revStyle("observacoes")}
+                />
               </div>
 
               <div className="step-nav">

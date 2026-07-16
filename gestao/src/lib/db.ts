@@ -6,6 +6,7 @@ import {
   TransacaoFinanceira,
   Agendamento,
   ItemEstoque,
+  FrigobarRegistro,
   ProcedimentoCatalogo,
   Orcamento,
   OrcamentoItem,
@@ -23,6 +24,7 @@ import {
   ModeloAnamnese,
   Protese,
   SolicitacaoAgendamento,
+  Auditoria,
 } from "./types";
 
 // ============================================================
@@ -77,6 +79,10 @@ const fromPaciente = (r: any): Paciente => ({
   cidade: r.cidade ?? "",
   uf: r.uf ?? "",
   proximaRevisao: r.proxima_revisao ?? "",
+  consentimentoLgpd: r.consentimento_lgpd ?? false,
+  consentimentoLgpdEm: r.consentimento_lgpd_em ?? "",
+  consentimentoLgpdVersao: r.consentimento_lgpd_versao ?? "",
+  consentimentoWhatsapp: r.consentimento_whatsapp ?? false,
   criadoEm: r.created_at,
 });
 const toPaciente = (p: Paciente) => ({
@@ -101,6 +107,10 @@ const toPaciente = (p: Paciente) => ({
   cidade: orNull(p.cidade),
   uf: orNull(p.uf),
   proxima_revisao: orNull(p.proximaRevisao),
+  consentimento_lgpd: p.consentimentoLgpd ?? false,
+  consentimento_lgpd_em: orNull(p.consentimentoLgpdEm),
+  consentimento_lgpd_versao: orNull(p.consentimentoLgpdVersao),
+  consentimento_whatsapp: p.consentimentoWhatsapp ?? false,
 });
 
 const fromProcedimento = (r: any): Procedimento => ({
@@ -227,6 +237,10 @@ const fromEstoque = (r: any): ItemEstoque => ({
   fornecedor: r.fornecedor ?? "",
   unidade: r.unidade ?? "",
   obs: r.obs ?? "",
+  fabricante: r.fabricante ?? "",
+  lote: r.lote ?? "",
+  dataFabricacao: r.data_fabricacao ?? "",
+  dataValidade: r.data_validade ?? "",
   criadoEm: r.created_at,
 });
 const toEstoque = (i: ItemEstoque) => ({
@@ -237,6 +251,33 @@ const toEstoque = (i: ItemEstoque) => ({
   fornecedor: i.fornecedor,
   unidade: orNull(i.unidade),
   obs: orNull(i.obs),
+  fabricante: orNull(i.fabricante),
+  lote: orNull(i.lote),
+  data_fabricacao: orNull(i.dataFabricacao),
+  data_validade: orNull(i.dataValidade),
+});
+
+const fromFrigobar = (r: any): FrigobarRegistro => ({
+  id: r.id,
+  data: r.data,
+  entradaHora: r.entrada_hora ?? "",
+  entradaTemp: r.entrada_temp != null ? Number(r.entrada_temp) : undefined,
+  saidaHora: r.saida_hora ?? "",
+  saidaTemp: r.saida_temp != null ? Number(r.saida_temp) : undefined,
+  acaoCorretiva: r.acao_corretiva ?? "",
+  responsavel: r.responsavel ?? "",
+  obs: r.obs ?? "",
+  criadoEm: r.created_at,
+});
+const toFrigobar = (f: FrigobarRegistro) => ({
+  data: f.data,
+  entrada_hora: orNull(f.entradaHora),
+  entrada_temp: f.entradaTemp ?? null,
+  saida_hora: orNull(f.saidaHora),
+  saida_temp: f.saidaTemp ?? null,
+  acao_corretiva: f.acaoCorretiva ?? "",
+  responsavel: f.responsavel ?? "",
+  obs: f.obs ?? "",
 });
 
 const fromCatalogo = (r: any): ProcedimentoCatalogo => ({
@@ -358,6 +399,17 @@ const toProtese = (p: Protese): Record<string, unknown> => ({
   previsao_retorno: orNull(p.previsaoRetorno),
   instalado_em: orNull(p.instaladoEm),
   obs: p.obs ?? "",
+});
+
+const fromAuditoria = (r: any): Auditoria => ({
+  id: r.id,
+  usuarioId: r.usuario_id ?? undefined,
+  usuarioNome: r.usuario_nome ?? "",
+  acao: r.acao,
+  entidade: r.entidade,
+  entidadeId: r.entidade_id ?? undefined,
+  detalhe: r.detalhe ?? "",
+  criadoEm: r.created_at,
 });
 
 const fromDocumento = (r: any): Documento => ({
@@ -522,6 +574,14 @@ export const DB = {
     get: (id: number | string) => getTable<ItemEstoque>("itens_estoque", fromEstoque, id),
     save: (i: ItemEstoque) => saveTable<ItemEstoque>("itens_estoque", toEstoque, fromEstoque, i),
     remove: (id: number | string) => removeTable("itens_estoque", id),
+  },
+
+  // Controle de temperatura do frigobar (Vigilância Sanitária).
+  frigobar: {
+    list: () => listTable<FrigobarRegistro>("frigobar_registros", fromFrigobar),
+    save: (f: FrigobarRegistro) =>
+      saveTable<FrigobarRegistro>("frigobar_registros", toFrigobar, fromFrigobar, f),
+    remove: (id: number | string) => removeTable("frigobar_registros", id),
   },
 
   catalogo: {
@@ -770,6 +830,40 @@ export const DB = {
     save: (p: Protese) =>
       saveTable<Protese>("proteses", toProtese, fromProtese, p),
     remove: (id: number | string) => removeTable("proteses", id),
+  },
+
+  // LGPD — log de auditoria. Leitura só p/ admin (RLS). Escritas em pacientes
+  // são registradas por trigger no banco; acessos/exportações pelo app.
+  auditoria: {
+    async list(limite = 300): Promise<Auditoria[]> {
+      if (semBackend()) return [];
+      const { data, error } = await sb()
+        .from("auditoria")
+        .select("*")
+        .order("id", { ascending: false })
+        .limit(limite);
+      if (error) {
+        console.error("[DB] listar auditoria:", error.message);
+        return [];
+      }
+      return (data ?? []).map(fromAuditoria);
+    },
+    // Registra um evento (fire-and-forget: nunca quebra o fluxo da UI).
+    async registrar(acao: string, entidade: string, entidadeId?: number, detalhe?: string): Promise<void> {
+      if (semBackend()) return;
+      try {
+        const u = await usuarioAtual();
+        await sb().from("auditoria").insert({
+          acao,
+          entidade,
+          entidade_id: entidadeId ?? null,
+          detalhe: detalhe ?? null,
+          usuario_nome: u?.nome ?? null,
+        });
+      } catch (e) {
+        console.warn("[DB] registrar auditoria falhou:", e);
+      }
+    },
   },
 
   solicitacoes: {

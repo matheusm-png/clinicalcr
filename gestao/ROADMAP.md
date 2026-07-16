@@ -4,7 +4,7 @@ Plano de evolução do app para nível de mercado (referências: Capim, Simples 
 
 Os "sprints" abaixo são **marcos de entrega** ordenados por dependência e impacto — cada um entrega valor utilizável. Itens marcados com 🔌 dependem de contas/integrações externas; ⚙️ dependem do Supabase ligado.
 
-> Última revisão do plano: **2026-06-25**.
+> Última revisão do plano: **2026-07-06**.
 
 ---
 
@@ -23,33 +23,65 @@ Os "sprints" abaixo são **marcos de entrega** ordenados por dependência e impa
 - **C2** — Catálogo odontológico padrão importável (12 especialidades).
 - **C3** — Recuperação de pacientes: kanban de Faltas e Desmarcados + WhatsApp.
 - **C4** — Clínico customizável: modelos de documentos, receituário com base de medicamentos, modelos de anamnese.
+- **C5** — Controle protético: kanban solicitada → laboratório → retornou → instalada, com alerta de atraso.
 - **C6** — Simulador de parcelamento (Tabela Price).
+- **C7** — Relatórios financeiros avançados: fluxo de caixa com previsão/inadimplência (aging), ticket médio, distribuição por forma de pagamento.
+- **A2 — Acabamentos**: custo manual no procedimento (fim do R$150 fixo) + catálogo no procedimento, autor real (não mais "Dra. Lara Camila" fixo), profissional no orçamento aprovado, histórico de anamnese com nome do modelo, procedimento da agenda puxa do catálogo, reabrir consulta desmarcada.
+- **A7 — Dashboard turbinado + PWA**: painel "Precisa de atenção" (pendências acionáveis) + app instalável no celular.
+- **S8** — Agendamento online público (`/agendar` como landing page + horários reais da agenda) + caixa de entrada em `/admin/solicitacoes`.
+- **S9** — Pagamentos InfinitePay (link Pix/cartão + webhook): **código no ar; falta só a Mila cadastrar a InfiniteTag** em Config › Minha Clínica p/ cobrar de verdade.
 
-> _Deploy de 2026-06-25 (commit `48308f5`, Vercel `dpl_F54jnkA7h1sxKNuLSYpumTw9PJ8L`)._
+> _Deploys de 2026-06-25/26 (commits `6d1d207`→`d29f1f7`). Migrations aplicadas até 0022. Deploy é sempre `npx vercel@latest --prod --yes` de `gestao/` — push não auto-deploya._
 
 ---
 
-## 🗂️ PRÓXIMA LEVA — organizada por responsável (2026-06-25)
+## 🗂️ PLANO DE EXECUÇÃO — revisado pós-reunião com a Mila (2026-07-16)
 
-Tudo que falta, separado por **quem faz**. Atalho: um **PAT do Supabase** elimina o passo "colar SQL" e deixa a Trilha A 100% autônoma.
+Foco: **consolidar a LCR como clínica única** e deixar o app pronto pra operação real + compliance. Multi-clínica e convênios ficam pra depois. Claude aplica migrations sozinho (PAT no `.env.local`). Detalhes de cada item novo em `../DOCS/WORKLIST-APP-REUNIAO-MILA.md`.
 
-### 🟩 Trilha A — Claude implementa (autônomo)
-Único passo do usuário: **colar 1 SQL** quando houver tabela nova (🗄️).
-- **A1 — C7 Relatórios financeiros avançados** (fluxo de caixa com previsão/inadimplência, preço médio, distribuição de receita). _Sem SQL._
-- **A2 — Acabamentos** (custo manual no procedimento; atribuir profissional no orçamento aprovado; autor real; histórico de anamnese mostrar o nome do modelo; procedimento do modal da agenda puxar do catálogo; botão "reabrir" consulta desmarcada). _Sem SQL._
-- **A3 — C5 Controle protético** (kanban solicitação → laboratório → retornada → instalada). 🗄️
-- **A4 — S8 Agendamento online público** (página pública + caixa de entrada no admin; confirmação por WhatsApp fica pra depois do B2). 🗄️
-- **A5 — C8 Migração guiada + permissões granulares**. 🗄️
-- **A6 — F2 Signup de nova clínica** (cadastro de clínica + 1º admin). 🗄️
-- **A7 — Dashboard turbinado + PWA** (instalável no celular). _Sem SQL._
+> **⚠️ Estado da árvore (2026-07-16):** LGPD **Parte 1 (consentimento, migration 0023)** + **Parte 2 (auditoria, migration 0024)** estão FEITAS e aplicadas no banco, mas **NÃO commitadas nem deployadas** (na árvore: `src/lib/lgpd/`, `admin/auditoria/`, 0023/0024, e edits em pacientes/prontuario/Sidebar/db/types). Fecham junto com a Parte 3.
 
-### 🟦 Trilha B — Usuário precisa fazer (painel/contas); Claude faz o código depois
-- **B1 — F3 Higiene/deploy**: setar Supabase Auth URL de produção (Site URL + Redirect `https://app.clinicalcr.com.br/**`), conectar GitHub→Vercel (Root Directory=`gestao`) para auto-deploy. _Claude escreve o guia passo a passo._
-  - ⏸️ **Rotacionar segredos (Supabase secret key + OpenAI) → adiado para o LANÇAMENTO** (decisão do usuário em 2026-06-25). Não cobrar antes disso.
-- **B2 — Conta WhatsApp Business Platform (Meta)** ✅ *queremos* + número + `WA_ACCESS_TOKEN`/`WA_PHONE_NUMBER_ID`/`WA_WABA_ID` → **destrava S7** (lembretes automáticos, confirmação, campanhas de reativação, aniversário automático). Reaproveita o cliente do `alquimia-crm`. _Tarefa mais demorada (aprovação Meta)._
-- **B3 — Conta de gateway** (ex.: Mercado Pago) + chaves → **destrava S9** (Pix/cartão/boleto + conciliação). ⏸️ **EM ESPERA** (2026-06-25): usuário vai estudar + a irmã ainda não definiu qual meio usa. Não cobrar até ela definir.
-- **B4 — Decisão sobre convênios** → **S10** (TISS + NF-e). Não priorizado pelo usuário; provavelmente fora (confirmar antes de descartar).
-- **PAT do Supabase** ✅ usuário vai gerar → quando chegar, Claude aplica migrations sozinho (Trilha A 100% autônoma). _O PAT entra na rotação de segredos do lançamento._
+### 🟩 FASE 1 — Quick wins do prontuário (rápidos, sem dep., alto uso diário)
+1. **Orçamento: desconto em % (não R$)** — `orcamentos/page.tsx` hoje faz `total = subtotal − desconto` em reais → virar percentual (mostrar o R$ ao lado). _Sem SQL (reinterpreta a coluna; sobrescrever dados de teste)._
+2. **Prontuário: busca/seleção de paciente na página** — hoje só abre via `?id=` (travado num paciente); adicionar seletor com busca pra trocar de paciente sem sair. _Sem SQL._
+3. **Prontuário: abas faltando** — Next tem 5 (Ficha/Anamnese/Evoluções/Anexos/Documentos); o protótipo HTML tem 8. Adicionar **Orçamentos**, **Financeiro** e **Consultas** (do paciente) + renomear **Anexos → Arquivos**. _Sem SQL._
+
+### 🟩 FASE 2 — Estoque nível Vigilância Sanitária (VISA) 🗄️
+4. **Campos de controle sanitário por produto**: nome, fabricante, lote, data de fabricação, data de validade, **situação calculada** (dentro da validade / vence em breve / vencido; "vence em breve" = ≤30 dias, confirmar com a Mila).
+5. **Controle de temperatura do frigobar**: faixa 2–8 °C; tabela data · entrada(hora+temp) · saída(hora+temp); **alerta de ação corretiva** quando fora da faixa + registro da ação.
+6. **Export PDF pra VISA**: relatório de estoque (validades/situação) + planilha de frigobar (temperaturas/ações). Padrão window.print A4 (sem lib).
+
+### 🟩 FASE 3 — LGPD completa + fechar o que está na árvore 🗄️
+7. **LGPD Parte 3 — exportação/portabilidade** dos dados do paciente (+ backup da clínica). Fechar, **commitar e deployar** as Partes 1+2+3 juntas.
+
+### 🟩 FASE 4 — Prontuário/IA — captura de paciente
+8. **OCR da ficha cria paciente E anamnese** — hoje o OCR só pré-preenche a anamnese; a mesma foto deve **criar o cadastro do paciente** também. _Sem SQL._
+9. **Inputs do OCR de anamnese** — campos que o OCR extrai mas o wizard não tem UI (profissão, identidade/RG, observações, hábitos). _Sem SQL._
+
+### 🟩 FASE 5 — Odontograma (parte autônoma) 🗄️(talvez)
+10. **Paridade com o HTML**: seleção por **marquee (arrastar)**, modal **ficha-do-dente** (histórico por dente), ação de status em massa.
+11. **Seleção por sextante** — dividir a boca em 6 grupos (S1 18-14 · S2 13-23 · S3 24-28 · S4 34-38 · S5 33-43 · S6 44-48); botões pra selecionar o grupo de uma vez. _Confirmar com a Mila quais procedimentos usam sextante._
+
+### 🟩 FASE 6 — C8 (gestão/onboarding) 🗄️
+12. **C8 — Wizard de migração guiada** (importar pacientes/agenda/financeiro de planilha/sistema antigo).
+13. **C8 — Permissões granulares** por usuário (toggles por módulo além dos 3 papéis).
+
+### 🎨 Transversal — marca (conteúdo, combinar com a Mila)
+14. **Reposicionamento: prevenção + acompanhamento de longo prazo** (não "transformação"). Revisar copy da **landing** (hero "voltar a sorrir" é transformação) e dar destaque a recall/manutenção no app.
+
+### 🟠 BLOQUEADO na Mila (destrava quando ela entregar)
+- **Lista completa de procedimentos + valores atualizados** → destrava o **visual de cada procedimento no odontograma** (item 3a do worklist: `PROC_VISUALS` só desenha ~7 nomes; catálogo tem ~66) + atualização de preços do catálogo.
+- **Quais procedimentos são por sextante** → completa o item 11.
+- **Novo tom de marca** → item 14.
+
+### 🟦 Depende de terceiros
+- **S7 — WhatsApp** ⏳ **aguardando a conta Meta** (a Mila vai liberar o acesso). Código pronto pra portar do `alquimia-crm`. Ao receber: `WA_ACCESS_TOKEN`/`WA_PHONE_NUMBER_ID`/`WA_WABA_ID` + aprovar templates. Maior multiplicador (derruba falta).
+- **S9 — ir ao vivo**: só a **InfiniteTag da Mila** em Config › Minha Clínica. Código já em produção.
+- **F3 — Rotação de segredos** (Supabase secret key + OpenAI) ⏸️ **adiada pro LANÇAMENTO**. Auth URL de prod e GitHub→Vercel já configurados.
+- **F2 — Signup de nova clínica** ⏳ **adiado (futuro)** — só quando vender pra 2ª clínica.
+
+### ❌ Fora de escopo (decisão do usuário)
+- **S10 — Convênios / TISS + NF-e**: a LCR **não atende convênio**. Descartado (reabrir só se mudar).
 
 ---
 
@@ -120,14 +152,14 @@ Após estudar o sistema do Capim print a print, estes são os **gaps** que viram
 - ✅ **Receituário com base de medicamentos** (base curada + favoritos da clínica; quick-insert no editor de receituário).
 - ✅ **Modelos de anamnese** customizáveis (opção escolhida: **mantém o wizard fixo + OCR** e adiciona fichas próprias — builder em `/admin/modelos-anamnese`, preenchimento dinâmico, seletor no prontuário).
 
-### C5 — Controle protético 🟡
-- **Kanban de solicitação de prótese** (Criada → Enviada ao laboratório → Retornada → Instalada), ligado ao paciente/procedimento, com prazos.
+### C5 — Controle protético 🟡 ✅ *(concluído — migration 0020)*
+- ✅ **Kanban de próteses** (`/admin/proteses`): solicitada → laboratório → retornou → instalada, ligado ao paciente, com datas automáticas e alerta de **Atrasada** (passou da previsão de retorno).
 
 ### C6 — Simulador de parcelamento 🟢 ✅ *(concluído — 2026-06-25)*
 - ✅ Página `/admin/simulador` (link no Sidebar): valor + entrada (R$/%) + nº parcelas + juros (% a.m.); Tabela Price (parcelas fixas) com amortização; KPIs (parcelado/juros/total). Sem migration.
 
-### C7 — Relatórios financeiros avançados 🟡
-- **Fluxo de caixa com previsão/inadimplência**, **preço médio** e **distribuição de receita** por procedimento/profissional, detalhamento por forma de pagamento.
+### C7 — Relatórios financeiros avançados 🟡 ✅ *(concluído)*
+- ✅ **Fluxo de caixa com previsão/inadimplência** (aging), **ticket médio** e **distribuição de receita** por forma de pagamento, tudo no CSV/PDF de `/admin/relatorios`.
 
 ### C8 — Permissões granulares + migração guiada 🟡
 - **Permissões finas por usuário** (toggles por módulo, além dos 3 papéis) — encaixa com F2.
@@ -147,8 +179,8 @@ Após estudar o sistema do Capim print a print, estes são os **gaps** que viram
 
 ---
 
-## Ordem recomendada (revisada 2026-06-24, com sprints do Capim)
-**C2 → C1 → C3 → S7 (WhatsApp) → C4 → S8 (online) → C5 → C6 → C7 → F2+C8 → S9 → S10.**
-Transversais ao longo do caminho: **F3** (higiene/deploy, rápido) e os **acabamentos**.
+## Ordem recomendada (revisada 2026-07-06)
+Quase todo o roadmap técnico foi entregue (ver "Entregue e em produção"). O que resta:
+**LGPD → inputs OCR anamnese → C8 (migração + permissões) → [S7 quando a conta Meta sair] → F2 (futuro, ao vender pra 2ª clínica).**
 
-Racional: prioriza **impacto na clínica real** e **baixa dependência externa** primeiro — C2 e C1 são ganhos rápidos e visíveis; C3 recupera receita com o que já temos; S7 é o maior multiplicador (mas exige conta Meta); C4 é o grande diferencial clínico. F1 (feito) já destravou lembrete automático (S7), agendamento online (S8) e BI por período.
+Racional: o app já roda numa clínica real com dado de paciente em produção, então **LGPD vem primeiro** (exposição legal). Depois, ganhos de completude (OCR) e onboarding de dados reais (migração). **S7/WhatsApp** é o maior multiplicador e já foi iniciado como long-pole (aguarda conta Meta). **S10 convênios** está fora (a LCR não atende). **F3 rotação de segredos** fica pro lançamento.

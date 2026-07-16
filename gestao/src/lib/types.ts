@@ -21,6 +21,11 @@ export interface Paciente {
   cidade?: string;
   uf?: string;
   proximaRevisao?: string; // data ISO (yyyy-mm-dd) da próxima revisão/recall
+  // LGPD — consentimento do titular
+  consentimentoLgpd?: boolean;       // consente com o tratamento de dados
+  consentimentoLgpdEm?: string;      // timestamp ISO em que consentiu
+  consentimentoLgpdVersao?: string;  // versão do termo aceita (TERMO_LGPD_VERSAO)
+  consentimentoWhatsapp?: boolean;   // autoriza contato por WhatsApp (gancho do S7)
   criadoEm?: string;
 }
 
@@ -294,5 +299,37 @@ export interface ItemEstoque {
   fornecedor: string;
   unidade?: string;
   obs?: string;
+  // Controle sanitário (Vigilância Sanitária)
+  fabricante?: string;
+  lote?: string;
+  dataFabricacao?: string; // 'yyyy-mm-dd'
+  dataValidade?: string;   // 'yyyy-mm-dd'
+  criadoEm?: string;
+}
+
+// Registro de controle de temperatura do frigobar (faixa aceitável 2–8 °C).
+export interface FrigobarRegistro {
+  id?: number;
+  data: string;            // 'yyyy-mm-dd'
+  entradaHora?: string;    // 'HH:MM'
+  entradaTemp?: number;    // °C
+  saidaHora?: string;      // 'HH:MM'
+  saidaTemp?: number;      // °C
+  acaoCorretiva?: string;  // registro da ação quando fora da faixa
+  responsavel?: string;
+  obs?: string;
+  criadoEm?: string;
+}
+
+// LGPD — log de auditoria (quem criou/alterou/excluiu/acessou dado de paciente)
+export type AcaoAuditoria = 'criacao' | 'edicao' | 'exclusao' | 'acesso' | 'exportacao';
+export interface Auditoria {
+  id?: number;
+  usuarioId?: string;
+  usuarioNome?: string;
+  acao: AcaoAuditoria | string;
+  entidade: string;      // 'paciente' | ...
+  entidadeId?: number;
+  detalhe?: string;
   criadoEm?: string;
 }

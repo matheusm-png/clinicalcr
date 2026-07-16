@@ -72,7 +72,9 @@ export default function OrcamentosPage() {
   const nomePaciente = (id: number) => pacientes.find((p) => p.id === id)?.nome ?? "—";
 
   const subtotal = itens.reduce((s, it) => s + it.quantidade * it.valorUnitario, 0);
-  const total = Math.max(0, subtotal - (parseFloat(desconto) || 0));
+  const descPct = Math.min(100, Math.max(0, parseFloat(desconto) || 0));
+  const descontoValor = subtotal * (descPct / 100);
+  const total = Math.max(0, subtotal - descontoValor);
 
   const abrirNovo = () => {
     setEditId(null);
@@ -119,7 +121,7 @@ export default function OrcamentosPage() {
         ...(editId ? { id: editId } : {}),
         pacienteId: Number(pacienteId),
         status: "rascunho",
-        desconto: parseFloat(desconto) || 0,
+        desconto: descPct,
         total,
         observacoes,
         itens,
@@ -195,10 +197,11 @@ export default function OrcamentosPage() {
     setIaTexto("");
     try {
       const full = orc.id ? await DB.orcamentos.get(orc.id) : orc;
+      const sub = (full?.itens ?? []).reduce((s, i) => s + (i.quantidade || 1) * i.valorUnitario, 0);
       const input = {
         paciente: nomePaciente(orc.pacienteId),
         itens: (full?.itens ?? []).map((i) => ({ procedimento: i.descricao, dente: i.dente, valor: i.valorUnitario })),
-        desconto: orc.desconto,
+        desconto: `${orc.desconto || 0}% (${brl(sub * ((orc.desconto || 0) / 100))})`,
         total: orc.total,
       };
       const r = await fetch("/api/ai", {
@@ -366,15 +369,23 @@ export default function OrcamentosPage() {
                   </div>
                 )}
 
+                {/* Subtotal */}
                 <div className="form-row form-row-2">
                   <div className="form-group">
-                    <label className="form-label">Desconto (R$)</label>
-                    <input type="number" step="0.01" className="form-control" value={desconto} onChange={(e) => setDesconto(e.target.value)} />
+                    <label className="form-label">Subtotal</label>
+                    <input className="form-control" value={brl(subtotal)} readOnly />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Total</label>
-                    <input className="form-control" value={brl(total)} readOnly style={{ fontWeight: 700 }} />
+                    <label className="form-label">Desconto (%)</label>
+                    <input type="number" step="0.01" min={0} max={100} className="form-control" value={desconto} onChange={(e) => setDesconto(e.target.value)} />
+                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                      {descPct > 0 ? `− ${brl(descontoValor)}` : "Sem desconto"}
+                    </span>
                   </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Total</label>
+                  <input className="form-control" value={brl(total)} readOnly style={{ fontWeight: 700, fontSize: 16 }} />
                 </div>
 
                 <div className="form-group">

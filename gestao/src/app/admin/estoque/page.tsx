@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { DB } from "@/lib/db";
 import { ItemEstoque } from "@/lib/types";
 import Topbar from "@/components/Topbar";
 import { useToast } from "@/components/Toast";
 import EmptyState from "@/components/EmptyState";
+import { situacaoValidade, imprimirRelatorioEstoque } from "@/lib/estoque/visa";
 
 export default function EstoquePage() {
   const { showToast, confirm } = useToast();
@@ -14,6 +16,8 @@ export default function EstoquePage() {
   const [catFilter, setCatFilter] = useState(""); // "" | "odontologico" | "limpeza" | "baixo"
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   const [isMovModalOpen, setIsMovModalOpen] = useState(false);
+
+  const [clinicaNome, setClinicaNome] = useState("Clínica");
 
   // Item Form State
   const [itemId, setItemId] = useState<number | null>(null);
@@ -24,6 +28,11 @@ export default function EstoquePage() {
   const [unidade, setUnidade] = useState("unid");
   const [fornecedor, setFornecedor] = useState("");
   const [obs, setObs] = useState("");
+  // Controle sanitário (VISA)
+  const [fabricante, setFabricante] = useState("");
+  const [lote, setLote] = useState("");
+  const [dataFabricacao, setDataFabricacao] = useState("");
+  const [dataValidade, setDataValidade] = useState("");
 
   // Movimentação Form State
   const [selectedItem, setSelectedItem] = useState<ItemEstoque | null>(null);
@@ -38,6 +47,8 @@ export default function EstoquePage() {
 
   const loadData = async () => {
     setItems(await DB.estoque.list());
+    const c = await DB.clinica.get();
+    if (c?.nome) setClinicaNome(c.nome);
   };
 
   const handleOpenItemModal = (item?: ItemEstoque) => {
@@ -50,6 +61,10 @@ export default function EstoquePage() {
       setUnidade(item.unidade || "unid");
       setFornecedor(item.fornecedor || "");
       setObs(item.obs || "");
+      setFabricante(item.fabricante || "");
+      setLote(item.lote || "");
+      setDataFabricacao(item.dataFabricacao || "");
+      setDataValidade(item.dataValidade || "");
     } else {
       setItemId(null);
       setNome("");
@@ -59,6 +74,10 @@ export default function EstoquePage() {
       setUnidade("unid");
       setFornecedor("");
       setObs("");
+      setFabricante("");
+      setLote("");
+      setDataFabricacao("");
+      setDataValidade("");
     }
     setIsItemModalOpen(true);
   };
@@ -78,6 +97,10 @@ export default function EstoquePage() {
       fornecedor,
       unidade,
       obs,
+      fabricante,
+      lote,
+      dataFabricacao,
+      dataValidade,
     };
 
     try {
@@ -164,6 +187,8 @@ export default function EstoquePage() {
   const normalCount = items.filter((i) => i.quantidade > i.minimo).length;
   const baixoCount = items.filter((i) => i.quantidade > 0 && i.quantidade <= i.minimo).length;
   const zeradoCount = items.filter((i) => i.quantidade === 0).length;
+  const vencidoCount = items.filter((i) => situacaoValidade(i.dataValidade).key === "vencido").length;
+  const venceBreveCount = items.filter((i) => situacaoValidade(i.dataValidade).key === "vence-breve").length;
 
   // Filtragem
   const filteredItems = items.filter((i) => {
@@ -185,6 +210,22 @@ export default function EstoquePage() {
   return (
     <>
       <Topbar title="Controle de Estoque">
+        <Link href="/admin/frigobar" className="btn btn-outline btn-sm">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: 15, height: 15 }}>
+            <path d="M5 3h14a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
+            <path d="M4 10h16M9 6v2M9 14v3" />
+          </svg>
+          Frigobar
+        </Link>
+        <button
+          className="btn btn-outline btn-sm"
+          onClick={() => { if (!imprimirRelatorioEstoque(items, clinicaNome)) showToast("Libere os pop-ups para gerar o relatório.", "error"); }}
+        >
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: 15, height: 15 }}>
+            <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z" />
+          </svg>
+          Relatório VISA (PDF)
+        </button>
         <button className="btn btn-primary" onClick={() => handleOpenItemModal()}>
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: 15, height: 15 }}>
             <path d="M12 5v14M5 12h14" />
@@ -240,6 +281,18 @@ export default function EstoquePage() {
             <div>
               <div className="est-stat-val" style={{ color: "#DC2626" }}>{zeradoCount}</div>
               <div className="est-stat-lbl">Sem Estoque</div>
+            </div>
+          </div>
+          <div className="est-stat">
+            <div className="est-stat-icon" style={{ background: "#FEF3C7" }}>
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ color: "#D97706" }}>
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7v5l3 2" />
+              </svg>
+            </div>
+            <div>
+              <div className="est-stat-val" style={{ color: vencidoCount > 0 ? "#DC2626" : "#D97706" }}>{vencidoCount + venceBreveCount}</div>
+              <div className="est-stat-lbl">Vencidos / a vencer</div>
             </div>
           </div>
         </div>
@@ -318,6 +371,7 @@ export default function EstoquePage() {
                     <th>Categoria</th>
                     <th>Quantidade</th>
                     <th>Mínimo</th>
+                    <th>Lote / Validade</th>
                     <th>Fornecedor</th>
                     <th>Status</th>
                     <th>Ações</th>
@@ -364,6 +418,24 @@ export default function EstoquePage() {
                         </td>
                         <td style={{ color: "var(--text-muted)", fontSize: 13 }}>
                           {item.minimo} {(item as any).unidade || "unid"}
+                        </td>
+                        <td style={{ fontSize: 12 }}>
+                          {(() => {
+                            const s = situacaoValidade(item.dataValidade);
+                            return (
+                              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                                {item.lote && <span style={{ color: "var(--text-muted)" }}>Lote {item.lote}</span>}
+                                {item.dataValidade ? (
+                                  <span className={`badge ${s.cls}`} style={s.cls ? undefined : { color: "var(--text-muted)" }}>
+                                    {new Date(item.dataValidade + "T00:00:00").toLocaleDateString("pt-BR")}
+                                    {s.key !== "ok" && s.key !== "sem" ? ` · ${s.label}` : ""}
+                                  </span>
+                                ) : (
+                                  <span style={{ color: "var(--text-muted)" }}>—</span>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </td>
                         <td style={{ fontSize: 12, color: "var(--text-muted)" }}>{item.fornecedor || "—"}</td>
                         <td>
@@ -486,6 +558,37 @@ export default function EstoquePage() {
                     </select>
                   </div>
                 </div>
+                {/* Controle sanitário (Vigilância Sanitária) */}
+                <div style={{ borderTop: "1px solid var(--border)", margin: "4px 0 14px", paddingTop: 12 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 10 }}>
+                    Controle sanitário
+                  </div>
+                  <div className="form-row form-row-2">
+                    <div className="form-group">
+                      <label className="form-label">Fabricante</label>
+                      <input type="text" className="form-control" placeholder="Ex: 3M" value={fabricante} onChange={(e) => setFabricante(e.target.value)} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Lote</label>
+                      <input type="text" className="form-control" placeholder="Ex: A1234" value={lote} onChange={(e) => setLote(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="form-row form-row-2">
+                    <div className="form-group">
+                      <label className="form-label">Data de fabricação</label>
+                      <input type="date" className="form-control" value={dataFabricacao} onChange={(e) => setDataFabricacao(e.target.value)} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Data de validade</label>
+                      <input type="date" className="form-control" value={dataValidade} onChange={(e) => setDataValidade(e.target.value)} />
+                      {dataValidade && (() => {
+                        const s = situacaoValidade(dataValidade);
+                        return <span style={{ fontSize: 11, color: s.color, fontWeight: 600 }}>{s.key === "sem" ? "" : s.label}</span>;
+                      })()}
+                    </div>
+                  </div>
+                </div>
+
                 <div className="form-group">
                   <label className="form-label">Observações</label>
                   <textarea

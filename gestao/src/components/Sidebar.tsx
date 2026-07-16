@@ -276,6 +276,27 @@ export default function Sidebar() {
             </Link>
           </li>
           <li>
+            <Link href="/admin/frigobar" className={isActive("/admin/frigobar") ? "active" : ""}>
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
+                <path d="M5 3h14a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
+                <path d="M4 10h16M9 6v2M9 14v3" />
+              </svg>
+              Frigobar
+            </Link>
+          </li>
+          {userPapel === "admin" && (
+            <li>
+              <Link href="/admin/auditoria" className={isActive("/admin/auditoria") ? "active" : ""}>
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
+                  <path d="M12 2a10 10 0 1 0 10 10" />
+                  <path d="M12 7v5l3 2" />
+                  <path d="M16 3l5 2-2 5" />
+                </svg>
+                Auditoria (LGPD)
+              </Link>
+            </li>
+          )}
+          <li>
             <Link href="/admin/config" className={isActive("/admin/config") ? "active" : ""}>
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
                 <circle cx="12" cy="12" r="3" />

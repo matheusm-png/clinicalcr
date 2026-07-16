@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DB } from "@/lib/db";
 import { Paciente } from "@/lib/types";
+import { TERMO_LGPD_TEXTO, TERMO_LGPD_VERSAO } from "@/lib/lgpd/termo";
 import Topbar from "@/components/Topbar";
 import { useToast } from "@/components/Toast";
 import EmptyState from "@/components/EmptyState";
@@ -60,7 +61,7 @@ export default function PacientesPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<"dados" | "contato" | "endereco">("dados");
+  const [activeTab, setActiveTab] = useState<"dados" | "contato" | "endereco" | "lgpd">("dados");
 
   // Form State
   const [nome, setNome] = useState("");
@@ -82,6 +83,11 @@ export default function PacientesPage() {
   const [bairro, setBairro] = useState("");
   const [cidade, setCidade] = useState("");
   const [uf, setUf] = useState("BA");
+  // LGPD — consentimento
+  const [consentimentoLgpd, setConsentimentoLgpd] = useState(false);
+  const [consentimentoWhatsapp, setConsentimentoWhatsapp] = useState(false);
+  const [consentEm, setConsentEm] = useState("");       // preservado ao editar
+  const [consentVersao, setConsentVersao] = useState(""); // preservado ao editar
 
   // Importação em lote (CSV)
   const [importOpen, setImportOpen] = useState(false);
@@ -151,6 +157,10 @@ export default function PacientesPage() {
     setBairro(p?.bairro ?? "");
     setCidade(p?.cidade ?? "");
     setUf(p?.uf || "BA");
+    setConsentimentoLgpd(p?.consentimentoLgpd ?? false);
+    setConsentimentoWhatsapp(p?.consentimentoWhatsapp ?? false);
+    setConsentEm(p?.consentimentoLgpdEm ?? "");
+    setConsentVersao(p?.consentimentoLgpdVersao ?? "");
   };
 
   const handleOpenNewModal = () => {
@@ -173,15 +183,24 @@ export default function PacientesPage() {
       return;
     }
 
+    const prev = editingId ? patients.find((x) => x.id === editingId) : undefined;
+    // Carimba data + versão quando o consentimento passa a valer (novo ou de false→true).
+    let consentimentoLgpdEm = consentEm;
+    let consentimentoLgpdVersao = consentVersao;
+    if (consentimentoLgpd && !prev?.consentimentoLgpd) {
+      consentimentoLgpdEm = new Date().toISOString();
+      consentimentoLgpdVersao = TERMO_LGPD_VERSAO;
+    }
+
     const paciente: Paciente = {
       ...(editingId ? { id: editingId } : {}),
       nome, nascimento, cpf, tel, plano,
-      status: editingId
-        ? (patients.find((x) => x.id === editingId)?.status ?? "Ativo")
-        : "Ativo",
+      status: editingId ? (prev?.status ?? "Ativo") : "Ativo",
       sexo, estadoCivil, rg, orgaoEmissor, email,
       contatoEmergencia, telEmergencia,
       cep, endereco, numero, complemento, bairro, cidade, uf,
+      consentimentoLgpd, consentimentoWhatsapp,
+      consentimentoLgpdEm, consentimentoLgpdVersao,
     };
 
     try {
@@ -407,6 +426,12 @@ export default function PacientesPage() {
                   >
                     Endereço
                   </button>
+                  <button
+                    className={`tab-btn ${activeTab === "lgpd" ? "active" : ""}`}
+                    onClick={() => setActiveTab("lgpd")}
+                  >
+                    Consentimento (LGPD)
+                  </button>
                 </div>
 
                 {/* Aba Dados Pessoais */}
@@ -595,6 +620,61 @@ export default function PacientesPage() {
                         <input type="text" className="form-control" value="Brasil" readOnly />
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {/* Aba Consentimento (LGPD) */}
+                {activeTab === "lgpd" && (
+                  <div className="tab-panel active">
+                    <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 10 }}>
+                      Registre o consentimento do paciente para o tratamento de dados,
+                      conforme a LGPD (Lei 13.709/2018). O aceite carimba data e versão do termo.
+                    </p>
+                    <div
+                      style={{
+                        maxHeight: 220,
+                        overflowY: "auto",
+                        border: "1px solid var(--border)",
+                        borderRadius: 8,
+                        padding: 14,
+                        background: "var(--bg-subtle, var(--primary-light))",
+                        fontSize: 12.5,
+                        lineHeight: 1.5,
+                        whiteSpace: "pre-wrap",
+                        marginBottom: 14,
+                      }}
+                    >
+                      {TERMO_LGPD_TEXTO}
+                    </div>
+                    <label style={{ display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer", marginBottom: 12 }}>
+                      <input
+                        type="checkbox"
+                        checked={consentimentoLgpd}
+                        onChange={(e) => setConsentimentoLgpd(e.target.checked)}
+                        style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0 }}
+                      />
+                      <span style={{ fontSize: 13.5 }}>
+                        O paciente <strong>consente</strong> com o tratamento de seus dados pessoais e de saúde
+                        para as finalidades descritas no termo acima.
+                      </span>
+                    </label>
+                    <label style={{ display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer" }}>
+                      <input
+                        type="checkbox"
+                        checked={consentimentoWhatsapp}
+                        onChange={(e) => setConsentimentoWhatsapp(e.target.checked)}
+                        style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0 }}
+                      />
+                      <span style={{ fontSize: 13.5 }}>
+                        Autoriza receber <strong>lembretes e comunicações por WhatsApp</strong>.
+                      </span>
+                    </label>
+                    {consentimentoLgpd && consentEm && (
+                      <div style={{ marginTop: 14, fontSize: 12, color: "var(--text-muted)" }}>
+                        ✓ Consentido em {new Date(consentEm).toLocaleString("pt-BR")}
+                        {consentVersao ? ` · termo v${consentVersao}` : ""}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
