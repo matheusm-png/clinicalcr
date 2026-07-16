@@ -559,6 +559,15 @@ export const DB = {
     update: (t: TransacaoFinanceira) =>
       saveTable<TransacaoFinanceira>("transacoes_financeiras", toFinanceiro, fromFinanceiro, t),
     remove: (id: number | string) => removeTable("transacoes_financeiras", id),
+    // Import em lote (migração). clinica_id carimbado pelo banco.
+    async importar(lista: TransacaoFinanceira[]): Promise<number> {
+      if (semBackend()) throw new Error("Supabase não configurado.");
+      if (!lista.length) return 0;
+      const rows = lista.map(toFinanceiro);
+      const { data, error } = await sb().from("transacoes_financeiras").insert(rows).select("id");
+      if (error) throw error;
+      return (data ?? []).length;
+    },
   },
 
   agendamentos: {
@@ -567,6 +576,15 @@ export const DB = {
     save: (a: Agendamento) =>
       saveTable<Agendamento>("agendamentos", toAgendamento, fromAgendamento, a),
     remove: (id: number | string) => removeTable("agendamentos", id),
+    // Import em lote (migração). clinica_id carimbado pelo banco.
+    async importar(lista: Agendamento[]): Promise<number> {
+      if (semBackend()) throw new Error("Supabase não configurado.");
+      if (!lista.length) return 0;
+      const rows = lista.map(toAgendamento);
+      const { data, error } = await sb().from("agendamentos").insert(rows).select("id");
+      if (error) throw error;
+      return (data ?? []).length;
+    },
   },
 
   estoque: {
@@ -1109,9 +1127,9 @@ export const DB = {
     // Lista perfis da clínica (admin vê todos via RLS).
     async list(): Promise<Usuario[]> {
       if (semBackend()) return [];
-      const { data, error } = await sb().from("profiles").select("id, nome, papel").order("nome");
+      const { data, error } = await sb().from("profiles").select("id, nome, papel, permissoes").order("nome");
       if (error) return [];
-      return (data ?? []).map((r) => ({ id: r.id, nome: r.nome ?? "", papel: r.papel }));
+      return (data ?? []).map((r) => ({ id: r.id, nome: r.nome ?? "", papel: r.papel, permissoes: r.permissoes ?? null }));
     },
   },
 

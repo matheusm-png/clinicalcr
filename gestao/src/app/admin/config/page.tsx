@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { DB } from "@/lib/db";
 import { Clinica, Usuario, Profissional, Marcador, ModeloDoc, Medicamento } from "@/lib/types";
+import { MODULOS } from "@/lib/permissoes";
 import Topbar from "@/components/Topbar";
 import { useToast } from "@/components/Toast";
 
@@ -247,6 +248,41 @@ export default function ConfigPage() {
       showToast("Papel atualizado.", "success");
     } catch (e) {
       showToast(e instanceof Error ? e.message : "Falha ao atualizar.", "error");
+    }
+  };
+
+  // Permissões granulares por usuário
+  const [permUser, setPermUser] = useState<Usuario | null>(null);
+  const [permMap, setPermMap] = useState<Record<string, boolean>>({});
+  const [salvandoPerm, setSalvandoPerm] = useState(false);
+
+  const abrirPermissoes = (u: Usuario) => {
+    const base: Record<string, boolean> = {};
+    MODULOS.forEach((m) => { base[m.key] = u.permissoes ? u.permissoes[m.key] !== false : true; });
+    setPermMap(base);
+    setPermUser(u);
+  };
+
+  const salvarPermissoes = async () => {
+    if (!permUser) return;
+    setSalvandoPerm(true);
+    try {
+      // Se tudo liberado, grava null (sem restrição); senão grava o mapa.
+      const todosTrue = MODULOS.every((m) => permMap[m.key] !== false);
+      const r = await fetch("/api/usuarios", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: permUser.id, permissoes: todosTrue ? null : permMap }),
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error);
+      setPermUser(null);
+      await load();
+      showToast("Permissões atualizadas.", "success");
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Falha ao salvar permissões.", "error");
+    } finally {
+      setSalvandoPerm(false);
     }
   };
 
@@ -581,7 +617,7 @@ export default function ConfigPage() {
             <div className="table-wrapper">
               <table>
                 <thead>
-                  <tr><th>Nome</th><th>Papel</th></tr>
+                  <tr><th>Nome</th><th>Papel</th><th>Acesso</th></tr>
                 </thead>
                 <tbody>
                   {usuarios.map((u) => (
@@ -594,6 +630,15 @@ export default function ConfigPage() {
                           <option value="secretaria">Secretária</option>
                         </select>
                       </td>
+                      <td>
+                        {u.papel === "admin" ? (
+                          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Acesso total</span>
+                        ) : (
+                          <button className="btn btn-outline btn-sm" onClick={() => abrirPermissoes(u)}>
+                            {u.permissoes ? "Personalizado" : "Todos os módulos"}
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -601,7 +646,46 @@ export default function ConfigPage() {
             </div>
             <p style={{ fontSize: 12, color: "var(--text-muted)", padding: "12px 16px 0" }}>
               Papéis: <strong>Administrador</strong> (tudo), <strong>Dentista</strong> (clínico + financeiro), <strong>Secretária</strong> (atendimento, sem financeiro).
+              Use <strong>Acesso</strong> para liberar/bloquear módulos específicos por usuário.
             </p>
+          </div>
+        )}
+
+        {/* Modal de permissões granulares */}
+        {permUser && (
+          <div className="modal-overlay open" onClick={(e) => e.target === e.currentTarget && setPermUser(null)}>
+            <div className="modal">
+              <div className="modal-header">
+                <span className="modal-title">Acesso de {permUser.nome || "usuário"}</span>
+                <button className="modal-close" onClick={() => setPermUser(null)}>×</button>
+              </div>
+              <div className="modal-body">
+                <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 14 }}>
+                  Marque os módulos que este usuário pode ver no menu. Desmarcar oculta o módulo para ele.
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  {MODULOS.map((m) => (
+                    <label key={m.key} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 6, cursor: "pointer", border: "1px solid var(--border)" }}>
+                      <input
+                        type="checkbox"
+                        checked={permMap[m.key] !== false}
+                        onChange={(e) => setPermMap((prev) => ({ ...prev, [m.key]: e.target.checked }))}
+                      />
+                      <span>
+                        <span style={{ fontWeight: 600, fontSize: 13 }}>{m.label}</span>
+                        <span style={{ display: "block", fontSize: 11, color: "var(--text-muted)" }}>{m.desc}</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-outline" onClick={() => setPermUser(null)}>Cancelar</button>
+                <button className="btn btn-primary" onClick={salvarPermissoes} disabled={salvandoPerm}>
+                  {salvandoPerm ? "Salvando…" : "Salvar acesso"}
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

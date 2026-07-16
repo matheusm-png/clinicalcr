@@ -58,9 +58,12 @@ export async function PATCH(req: Request) {
   const ctx = await exigirAdmin();
   if (ctx.erro) return ctx.erro;
 
-  const { id, papel } = await req.json().catch(() => ({}));
-  if (!id || !PAPEIS.includes(papel)) {
-    return NextResponse.json({ error: "Informe id e papel válido." }, { status: 400 });
+  const { id, papel, permissoes } = await req.json().catch(() => ({}));
+  if (!id) {
+    return NextResponse.json({ error: "Informe o id do usuário." }, { status: 400 });
+  }
+  if (papel !== undefined && !PAPEIS.includes(papel)) {
+    return NextResponse.json({ error: "Papel inválido." }, { status: 400 });
   }
   const { admin, clinicaId } = ctx;
   // Só altera se o alvo for da mesma clínica.
@@ -68,7 +71,13 @@ export async function PATCH(req: Request) {
   if (!alvo || alvo.clinica_id !== clinicaId) {
     return NextResponse.json({ error: "Usuário não encontrado nesta clínica." }, { status: 404 });
   }
-  const { error } = await admin.from("profiles").update({ papel }).eq("id", id);
+  const patch: Record<string, unknown> = {};
+  if (papel !== undefined) patch.papel = papel;
+  if (permissoes !== undefined) patch.permissoes = permissoes; // objeto ou null (limpa)
+  if (Object.keys(patch).length === 0) {
+    return NextResponse.json({ error: "Nada para atualizar." }, { status: 400 });
+  }
+  const { error } = await admin.from("profiles").update(patch).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

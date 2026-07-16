@@ -243,6 +243,8 @@ export interface Usuario {
   id: string;
   nome?: string;
   papel: 'admin' | 'dentista' | 'secretaria';
+  // Permissões granulares por módulo (C8). null = sem restrição (padrão do papel).
+  permissoes?: Record<string, boolean> | null;
 }
 
 export type StatusProtese = 'solicitada' | 'laboratorio' | 'retornou' | 'instalada';

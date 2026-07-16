@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { podeVerModulo, type Permissoes } from "@/lib/permissoes";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 const PAPEL_LABEL: Record<string, string> = {
@@ -17,6 +18,8 @@ export default function Sidebar() {
   const [isDark, setIsDark] = useState(false);
   const [userNome, setUserNome] = useState("");
   const [userPapel, setUserPapel] = useState("");
+  const [userPerms, setUserPerms] = useState<Permissoes>(null);
+  const gate = (key: string) => podeVerModulo(userPapel, userPerms, key);
 
   useEffect(() => {
     // Check initial theme state on client
@@ -36,11 +39,12 @@ export default function Sidebar() {
       if (!user) return;
       const { data: profile } = await supabase
         .from("profiles")
-        .select("nome, papel")
+        .select("nome, papel, permissoes")
         .eq("id", user.id)
         .maybeSingle();
       setUserNome(profile?.nome || user.email || "");
       setUserPapel(profile?.papel || "");
+      setUserPerms((profile?.permissoes as Permissoes) ?? null);
     })();
   }, []);
 
@@ -128,6 +132,7 @@ export default function Sidebar() {
               Assistente IA
             </Link>
           </li>
+          {gate("agenda") && (<>
           <li>
             <Link href="/admin/agenda" className={isActive("/admin/agenda") ? "active" : ""}>
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
@@ -146,6 +151,8 @@ export default function Sidebar() {
               Solicitações
             </Link>
           </li>
+          </>)}
+          {gate("pacientes") && (<>
           <li>
             <Link href="/admin/pacientes" className={isActive("/admin/pacientes") ? "active" : ""}>
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
@@ -164,6 +171,8 @@ export default function Sidebar() {
               Prontuário
             </Link>
           </li>
+          </>)}
+          {gate("clinico") && (<>
           <li>
             <Link href="/admin/retornos" className={isActive("/admin/retornos") ? "active" : ""}>
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
@@ -183,6 +192,8 @@ export default function Sidebar() {
               Recuperação
             </Link>
           </li>
+          </>)}
+          {gate("proteses") && (
           <li>
             <Link href="/admin/proteses" className={isActive("/admin/proteses") ? "active" : ""}>
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
@@ -192,6 +203,8 @@ export default function Sidebar() {
               Próteses
             </Link>
           </li>
+          )}
+          {gate("orcamentos") && (<>
           <li>
             <Link href="/admin/orcamentos" className={isActive("/admin/orcamentos") ? "active" : ""}>
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
@@ -211,6 +224,7 @@ export default function Sidebar() {
               Simulador
             </Link>
           </li>
+          </>)}
 
           <li className="nav-group-label">Gestão</li>
           <li>
@@ -221,6 +235,7 @@ export default function Sidebar() {
               Catálogo
             </Link>
           </li>
+          {gate("financeiro") && (<>
           <li>
             <Link href="/admin/financeiro" className={isActive("/admin/financeiro") ? "active" : ""}>
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
@@ -256,6 +271,8 @@ export default function Sidebar() {
               Comissões
             </Link>
           </li>
+          </>)}
+          {gate("pacientes") && (
           <li>
             <Link href="/admin/anamnese" className={isActive("/admin/anamnese") ? "active" : ""}>
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
@@ -266,6 +283,8 @@ export default function Sidebar() {
               Anamnese
             </Link>
           </li>
+          )}
+          {gate("estoque") && (<>
           <li>
             <Link href="/admin/estoque" className={isActive("/admin/estoque") ? "active" : ""}>
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
@@ -284,6 +303,7 @@ export default function Sidebar() {
               Frigobar
             </Link>
           </li>
+          </>)}
           {userPapel === "admin" && (
             <li>
               <Link href="/admin/auditoria" className={isActive("/admin/auditoria") ? "active" : ""}>
@@ -293,6 +313,17 @@ export default function Sidebar() {
                   <path d="M16 3l5 2-2 5" />
                 </svg>
                 Auditoria (LGPD)
+              </Link>
+            </li>
+          )}
+          {userPapel === "admin" && (
+            <li>
+              <Link href="/admin/migracao" className={isActive("/admin/migracao") ? "active" : ""}>
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <path d="M17 8l-5-5-5 5M12 3v12" />
+                </svg>
+                Migração
               </Link>
             </li>
           )}
