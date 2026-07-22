@@ -22,6 +22,8 @@ export default function AgendaPage() {
   const [catalogo, setCatalogo] = useState<ProcedimentoCatalogo[]>([]);
   const [horaInicio, setHoraInicio] = useState(7);
   const [horaFim, setHoraFim] = useState(19);
+  const [almocoInicio, setAlmocoInicio] = useState<number | null>(null);
+  const [almocoFim, setAlmocoFim] = useState<number | null>(null);
   const [filtroProf, setFiltroProf] = useState<number | "todos">("todos");
   const [currentMonday, setCurrentMonday] = useState<Date>(new Date());
   // Mês exibido no mini-calendário lateral (1º dia do mês).
@@ -65,10 +67,15 @@ export default function AgendaPage() {
     setCatalogo(cat);
     if (clinica?.agendaHoraInicio != null) setHoraInicio(clinica.agendaHoraInicio);
     if (clinica?.agendaHoraFim != null) setHoraFim(clinica.agendaHoraFim);
+    setAlmocoInicio(clinica?.agendaAlmocoInicio ?? null);
+    setAlmocoFim(clinica?.agendaAlmocoFim ?? null);
   };
 
   // Faixa de horas da grade, conforme o horário de funcionamento da clínica.
   const HOURS = Array.from({ length: Math.max(1, horaFim - horaInicio) }, (_, i) => horaInicio + i);
+  // Uma hora cai no intervalo de almoço da clínica (bloco não atendido)?
+  const emAlmoco = (h: number) =>
+    almocoInicio != null && almocoFim != null && h >= almocoInicio && h < almocoFim;
   // Opções de horário (a cada 30 min) dentro do funcionamento.
   const timeSlots = HOURS.flatMap((hh) => [`${String(hh).padStart(2, "0")}:00`, `${String(hh).padStart(2, "0")}:30`]);
 
@@ -401,6 +408,30 @@ export default function AgendaPage() {
             </thead>
             <tbody>
               {HOURS.map((h) => {
+                // Intervalo de almoço: linha única não agendável.
+                if (emAlmoco(h)) {
+                  return (
+                    <tr key={h} className="lunch-row">
+                      <td className="time-cell">{String(h).padStart(2, "0")}:00</td>
+                      <td
+                        colSpan={days.length}
+                        style={{
+                          textAlign: "center",
+                          color: "var(--text-muted)",
+                          fontSize: 11,
+                          fontWeight: 600,
+                          letterSpacing: 0.3,
+                          background:
+                            "repeating-linear-gradient(45deg, var(--bg2), var(--bg2) 8px, transparent 8px, transparent 16px)",
+                        }}
+                      >
+                        {h === almocoInicio
+                          ? `Intervalo de almoço · ${String(almocoInicio).padStart(2, "0")}h–${String(almocoFim).padStart(2, "0")}h`
+                          : ""}
+                      </td>
+                    </tr>
+                  );
+                }
                 return (
                   <React.Fragment key={h}>
                     {/* Slot de :00 */}

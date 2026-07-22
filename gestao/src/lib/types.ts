@@ -217,6 +217,8 @@ export interface Clinica {
   logoUrl?: string;
   agendaHoraInicio?: number; // hora de abertura da agenda (default 7)
   agendaHoraFim?: number;    // hora de fechamento da agenda (default 19)
+  agendaAlmocoInicio?: number | null; // início do intervalo de almoço (hora); null = sem intervalo
+  agendaAlmocoFim?: number | null;    // fim do intervalo de almoço (hora)
   infinitepayHandle?: string; // InfiniteTag (sem $) p/ gerar links de pagamento (S9)
   agendamentoOnline?: boolean; // liga/desliga o agendamento online público (S8)
 }

@@ -420,6 +420,26 @@ export default function ConfigPage() {
               {clinica.agendaHoraFim != null && clinica.agendaHoraInicio != null && clinica.agendaHoraFim <= clinica.agendaHoraInicio && (
                 <p style={{ fontSize: 12, color: "var(--danger)", margin: "0 0 10px" }}>O horário de fechamento deve ser maior que o de abertura.</p>
               )}
+              <div className="form-row form-row-2" style={{ maxWidth: 360 }}>
+                <div className="form-group">
+                  <label className="form-label">Almoço — das</label>
+                  <select className="form-control" value={clinica.agendaAlmocoInicio ?? ""} onChange={(e) => setClinica((c) => (c ? { ...c, agendaAlmocoInicio: e.target.value === "" ? null : Number(e.target.value) } : c))}>
+                    <option value="">Sem intervalo</option>
+                    {Array.from({ length: 24 }, (_, h) => <option key={h} value={h}>{String(h).padStart(2, "0")}:00</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">até</label>
+                  <select className="form-control" value={clinica.agendaAlmocoFim ?? ""} onChange={(e) => setClinica((c) => (c ? { ...c, agendaAlmocoFim: e.target.value === "" ? null : Number(e.target.value) } : c))}>
+                    <option value="">Sem intervalo</option>
+                    {Array.from({ length: 24 }, (_, h) => h + 1).map((h) => <option key={h} value={h}>{String(h).padStart(2, "0")}:00</option>)}
+                  </select>
+                </div>
+              </div>
+              {clinica.agendaAlmocoInicio != null && clinica.agendaAlmocoFim != null && clinica.agendaAlmocoFim <= clinica.agendaAlmocoInicio && (
+                <p style={{ fontSize: 12, color: "var(--danger)", margin: "0 0 10px" }}>O fim do almoço deve ser maior que o início.</p>
+              )}
+              <p style={{ fontSize: 12, color: "var(--text-muted)", margin: "0 0 12px" }}>O intervalo de almoço aparece bloqueado na grade e não é ofertado no agendamento online.</p>
               <button className="btn btn-primary" onClick={salvarClinica}>Salvar horário</button>
             </div>
 

@@ -823,6 +823,7 @@ export const DB = {
         numero: data.numero ?? "", bairro: data.bairro ?? "", cidade: data.cidade ?? "",
         uf: data.uf ?? "", logoUrl: data.logo_url ?? "",
         agendaHoraInicio: data.agenda_hora_inicio ?? 7, agendaHoraFim: data.agenda_hora_fim ?? 19,
+        agendaAlmocoInicio: data.agenda_almoco_inicio ?? null, agendaAlmocoFim: data.agenda_almoco_fim ?? null,
         infinitepayHandle: data.infinitepay_handle ?? "",
         agendamentoOnline: data.agendamento_online ?? true,
       };
@@ -835,6 +836,8 @@ export const DB = {
         bairro: orNull(c.bairro), cidade: orNull(c.cidade), uf: orNull(c.uf), logo_url: orNull(c.logoUrl),
         ...(c.agendaHoraInicio != null ? { agenda_hora_inicio: c.agendaHoraInicio } : {}),
         ...(c.agendaHoraFim != null ? { agenda_hora_fim: c.agendaHoraFim } : {}),
+        ...(c.agendaAlmocoInicio !== undefined ? { agenda_almoco_inicio: c.agendaAlmocoInicio } : {}),
+        ...(c.agendaAlmocoFim !== undefined ? { agenda_almoco_fim: c.agendaAlmocoFim } : {}),
         ...(c.infinitepayHandle !== undefined ? { infinitepay_handle: orNull(c.infinitepayHandle) } : {}),
         ...(c.agendamentoOnline !== undefined ? { agendamento_online: c.agendamentoOnline } : {}),
       }).eq("id", c.id);

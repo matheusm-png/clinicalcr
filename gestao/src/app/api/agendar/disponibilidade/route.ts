@@ -27,7 +27,7 @@ export async function GET(req: Request) {
 
   const { data: clinica } = await admin
     .from("clinicas")
-    .select("id, agenda_hora_inicio, agenda_hora_fim, agendamento_online")
+    .select("id, agenda_hora_inicio, agenda_hora_fim, agenda_almoco_inicio, agenda_almoco_fim, agendamento_online")
     .eq("agendamento_online", true)
     .order("id")
     .limit(1)
@@ -38,6 +38,9 @@ export async function GET(req: Request) {
 
   const inicio = clinica.agenda_hora_inicio ?? 7;
   const fim = clinica.agenda_hora_fim ?? 19;
+  // Intervalo de almoço (em minutos): slots dentro dessa faixa não são ofertados.
+  const almocoIni = clinica.agenda_almoco_inicio != null ? clinica.agenda_almoco_inicio * 60 : null;
+  const almocoFim = clinica.agenda_almoco_fim != null ? clinica.agenda_almoco_fim * 60 : null;
 
   // Intervalos ocupados (em minutos desde 00:00) das consultas já marcadas.
   const { data: ags } = await admin
@@ -71,6 +74,8 @@ export async function GET(req: Request) {
   const slots: Array<{ hora: number; min: number; label: string }> = [];
   for (let m = inicio * 60; m + SLOT_MIN <= fim * 60; m += SLOT_MIN) {
     if (m < minAtual) continue;
+    // Pula a faixa de almoço.
+    if (almocoIni != null && almocoFim != null && m >= almocoIni && m < almocoFim) continue;
     const colide = ocupados.some(([oi, of]) => m < of && m + SLOT_MIN > oi);
     if (colide) continue;
     const h = Math.floor(m / 60);
