@@ -25,10 +25,11 @@ const STATE_COLORS = {
   normal: { fill: "none", stroke: "var(--text-muted)" },
 };
 
-// Categoria visual por palavra-chave no nome do procedimento (o catálogo tem ~66
-// nomes descritivos; o casamento por keyword faz a maioria desenhar algo).
-// NOTA: os símbolos/cores definitivos por procedimento serão ajustados quando a
-// Mila enviar a lista completa de procedimentos + valores.
+// Categoria visual por palavra-chave no nome do procedimento. O catálogo real da
+// LCR (34 procs, migration 0027) tem nomes descritivos; o casamento por keyword
+// desenha os tipos com representação dental (restauração, extração, canal,
+// implante, ortodontia, prótese, clareamento). Preventivos/gengivais (profilaxia,
+// flúor, gengivoplastia) não têm marca no dente — são por sextante/arcada.
 type CatVisual = "restauracao" | "extracao" | "canal" | "implante" | "ortodontia" | "protese" | "clareamento" | "";
 const CAT_COLOR: Record<Exclude<CatVisual, "">, string> = {
   restauracao: "#3B82F6",
@@ -42,7 +43,7 @@ const CAT_COLOR: Record<Exclude<CatVisual, "">, string> = {
 function catProc(nome: string): CatVisual {
   const n = (nome || "").toLowerCase();
   if (/(exodontia|extra[çc][aã]o|extrair|extra[íi]d)/.test(n)) return "extracao";
-  if (/(canal|endodon|pulpar|pulpotomia)/.test(n)) return "canal";
+  if (/(canal|endod|pulpar|pulpotomia)/.test(n)) return "canal";
   if (/(implante|implantod)/.test(n)) return "implante";
   if (/(ortodon|aparelho|bracket|contenç)/.test(n)) return "ortodontia";
   if (/(restaura|resina|am[aá]lgama|f[aá]ceta|sela)/.test(n)) return "restauracao";
