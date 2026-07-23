@@ -3,6 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { aiVisao, aiConfigurado } from "@/lib/ai";
 import { montarPrompt } from "@/lib/ai/prompts";
 
+// A leitura da ficha (OpenAI visão) pode levar 10-20s; sobe o teto da função
+// serverless na Vercel para não estourar timeout e devolver HTML em vez de JSON.
+export const maxDuration = 60;
+
 // Recebe foto(s) da ficha COMPLETA (anamnese + odontograma/procedimentos) → IA de
 // visão → JSON estruturado { anamnese, procedimentos[] }.
 // Dado de saúde do paciente: NÃO logamos o conteúdo extraído nem as imagens.

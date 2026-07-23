@@ -73,6 +73,38 @@ const paraISO = (s?: string | null): string => {
   return `${y}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
 };
 
+// Reduz a foto no navegador antes de enviar: redimensiona (máx. lado) e converte
+// para JPEG. Resolve o limite de ~4,5MB de upload da Vercel E o HEIC do iPhone
+// (o canvas decodifica e reexporta como JPEG). Se algo falhar, envia o original.
+async function comprimirImagem(file: File, maxLado = 2200, quality = 0.72): Promise<Blob> {
+  if (!file.type.startsWith("image/")) return file;
+  const url = URL.createObjectURL(file);
+  try {
+    const img = document.createElement("img");
+    img.decoding = "async";
+    img.src = url;
+    await img.decode();
+    let w = img.naturalWidth || img.width;
+    let h = img.naturalHeight || img.height;
+    if (!w || !h) return file;
+    const escala = Math.min(1, maxLado / Math.max(w, h));
+    w = Math.round(w * escala);
+    h = Math.round(h * escala);
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(img, 0, 0, w, h);
+    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", quality));
+    return blob ?? file;
+  } catch {
+    return file;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 const normSimNao = (v: unknown): "sim" | "não" | "" => {
   if (v == null) return "";
   if (typeof v === "boolean") return v ? "sim" : "não";
@@ -156,8 +188,23 @@ export default function ImportarFichaPage() {
     setLendo(true);
     try {
       const fd = new FormData();
-      fotos.forEach((f) => fd.append("imagens", f));
+      // Comprime cada foto antes de enviar (tamanho + HEIC do iPhone).
+      for (let i = 0; i < fotos.length; i++) {
+        const blob = await comprimirImagem(fotos[i]);
+        fd.append("imagens", blob, `ficha-${i + 1}.jpg`);
+      }
       const res = await fetch("/api/ai/importar-ficha", { method: "POST", body: fd });
+
+      // O servidor sempre devolve JSON; se vier outra coisa (timeout/limite da
+      // hospedagem = página HTML), damos uma mensagem clara em vez de quebrar.
+      const tipo = res.headers.get("content-type") || "";
+      if (!tipo.includes("application/json")) {
+        throw new Error(
+          res.status === 413
+            ? "As fotos ficaram grandes demais. Tente fotografar uma página por vez."
+            : "O servidor demorou ou recusou o envio. Tente de novo com fotos mais nítidas.",
+        );
+      }
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || "Falha ao ler a ficha.");
       aplicarResultado(json.dados ?? {}, json.procedimentos ?? [], json.revisar ?? []);
