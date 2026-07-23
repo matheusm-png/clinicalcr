@@ -10,6 +10,9 @@ export type AiMessage = { role: "system" | "user" | "assistant"; content: string
 const PROVIDER = process.env.AI_PROVIDER ?? "openai";
 const CHAT_MODEL = process.env.AI_CHAT_MODEL ?? "gpt-4o-mini";
 const TRANSCRIBE_MODEL = process.env.AI_TRANSCRIBE_MODEL ?? "whisper-1";
+// Visão: "mini" por padrão (barato) — como a leitura é sempre conferida por humano
+// antes de salvar, não compensa o custo ~10x do modelo completo. Pode ser
+// sobrescrito por AI_VISION_MODEL=gpt-4o se um dia quiser mais precisão.
 const VISION_MODEL = process.env.AI_VISION_MODEL ?? "gpt-4o-mini";
 
 export function aiConfigurado(): boolean {

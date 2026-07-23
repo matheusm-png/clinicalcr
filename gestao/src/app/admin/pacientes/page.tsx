@@ -254,6 +254,14 @@ export default function PacientesPage() {
           </svg>
           Importar
         </button>
+        <button className="btn btn-outline" onClick={() => router.push("/admin/importar-ficha")} title="Fotografe a ficha e a IA preenche tudo">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: 15, height: 15 }}>
+            <path d="M12 3v3M12 18v3M3 12h3M18 12h3" />
+            <path d="M9 9l-1.5-1.5M16.5 16.5L15 15M15 9l1.5-1.5M7.5 16.5L9 15" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+          Importar com IA
+        </button>
         <button className="btn btn-primary" onClick={handleOpenNewModal}>
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: 15, height: 15 }}>
             <path d="M12 5v14M5 12h14" />

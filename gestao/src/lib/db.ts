@@ -353,6 +353,7 @@ const fromConta = (r: any): ContaReceber => ({
   descricao: r.descricao,
   valorTotal: Number(r.valor_total),
   status: r.status,
+  nfEmitida: r.nf_emitida ?? false,
   criadoEm: r.created_at,
 });
 const fromProtese = (r: any): Protese => ({
@@ -728,6 +729,7 @@ export const DB = {
           descricao: conta.descricao,
           valor_total: conta.valorTotal,
           status: conta.status ?? "aberta",
+          nf_emitida: conta.nfEmitida ?? false,
         })
         .select()
         .single();
@@ -740,6 +742,7 @@ export const DB = {
           valor: p.valor,
           vencimento: orNull(p.vencimento),
           pago: p.pago ?? false,
+          pago_em: orNull(p.pagoEm),
           forma_pagamento: orNull(p.formaPagamento),
         }));
         const { error: e2 } = await sb().from("parcelas").insert(rows);

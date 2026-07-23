@@ -290,6 +290,7 @@ export interface ContaReceber {
   descricao: string;
   valorTotal: number;
   status: 'aberta' | 'quitada' | 'cancelada';
+  nfEmitida?: boolean; // NF emitida para este recebimento (marcador simples sim/não)
   criadoEm?: string;
   parcelas?: Parcela[];
 }

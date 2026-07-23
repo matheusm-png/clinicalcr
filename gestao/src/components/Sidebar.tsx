@@ -263,7 +263,7 @@ export default function Sidebar() {
             </Link>
           </li>
           </>)}
-          {gate("pacientes") && (
+          {gate("pacientes") && (<>
           <li>
             <Link href="/admin/anamnese" className={isActive("/admin/anamnese") ? "active" : ""}>
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
@@ -274,7 +274,17 @@ export default function Sidebar() {
               Anamnese
             </Link>
           </li>
-          )}
+          <li>
+            <Link href="/admin/importar-ficha" className={isActive("/admin/importar-ficha") ? "active" : ""}>
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
+                <path d="M3 9a2 2 0 0 1 2-2h1l1-2h6l1 2h1a2 2 0 0 1 2 2v3" />
+                <circle cx="11" cy="12" r="3" />
+                <path d="M16 16l2 2 4-4" />
+              </svg>
+              Importar ficha
+            </Link>
+          </li>
+          </>)}
           {gate("estoque") && (<>
           <li>
             <Link href="/admin/estoque" className={isActive("/admin/estoque") ? "active" : ""}>
