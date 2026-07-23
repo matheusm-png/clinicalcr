@@ -1,4 +1,5 @@
 import Sidebar from "@/components/Sidebar";
+import AssistenteFlutuante from "@/components/AssistenteFlutuante";
 import { ToastProvider } from "@/components/Toast";
 
 export default function AdminLayout({
@@ -13,6 +14,7 @@ export default function AdminLayout({
         <div id="main">
           {children}
         </div>
+        <AssistenteFlutuante />
       </div>
     </ToastProvider>
   );
