@@ -131,7 +131,7 @@ export function montarPrompt(task: AiTask, input: any): AiMessage[] | null {
             "Estrutura EXATA do JSON:\n" +
             "{\n" +
             '  "anamnese": { ...campos abaixo... },\n' +
-            '  "procedimentos": [ { "data": "dd/mm/aaaa", "descricao": "texto", "dente": "NN|null", "valorPago": number|null } ],\n' +
+            '  "procedimentos": [ { "data": "dd/mm/aaaa", "descricao": "texto", "dente": "NN|null", "valorPago": number|null, "pago": "sim"|"não"|null, "nf": "sim"|"não"|null } ],\n' +
             '  "_revisar": [ "nomes.dos.campos.de.baixa.confianca" ]\n' +
             "}\n\n" +
             "Campos de \"anamnese\" (use EXATAMENTE estas chaves):\n" +
@@ -151,7 +151,9 @@ export function montarPrompt(task: AiTask, input: any): AiMessage[] | null {
             "- 'data': a data da linha em dd/mm/aaaa (ou null).\n" +
             "- 'descricao': o texto do procedimento executado, transcrito como está (ex.: \"Restauração palatina na unidade 23. RC A3\").\n" +
             "- 'dente': APENAS o número do dente (notação FDI, ex.: \"23\") se a descrição citar uma unidade/dente. Se citar vários, separe por vírgula (\"14,15\"). Se não citar, null. Não invente números.\n" +
-            "- 'valorPago': o valor pago daquela linha como número (ex.: \"Pago 80,00\" → 80.0). Se não houver, null.\n\n" +
+            "- 'valorPago': o valor pago daquela linha como número (ex.: \"Pago 80,00\" → 80.0). Se não houver, null.\n" +
+            "- 'pago': \"sim\" se a linha tiver indicação de pagamento (ex.: \"Pago\", \"OK\", valor anotado); \"não\" se indicar pendente/não pago; sem indicação → null.\n" +
+            "- 'nf': \"sim\" se a linha indicar nota fiscal emitida (ex.: \"NF\", \"NF ✓\", \"c/ NF\", \"nota\"); \"não\" se indicar sem nota (ex.: \"s/ NF\"); sem indicação → null.\n\n" +
             "- Em \"_revisar\", liste os nomes dos campos/itens que você leu com baixa confiança (ilegível, rasura, ambiguidade). Ex.: \"anamnese.alergia\", \"procedimentos[0].valorPago\".\n" +
             "Dado de saúde de paciente: precisão e honestidade são obrigatórias — na dúvida, use null e liste em _revisar.",
         },

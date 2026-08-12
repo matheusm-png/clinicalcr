@@ -13,7 +13,24 @@ export const maxDuration = 60;
 const MAX_TOTAL = 25 * 1024 * 1024; // ~25MB no total
 const MAX_IMAGENS = 8;
 
-type Proc = { data: string | null; descricao: string; dente: string | null; valorPago: number | null };
+type Proc = {
+  data: string | null;
+  descricao: string;
+  dente: string | null;
+  valorPago: number | null;
+  pago: "sim" | "não" | null;
+  nf: "sim" | "não" | null;
+};
+
+// "sim"/"não" tolerante a variações ("s", "nao", true/false); senão null.
+function parseSimNao(v: unknown): "sim" | "não" | null {
+  if (typeof v === "boolean") return v ? "sim" : "não";
+  if (typeof v !== "string") return null;
+  const s = v.trim().toLowerCase();
+  if (["sim", "s", "true", "1"].includes(s)) return "sim";
+  if (["não", "nao", "n", "false", "0"].includes(s)) return "não";
+  return null;
+}
 
 // Aceita number, "80,00", "R$ 80,00", "80.00" → 80. Caso contrário null.
 function parseValor(v: unknown): number | null {
@@ -86,6 +103,8 @@ export async function POST(req: Request) {
         descricao: p.descricao != null ? String(p.descricao) : "",
         dente: p.dente != null && String(p.dente).trim() !== "" ? String(p.dente).trim() : null,
         valorPago: parseValor(p.valorPago),
+        pago: parseSimNao(p.pago),
+        nf: parseSimNao(p.nf),
       }))
       .filter((p) => p.descricao.trim() !== "" || p.valorPago != null);
 

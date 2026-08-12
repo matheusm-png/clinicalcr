@@ -4,10 +4,11 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { DB, usuarioAtual } from "@/lib/db";
-import { Paciente, Procedimento } from "@/lib/types";
+import { CapturaLote, Paciente, Procedimento } from "@/lib/types";
 import Topbar from "@/components/Topbar";
 import Odontograma from "@/components/Odontograma";
 import { useToast } from "@/components/Toast";
+import { comprimirImagem } from "@/lib/imagem";
 
 // ── Fluxo "Importar ficha por foto" ─────────────────────────────
 // 1 foto (ou as 2 páginas) → IA de visão lê anamnese + procedimentos →
@@ -73,38 +74,6 @@ const paraISO = (s?: string | null): string => {
   return `${y}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
 };
 
-// Reduz a foto no navegador antes de enviar: redimensiona (máx. lado) e converte
-// para JPEG. Resolve o limite de ~4,5MB de upload da Vercel E o HEIC do iPhone
-// (o canvas decodifica e reexporta como JPEG). Se algo falhar, envia o original.
-async function comprimirImagem(file: File, maxLado = 2200, quality = 0.72): Promise<Blob> {
-  if (!file.type.startsWith("image/")) return file;
-  const url = URL.createObjectURL(file);
-  try {
-    const img = document.createElement("img");
-    img.decoding = "async";
-    img.src = url;
-    await img.decode();
-    let w = img.naturalWidth || img.width;
-    let h = img.naturalHeight || img.height;
-    if (!w || !h) return file;
-    const escala = Math.min(1, maxLado / Math.max(w, h));
-    w = Math.round(w * escala);
-    h = Math.round(h * escala);
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return file;
-    ctx.drawImage(img, 0, 0, w, h);
-    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", quality));
-    return blob ?? file;
-  } catch {
-    return file;
-  } finally {
-    URL.revokeObjectURL(url);
-  }
-}
-
 const normSimNao = (v: unknown): "sim" | "não" | "" => {
   if (v == null) return "";
   if (typeof v === "boolean") return v ? "sim" : "não";
@@ -128,6 +97,12 @@ export default function ImportarFichaPage() {
   const [lendo, setLendo] = useState(false);
   const fotoInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Capturas enviadas pelo celular (fila no Storage)
+  const [capturas, setCapturas] = useState<CapturaLote[]>([]);
+  const [capturaThumbs, setCapturaThumbs] = useState<Record<string, string>>({});
+  const [capturaUsada, setCapturaUsada] = useState<CapturaLote | null>(null);
+  const [carregandoCaptura, setCarregandoCaptura] = useState<string | null>(null);
+
   // Revisão — paciente
   const [nome, setNome] = useState("");
   const [nascimento, setNascimento] = useState("");
@@ -144,6 +119,8 @@ export default function ImportarFichaPage() {
   const [queixa, setQueixa] = useState("");
   const [habitos, setHabitos] = useState("");
   const [antecedentes, setAntecedentes] = useState("");
+  const [ultimaVezDentista, setUltimaVezDentista] = useState("");
+  const [higieneOral, setHigieneOral] = useState("");
   const [observacoes, setObservacoes] = useState("");
   const [autorizaFotos, setAutorizaFotos] = useState(false);
   const [dataFicha, setDataFicha] = useState("");
@@ -166,8 +143,56 @@ export default function ImportarFichaPage() {
       if (u?.nome) setAutor(u.nome);
       const c = await DB.clinica.get();
       setClinicaId(c?.id ?? null);
+      if (c?.id) await carregarCapturas(c.id);
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── Capturas do celular ───────────────────────────────────
+  const carregarCapturas = async (cid: number) => {
+    try {
+      const lotes = await DB.capturas.listar(cid);
+      setCapturas(lotes);
+      // Miniatura = 1ª foto de cada lote (URL assinada, bucket privado).
+      const thumbs: Record<string, string> = {};
+      await Promise.all(
+        lotes.map(async (l) => {
+          const url = await DB.anexos.signedUrl(l.paths[0], 600);
+          if (url) thumbs[l.pasta] = url;
+        }),
+      );
+      setCapturaThumbs(thumbs);
+    } catch {
+      /* lista vazia em caso de erro */
+    }
+  };
+
+  // Baixa as fotos do lote e coloca no fluxo normal de leitura por IA.
+  const usarCaptura = async (lote: CapturaLote) => {
+    setCarregandoCaptura(lote.pasta);
+    try {
+      const arquivos: File[] = [];
+      for (const path of lote.paths) {
+        const url = await DB.anexos.signedUrl(path, 600);
+        if (!url) throw new Error("URL");
+        const blob = await (await fetch(url)).blob();
+        arquivos.push(new File([blob], path.split("/").pop() || "pagina.jpg", { type: blob.type || "image/jpeg" }));
+      }
+      setFotos(arquivos);
+      setCapturaUsada(lote);
+      showToast(`${arquivos.length} foto(s) do celular carregadas. Agora é só ler com a IA.`, "success");
+    } catch {
+      showToast("Não foi possível baixar as fotos deste envio.", "error");
+    } finally {
+      setCarregandoCaptura(null);
+    }
+  };
+
+  const descartarCaptura = async (lote: CapturaLote) => {
+    await DB.capturas.remover(lote);
+    setCapturas((p) => p.filter((l) => l.pasta !== lote.pasta));
+    if (capturaUsada?.pasta === lote.pasta) setCapturaUsada(null);
+  };
 
   const rev = (k: string): React.CSSProperties =>
     revisar.has(k) ? { borderColor: "#F59E0B", background: "#FFFBEB" } : {};
@@ -242,6 +267,8 @@ export default function ImportarFichaPage() {
     setQueixa(d.queixa ? String(d.queixa) : "");
     setHabitos(d.habitos ? String(d.habitos) : "");
     setAntecedentes(d.antecedentes_familiares ? String(d.antecedentes_familiares) : "");
+    setUltimaVezDentista(d.ultima_vez_dentista ? String(d.ultima_vez_dentista) : "");
+    setHigieneOral(d.higiene_oral ? String(d.higiene_oral) : "");
     setObservacoes(d.observacoes ? String(d.observacoes) : "");
     setAutorizaFotos(normSimNao(d.autoriza_fotos) === "sim");
     setDataFicha(paraISO(d.local_data) || "");
@@ -251,7 +278,7 @@ export default function ImportarFichaPage() {
       descricao: p?.descricao ? String(p.descricao) : "",
       dente: p?.dente != null ? String(p.dente) : "",
       valor: typeof p?.valorPago === "number" ? p.valorPago : Number(p?.valorPago) || 0,
-      nfEmitida: false,
+      nfEmitida: normSimNao(p?.nf) === "sim",
       formaPagto: "",
     }));
     setProcs(lista);
@@ -325,6 +352,8 @@ export default function ImportarFichaPage() {
         indicado_por: indicadoPor,
         habitos,
         antecedentes_familiares: antecedentes,
+        ultima_vez_dentista: ultimaVezDentista,
+        higiene_oral: higieneOral,
         observacoes,
         autorizacaoFoto: autorizaFotos,
         _origem: "importacao-foto",
@@ -385,6 +414,13 @@ export default function ImportarFichaPage() {
         }
       }
 
+      // Ficha importada: remove o lote de fotos da fila do celular.
+      if (capturaUsada) {
+        await DB.capturas.remover(capturaUsada);
+        setCapturas((p) => p.filter((l) => l.pasta !== capturaUsada.pasta));
+        setCapturaUsada(null);
+      }
+
       const procsSalvos = procs.filter((p) => p.descricao.trim() || p.valor).length;
       setSalvo({ pacienteId, nome: nome.trim(), procs: procsSalvos, anexos: anexosOk });
       setFase("sucesso");
@@ -400,10 +436,13 @@ export default function ImportarFichaPage() {
     setNome(""); setNascimento(""); setSexo("F"); setCpf(""); setRg(""); setTel("");
     setEndereco(""); setProfissao(""); setIndicadoPor("");
     setSaude({}); setQueixa(""); setHabitos(""); setAntecedentes(""); setObservacoes("");
+    setUltimaVezDentista(""); setHigieneOral("");
     setAutorizaFotos(false); setDataFicha("");
     setProcs([]); setAnexos([]); setRevisar(new Set());
+    setCapturaUsada(null);
     setPasso(1);
     setFase("upload");
+    if (clinicaId) carregarCapturas(clinicaId);
   };
 
   // ── UI ────────────────────────────────────────────────────
@@ -451,6 +490,58 @@ export default function ImportarFichaPage() {
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
 
           {fase === "upload" && (
+            <>
+            {capturas.length > 0 && (
+              <div className="card" style={{ padding: 20, marginBottom: 16, borderLeft: "4px solid var(--primary)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 4, flexWrap: "wrap" }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 700 }}>📥 Fotos enviadas do celular</h3>
+                  <button className="btn btn-sm btn-outline" onClick={() => clinicaId && carregarCapturas(clinicaId)}>Atualizar</button>
+                </div>
+                <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 12 }}>
+                  Fichas fotografadas na página <strong>Capturar ficha</strong> do celular. Escolha uma para continuar aqui.
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {capturas.map((l) => (
+                    <div key={l.pasta} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 10px", borderRadius: 10, border: `1px solid ${capturaUsada?.pasta === l.pasta ? "var(--primary)" : "var(--border)"}`, background: capturaUsada?.pasta === l.pasta ? "var(--primary-light)" : "var(--bg2)" }}>
+                      {capturaThumbs[l.pasta] ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={capturaThumbs[l.pasta]} alt="" style={{ width: 52, height: 52, objectFit: "cover", borderRadius: 8, border: "1px solid var(--border)", flexShrink: 0 }} />
+                      ) : (
+                        <div style={{ width: 52, height: 52, borderRadius: 8, background: "var(--bg)", display: "grid", placeItems: "center", flexShrink: 0 }}>📄</div>
+                      )}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {l.label || "Ficha sem nome"}
+                        </div>
+                        <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                          {l.paths.length} foto{l.paths.length === 1 ? "" : "s"}
+                          {l.quando ? ` · ${new Date(l.quando).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}` : ""}
+                        </div>
+                      </div>
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={() => usarCaptura(l)}
+                        disabled={carregandoCaptura !== null}
+                        style={{ flexShrink: 0 }}
+                      >
+                        {carregandoCaptura === l.pasta ? "Carregando…" : capturaUsada?.pasta === l.pasta ? "Em uso ✓" : "Usar fotos"}
+                      </button>
+                      <button
+                        className="icon-btn danger"
+                        title="Descartar este envio"
+                        onClick={() => descartarCaptura(l)}
+                        style={{ flexShrink: 0 }}
+                      >
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: 15, height: 15 }}>
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="card" style={{ padding: 24 }}>
               <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Fotografe a ficha do paciente</h2>
               <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 18 }}>
@@ -502,7 +593,12 @@ export default function ImportarFichaPage() {
                   As imagens são enviadas com segurança e não substituem a conferência da dentista.
                 </span>
               </div>
+              <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--border)", fontSize: 12.5, color: "var(--text-muted)" }}>
+                💡 Dica: no celular, abra <Link href="/admin/capturar" style={{ fontWeight: 600 }}>Capturar ficha</Link> para
+                fotografar — as fotos aparecem aqui em cima e você continua no computador.
+              </div>
             </div>
+            </>
           )}
 
           {fase === "sucesso" && salvo && (
@@ -619,6 +715,10 @@ export default function ImportarFichaPage() {
                     <input style={inputStyle} value={habitos} onChange={(e) => setHabitos(e.target.value)} /></div>
                   <div><label style={labelStyle}>Antecedentes familiares</label>
                     <input style={inputStyle} value={antecedentes} onChange={(e) => setAntecedentes(e.target.value)} /></div>
+                  <div><label style={labelStyle}>Última vez que foi ao dentista</label>
+                    <input style={{ ...inputStyle, ...rev("ultima_vez_dentista") }} value={ultimaVezDentista} onChange={(e) => setUltimaVezDentista(e.target.value)} /></div>
+                  <div><label style={labelStyle}>Como realiza a higiene oral</label>
+                    <input style={{ ...inputStyle, ...rev("higiene_oral") }} value={higieneOral} onChange={(e) => setHigieneOral(e.target.value)} /></div>
                   <div style={{ gridColumn: "1 / -1" }}><label style={labelStyle}>Observações</label>
                     <input style={inputStyle} value={observacoes} onChange={(e) => setObservacoes(e.target.value)} /></div>
                 </div>

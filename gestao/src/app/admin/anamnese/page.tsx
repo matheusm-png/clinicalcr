@@ -96,6 +96,8 @@ function AnamneseContent() {
     sensibilidade_frio_calor: "não",
     alergia_anestesia: "não",
     alergia_anestesia_desc: "",
+    ultima_vez_dentista: "",
+    higiene_oral: "",
   });
 
   // Step 4 Verification & Sign
@@ -913,7 +915,31 @@ function AnamneseContent() {
                 ))}
               </div>
 
-              <div className="form-group" style={{ marginTop: 16 }}>
+              <div className="form-row form-row-2" style={{ marginTop: 16 }}>
+                <div className="form-group">
+                  <label className="form-label">Qual a última vez que foi ao dentista?</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={dentalRespostas.ultima_vez_dentista || ""}
+                    onChange={(e) => setDentalRespostas({ ...dentalRespostas, ultima_vez_dentista: e.target.value })}
+                    placeholder="Ex: há 6 meses, ano passado…"
+                    style={revStyle("ultima_vez_dentista")}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Como realiza a higiene oral?</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={dentalRespostas.higiene_oral || ""}
+                    onChange={(e) => setDentalRespostas({ ...dentalRespostas, higiene_oral: e.target.value })}
+                    placeholder="Ex: escova 3x ao dia, usa fio dental…"
+                    style={revStyle("higiene_oral")}
+                  />
+                </div>
+              </div>
+              <div className="form-group">
                 <label className="form-label">Hábitos</label>
                 <input
                   type="text"

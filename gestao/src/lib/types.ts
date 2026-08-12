@@ -179,6 +179,15 @@ export interface Evolucao {
   criadoEm?: string;
 }
 
+// Lote de fotos de ficha capturadas no celular (vive apenas no Storage,
+// em "{clinicaId}/capturas/{pasta}/pag-N.jpg" — sem tabela própria).
+export interface CapturaLote {
+  pasta: string;   // nome da pasta do lote no bucket
+  label: string;   // rótulo opcional (ex.: nome do paciente)
+  quando: string;  // ISO de quando foi capturado
+  paths: string[]; // caminhos das fotos no bucket
+}
+
 export interface Anexo {
   id?: number;
   pacienteId: number;

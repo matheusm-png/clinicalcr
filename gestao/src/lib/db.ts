@@ -16,6 +16,7 @@ import {
   Usuario,
   Evolucao,
   Anexo,
+  CapturaLote,
   Documento,
   Profissional,
   Marcador,
@@ -1109,6 +1110,63 @@ export const DB = {
       const { error } = await sb().storage.from("anexos").remove([path]);
       if (error) console.error("[DB] remover arquivo anexo:", error.message);
       await removeTable("anexos", id);
+    },
+  },
+
+  // ─── Capturas: fotos de ficha enviadas pelo celular ────────
+  // Sem tabela própria: vivem apenas no Storage, em
+  // "{clinicaId}/capturas/{lote}/pag-N.jpg" — a 1ª pasta ser a clínica
+  // satisfaz a policy de RLS do bucket "anexos". O lote é removido
+  // quando a ficha é importada no computador.
+  capturas: {
+    async enviar(clinicaId: number, imagens: Blob[], label?: string): Promise<void> {
+      if (semBackend()) throw new Error("Supabase não configurado — não é possível enviar.");
+      const slug = (label || "")
+        .trim().toLowerCase().normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "").slice(0, 40);
+      const pasta = `${Date.now()}${slug ? `_${slug}` : ""}`;
+      for (let i = 0; i < imagens.length; i++) {
+        const path = `${clinicaId}/capturas/${pasta}/pag-${i + 1}.jpg`;
+        const { error } = await sb()
+          .storage.from("anexos")
+          .upload(path, imagens[i], { contentType: "image/jpeg", upsert: false });
+        if (error) {
+          console.error("[DB] enviar captura:", error.message);
+          throw error;
+        }
+      }
+    },
+
+    // Lotes pendentes, do mais novo para o mais antigo.
+    async listar(clinicaId: number): Promise<CapturaLote[]> {
+      if (semBackend()) return [];
+      const base = `${clinicaId}/capturas`;
+      const { data: pastas, error } = await sb()
+        .storage.from("anexos")
+        .list(base, { sortBy: { column: "name", order: "desc" } });
+      if (error || !pastas) return [];
+      const lotes: CapturaLote[] = [];
+      for (const p of pastas) {
+        if (p.id) continue; // entradas com id são arquivos soltos; pastas vêm com id null
+        const { data: arquivos } = await sb().storage.from("anexos").list(`${base}/${p.name}`);
+        const paths = (arquivos ?? []).filter((a) => a.id).map((a) => `${base}/${p.name}/${a.name}`).sort();
+        if (!paths.length) continue;
+        const [ts, ...resto] = p.name.split("_");
+        lotes.push({
+          pasta: p.name,
+          label: resto.join("_").replace(/-/g, " "),
+          quando: Number(ts) ? new Date(Number(ts)).toISOString() : "",
+          paths,
+        });
+      }
+      return lotes;
+    },
+
+    async remover(lote: CapturaLote): Promise<void> {
+      if (semBackend()) return;
+      const { error } = await sb().storage.from("anexos").remove(lote.paths);
+      if (error) console.error("[DB] remover captura:", error.message);
     },
   },
 
