@@ -10,6 +10,7 @@ import { useToast } from "@/components/Toast";
 import EmptyState from "@/components/EmptyState";
 import AnaliseRiscoIA from "@/components/AnaliseRiscoIA";
 import AnamneseViewModal from "@/components/AnamneseViewModal";
+import { FICHA_SAUDE_TODAS } from "@/lib/fichaSaude";
 
 // Rótulos amigáveis dos campos da ficha (para o aviso de revisão).
 const ROTULOS_CAMPO: Record<string, string> = {
@@ -70,23 +71,16 @@ function AnamneseContent() {
   const [habitos, setHabitos] = useState("");
   const [observacoes, setObservacoes] = useState("");
 
-  // Step 2 Questionario Saúde State
-  const [saudeRespostas, setSaudeRespostas] = useState<Record<string, any>>({
-    febre_reumatica: "não",
-    prob_cardiacos: "não",
-    prob_cardiacos_desc: "",
-    prob_renais: "não",
-    prob_renais_desc: "",
-    prob_gastricos: "não",
-    prob_gastricos_desc: "",
-    prob_respiratorios: "não",
-    prob_respiratorios_desc: "",
-    diabetes: "não",
-    hipertensao: "não",
-    fuma: "não",
-    fuma_desc: "",
-    tratamento_medico: "não",
-    tratamento_medico_desc: "",
+  // Step 2 Questionario Saúde State — chaves geradas da fonte única da ficha
+  // (todas as perguntas do papel, exceto alergia_anestesia, que fica no passo 3).
+  const [saudeRespostas, setSaudeRespostas] = useState<Record<string, any>>(() => {
+    const init: Record<string, any> = {};
+    FICHA_SAUDE_TODAS.forEach((q) => {
+      if (q.key === "alergia_anestesia") return;
+      init[q.key] = "não";
+      if (q.desc) init[q.desc] = "";
+    });
+    return init;
   });
 
   // Step 3 Habits/Dental State
@@ -783,15 +777,10 @@ function AnamneseContent() {
             <div className="card">
               <h3 className="section-title">Questionário de Saúde Geral</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                {[
-                  { key: "febre_reumatica", label: "Febre reumática" },
-                  { key: "prob_cardiacos", label: "Problemas cardíacos", descKey: "prob_cardiacos_desc", descPlaceholder: "Qual problema cardíaco?" },
-                  { key: "prob_renais", label: "Problemas renais", descKey: "prob_renais_desc", descPlaceholder: "Qual problema renal?" },
-                  { key: "prob_respiratorios", label: "Problemas respiratórios", descKey: "prob_respiratorios_desc", descPlaceholder: "Qual problema respiratório? (ex: asma)" },
-                  { key: "diabetes", label: "Diabetes" },
-                  { key: "hipertensao", label: "Hipertensão arterial" },
-                  { key: "fuma", label: "Fuma ou já fumou?", descKey: "fuma_desc", descPlaceholder: "Quantidade por dia?" },
-                ].map((q) => (
+                {FICHA_SAUDE_TODAS
+                  .filter((q) => q.key !== "alergia_anestesia")
+                  .map((q) => ({ key: q.key, label: q.label, descKey: q.desc ?? "", descPlaceholder: q.placeholder ?? "" }))
+                  .map((q) => (
                   <div
                     key={q.key}
                     style={{

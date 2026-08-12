@@ -2,6 +2,7 @@
 
 import { Anamnese } from "@/lib/types";
 import AnaliseRiscoIA from "@/components/AnaliseRiscoIA";
+import { ORDEM_FICHA } from "@/lib/fichaSaude";
 
 // Rótulos amigáveis para as chaves do questionário padrão.
 const LABELS: Record<string, string> = {
@@ -75,8 +76,12 @@ export default function AnamneseViewModal({
       textos.push({ key: k, label: humanizar(k), valor: String(v) });
     }
   });
-  // "Sim" primeiro — são os pontos de atenção clínica.
-  yesNo.sort((a, b) => (a.valor === b.valor ? 0 : a.valor === "sim" ? -1 : 1));
+  // Exibe na MESMA ordem da ficha impressa (facilita conferir com o papel);
+  // chaves fora da ficha vão para o final, na ordem em que foram salvas.
+  const posicao = new Map(ORDEM_FICHA.map((k, i) => [k, i]));
+  const rank = (k: string) => posicao.get(k) ?? ORDEM_FICHA.length;
+  yesNo.sort((a, b) => rank(a.key) - rank(b.key));
+  textos.sort((a, b) => rank(a.key) - rank(b.key));
 
   const dataRegistro = anamnese.data || anamnese.criadoEm;
 

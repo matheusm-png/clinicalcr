@@ -9,37 +9,16 @@ import Topbar from "@/components/Topbar";
 import Odontograma from "@/components/Odontograma";
 import { useToast } from "@/components/Toast";
 import { comprimirImagem } from "@/lib/imagem";
+import { FICHA_DOENCAS, FICHA_GERAL, FICHA_SAUDE_TODAS } from "@/lib/fichaSaude";
 
 // ── Fluxo "Importar ficha por foto" ─────────────────────────────
 // 1 foto (ou as 2 páginas) → IA de visão lê anamnese + procedimentos →
 // você revisa tudo numa tela → 1 clique cria paciente + anamnese +
 // procedimentos + conta quitada (com flag de NF) + anexa raio-x/exames.
 
-// Perguntas de saúde NA ORDEM EXATA da ficha de papel da LCR (facilita a conferência).
-// Bloco geral — uma por linha, como no papel.
-const SAUDE_GERAL: { key: string; label: string; desc?: string }[] = [
-  { key: "tratamento_medico", label: "Está em tratamento médico atualmente?" },
-  { key: "gravidez", label: "Gravidez" },
-  { key: "medicacao", label: "Está fazendo uso de alguma medicação?", desc: "medicacao_desc" },
-  { key: "alergia", label: "Tem alergia?", desc: "alergia_desc" },
-  { key: "operado", label: "Já foi operado?", desc: "operado_desc" },
-  { key: "prob_cicatrizacao", label: "Teve problemas com a cicatrização?" },
-  { key: "alergia_anestesia", label: "Teve problemas com a anestesia?" },
-  { key: "prob_hemorragia", label: "Teve problemas de hemorragia?" },
-];
-// "Sofre de alguma das seguintes doenças?" — pares na mesma disposição do papel.
-const SAUDE_DOENCAS: { key: string; label: string }[] = [
-  { key: "febre_reumatica", label: "Febre Reumática" },
-  { key: "prob_cardiacos", label: "Problemas cardíacos" },
-  { key: "prob_renais", label: "Problemas renais" },
-  { key: "prob_gastricos", label: "Problemas gástricos" },
-  { key: "prob_respiratorios", label: "Problemas respiratórios" },
-  { key: "prob_alergicos", label: "Problemas alérgicos" },
-  { key: "prob_articulares", label: "Problemas articulares ou reumatismo" },
-  { key: "diabetes", label: "Diabetes" },
-  { key: "hipertensao", label: "Hipertensão arterial" },
-];
-const SAUDE_TODOS = [...SAUDE_GERAL, ...SAUDE_DOENCAS];
+// Perguntas de saúde na ORDEM EXATA da ficha de papel — fonte única em
+// src/lib/fichaSaude.ts (compartilhada com o wizard e a visualização).
+const SAUDE_TODOS = FICHA_SAUDE_TODAS;
 
 const CATEGORIAS_ANEXO = [
   { valor: "raio-x", label: "Raio-X" },
@@ -259,9 +238,21 @@ export default function ImportarFichaPage() {
     setIndicadoPor(d.indicado_por ? String(d.indicado_por) : "");
 
     const s: Record<string, string> = {};
-    SAUDE_TODOS.forEach(({ key, desc }: { key: string; label: string; desc?: string }) => {
+    SAUDE_TODOS.forEach(({ key, desc }) => {
       s[key] = normSimNao(d[key]) || "não";
       if (desc) s[desc] = d[desc] ? String(d[desc]) : "";
+    });
+    // Rede de segurança: qualquer campo extra que a IA leu e não tem input
+    // próprio ainda assim é preservado nas respostas (não perde dado).
+    const CONHECIDOS = new Set([
+      ...Object.keys(s),
+      "nome", "nascimento", "sexo", "tel", "endereco", "numero", "cpf", "identidade", "profissao",
+      "indicado_por", "queixa", "habitos", "antecedentes_familiares", "ultima_vez_dentista",
+      "higiene_oral", "observacoes", "autoriza_fotos", "local_data",
+    ]);
+    Object.entries(d).forEach(([k, v]) => {
+      if (v == null || v === "" || CONHECIDOS.has(k)) return;
+      s[k] = normSimNao(v) || String(v);
     });
     setSaude(s);
     setQueixa(d.queixa ? String(d.queixa) : "");
@@ -693,18 +684,18 @@ export default function ImportarFichaPage() {
                 <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>Anamnese — questionário de saúde</h3>
                 <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 14 }}>Na mesma ordem da ficha impressa — confira de cima pra baixo.</p>
 
-                {/* Bloco geral (uma por linha, como no papel) */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 560 }}>
-                  {SAUDE_GERAL.map(({ key, label, desc }) => (
+                {/* Doenças primeiro — mesma posição e pareamento do papel */}
+                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Sofre de alguma das seguintes doenças?</div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px 24px", maxWidth: 620 }}>
+                  {FICHA_DOENCAS.map(({ key, label, desc }) => (
                     <React.Fragment key={key}>{renderCampoSaude(key, label, desc)}</React.Fragment>
                   ))}
                 </div>
 
-                {/* Doenças (dois por linha, no mesmo pareamento do papel) */}
-                <div style={{ fontSize: 13, fontWeight: 700, marginTop: 18, marginBottom: 10 }}>Sofre de alguma das seguintes doenças?</div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px 24px", maxWidth: 620 }}>
-                  {SAUDE_DOENCAS.map(({ key, label }) => (
-                    <React.Fragment key={key}>{renderCampoSaude(key, label)}</React.Fragment>
+                {/* Demais perguntas — uma por linha, na sequência do papel */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 560, marginTop: 18 }}>
+                  {FICHA_GERAL.map(({ key, label, desc }) => (
+                    <React.Fragment key={key}>{renderCampoSaude(key, label, desc)}</React.Fragment>
                   ))}
                 </div>
 
@@ -753,10 +744,14 @@ export default function ImportarFichaPage() {
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 2 }}>Dente de cada procedimento</div>
                     {procs.map((p, i) => (
-                      <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", padding: "8px 10px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg2)" }}>
-                        <span style={{ flex: 1, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {p.descricao || <em style={{ color: "var(--text-muted)" }}>Procedimento {i + 1}</em>}
-                        </span>
+                      <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", padding: "8px 10px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg2)", flexWrap: "wrap" }}>
+                        <input
+                          placeholder={`Procedimento ${i + 1}`}
+                          title="Descrição do procedimento — edite se a leitura veio errada"
+                          value={p.descricao}
+                          onChange={(e) => setProc(i, { descricao: e.target.value })}
+                          style={{ ...inputStyle, flex: 1, minWidth: 220, ...rev(`procedimentos[${i}].descricao`) }}
+                        />
                         <input
                           placeholder="Dente" title="Nº do dente (FDI). Vários? separe por vírgula"
                           value={p.dente}
