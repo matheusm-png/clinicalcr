@@ -295,6 +295,9 @@ export default function Odontograma({
         })}
       </div>
 
+      {/* Dica de rolagem (aparece só no mobile via CSS) */}
+      <div className="odonto-scroll-hint">↔ Deslize para o lado para ver todos os dentes</div>
+
       {/* Odontograma (com marquee de seleção) */}
       <div
         ref={containerRef}
@@ -303,18 +306,6 @@ export default function Odontograma({
         onMouseMove={onMouseMove}
         onMouseUp={endDrag}
         onMouseLeave={endDrag}
-        style={{
-          position: "relative",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "10px",
-          padding: "30px",
-          background: "var(--bg2)",
-          borderRadius: "var(--radius-lg)",
-          border: "1px solid var(--border)",
-          userSelect: "none",
-        }}
       >
         <div className="odonto-row" style={{ display: "flex", gap: "8px", alignItems: "flex-end" }}>
           {DENTES_SUPERIOR.map((n) => renderDenteSVG(n))}

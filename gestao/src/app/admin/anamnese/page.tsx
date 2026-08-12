@@ -9,6 +9,7 @@ import Topbar from "@/components/Topbar";
 import { useToast } from "@/components/Toast";
 import EmptyState from "@/components/EmptyState";
 import AnaliseRiscoIA from "@/components/AnaliseRiscoIA";
+import AnamneseViewModal from "@/components/AnamneseViewModal";
 
 // Rótulos amigáveis dos campos da ficha (para o aviso de revisão).
 const ROTULOS_CAMPO: Record<string, string> = {
@@ -48,6 +49,7 @@ function AnamneseContent() {
   const [statusFilter, setStatusFilter] = useState("");
   const [isSelectPatientModalOpen, setIsSelectPatientModalOpen] = useState(false);
   const [selectedPatientIdForNew, setSelectedPatientIdForNew] = useState("");
+  const [anamneseView, setAnamneseView] = useState<Anamnese | null>(null);
 
   // State for wizard view
   const [currentStep, setCurrentStep] = useState(1);
@@ -493,17 +495,20 @@ function AnamneseContent() {
                   </thead>
                   <tbody>
                     {filteredAnamneses.map((a) => (
-                      <tr key={a.id}>
+                      <tr key={a.id} onClick={() => setAnamneseView(a)} style={{ cursor: "pointer" }}>
                         <td>
                           <strong>{a.pacienteNome}</strong>
                         </td>
-                        <td>{a.data ? new Date(a.data).toLocaleDateString("pt-BR") : "—"}</td>
-                        <td>Anamnese Padrão</td>
+                        <td>{a.data ? new Date(a.data + (a.data.length <= 10 ? "T00:00:00" : "")).toLocaleDateString("pt-BR") : "—"}</td>
+                        <td>{a.respostas?._modelo || "Anamnese Padrão"}</td>
                         <td>
                           <span className="badge badge-success">{a.status}</span>
                         </td>
-                        <td>
+                        <td onClick={(e) => e.stopPropagation()}>
                           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                            <button className="btn btn-primary btn-sm" onClick={() => setAnamneseView(a)}>
+                              Ver
+                            </button>
                             <AnaliseRiscoIA respostas={a.respostas} pacienteNome={a.pacienteNome} />
                           </div>
                         </td>
@@ -514,6 +519,11 @@ function AnamneseContent() {
               )}
             </div>
           </div>
+
+          {/* Modal Visualizar Anamnese */}
+          {anamneseView && (
+            <AnamneseViewModal anamnese={anamneseView} onClose={() => setAnamneseView(null)} />
+          )}
 
           {/* Modal Selecionar Paciente para Nova Anamnese */}
           {isSelectPatientModalOpen && (

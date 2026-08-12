@@ -889,15 +889,21 @@ tr.row-empty td:first-child { border-left:3px solid var(--danger); }
 .odonto-legend-dot { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
 .proc-table-wrap { margin-top:16px; }
 
-#odontograma { 
-  position: relative; 
-  user-select: none; 
+#odontograma {
+  position: relative;
+  user-select: none;
   -webkit-user-select: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   padding: 30px;
   background: var(--bg2);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
 }
+/* Dica de rolagem do odontograma — visível só no mobile */
+.odonto-scroll-hint { display: none; }
 .selection-marquee {
   position: absolute;
   border: 1.5px solid var(--primary);
@@ -1151,5 +1157,68 @@ tr.row-empty td:first-child { border-left:3px solid var(--danger); }
   /* Rodapé de modal: botões lado a lado ocupando a largura */
   .modal-footer { gap: 8px; }
   .modal-footer .btn { flex: 1; justify-content: center; }
+
+  /* ── Odontograma: rola na horizontal em vez de estourar a tela ── */
+  #odontograma {
+    padding: 14px 10px;
+    overflow-x: auto;
+    align-items: flex-start; /* necessário p/ o scroll funcionar com conteúdo maior que a tela */
+  }
+  #odontograma .odonto-row {
+    width: max-content;
+    margin-left: auto;  /* centraliza quando couber; alinha ao início quando transbordar */
+    margin-right: auto;
+    gap: 2px !important;
+  }
+  #odontograma .dente-wrap { padding: 8px 3px; }
+  .odonto-scroll-hint {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    text-align: center;
+  }
+
+  /* ── Topbar: ações ganham linha própria com rolagem horizontal ── */
+  .topbar {
+    height: auto;
+    min-height: 52px;
+    flex-wrap: wrap;
+    padding: 8px 12px;
+    row-gap: 8px;
+  }
+  .topbar h1 { max-width: 70vw; }
+  .topbar-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  .topbar-actions .btn { flex-shrink: 0; }
+  /* Página sem botões de ação (só o avatar, que fica oculto): esconde a linha */
+  .topbar-actions:not(:has(> :not(.avatar))) { display: none; }
+
+  /* ── Cards de métricas: coluna única e compactos ── */
+  .stats-grid { grid-template-columns: 1fr; gap: 10px; }
+  .stat-card { padding: 12px 14px; gap: 12px; }
+  .stat-icon { width: 40px; height: 40px; border-radius: 10px; }
+  .stat-icon svg { width: 18px; height: 18px; }
+  .stat-value { font-size: 20px; }
+  .stat-label { font-size: 11.5px; }
+
+  /* ── Prontuário: mini-cards financeiros empilham (label à esq., valor à dir.) ── */
+  .patient-fin-cards { grid-template-columns: 1fr; gap: 8px; }
+  .fin-mini {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 14px;
+  }
+  .fin-mini-val { margin-top: 0 !important; font-size: 16px !important; }
+
+  /* Tabelas: fonte um pouco menor p/ caber mais colunas antes do scroll */
+  table { font-size: 12.5px; }
+  tbody td { padding: 10px 10px; }
+  thead th { padding: 8px 10px; }
 }
 

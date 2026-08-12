@@ -10,6 +10,7 @@ import Odontograma from "@/components/Odontograma";
 import { useToast } from "@/components/Toast";
 import { exportarPaciente, baixarJson } from "@/lib/lgpd/exportar";
 import AnaliseRiscoIA from "@/components/AnaliseRiscoIA";
+import AnamneseViewModal from "@/components/AnamneseViewModal";
 import EvolucoesTab from "@/components/EvolucoesTab";
 import AnexosTab from "@/components/AnexosTab";
 import DocumentosTab from "@/components/DocumentosTab";
@@ -28,6 +29,7 @@ function ProntuarioContent() {
   const [catalogo, setCatalogo] = useState<ProcedimentoCatalogo[]>([]);
   const [autorAtual, setAutorAtual] = useState("");
   const [modelosAnamnese, setModelosAnamnese] = useState<ModeloAnamnese[]>([]);
+  const [anamneseView, setAnamneseView] = useState<Anamnese | null>(null);
   const [selectedTeeth, setSelectedTeeth] = useState<Set<string>>(new Set());
 
   // Dados das abas do paciente (Orçamentos/Financeiro/Consultas)
@@ -413,7 +415,6 @@ function ProntuarioContent() {
         <div
           className="card"
           style={{
-            background: "#fff",
             borderRadius: "var(--radius-lg)",
             boxShadow: "var(--shadow)",
             padding: "20px 24px",
@@ -479,10 +480,7 @@ function ProntuarioContent() {
             </div>
           </div>
 
-          <div
-            className="patient-fin-cards"
-            style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginTop: 16 }}
-          >
+          <div className="patient-fin-cards">
             <div className="fin-mini" style={{ borderColor: "#EF4444", background: "#FEF2F2" }}>
               <div className="fin-mini-label" style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase" }}>Total Atrasado</div>
               <div className="fin-mini-val" style={{ fontSize: 18, fontWeight: 700, marginTop: 2, color: "#EF4444" }}>{brl(finAtrasado)}</div>
@@ -851,12 +849,17 @@ function ProntuarioContent() {
                     </thead>
                     <tbody>
                       {anamneses.map((a: any) => (
-                        <tr key={a.id}>
+                        <tr key={a.id} onClick={() => setAnamneseView(a)} style={{ cursor: "pointer" }}>
                           <td>{a.criadoEm ? new Date(a.criadoEm).toLocaleDateString("pt-BR") : "—"}</td>
                           <td>{a.respostas?._modelo || "Anamnese Odontológica Padrão"}</td>
                           <td>{a.respostas?._autor || a.autor || "—"}</td>
-                          <td>
-                            <AnaliseRiscoIA respostas={a.respostas} pacienteNome={paciente.nome} />
+                          <td onClick={(e) => e.stopPropagation()}>
+                            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                              <button className="btn btn-primary btn-sm" onClick={() => setAnamneseView(a)}>
+                                Ver
+                              </button>
+                              <AnaliseRiscoIA respostas={a.respostas} pacienteNome={paciente.nome} />
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -867,6 +870,15 @@ function ProntuarioContent() {
             </div>
           )}
         </div>
+
+        {/* Modal Visualizar Anamnese */}
+        {anamneseView && (
+          <AnamneseViewModal
+            anamnese={anamneseView}
+            pacienteNome={paciente.nome}
+            onClose={() => setAnamneseView(null)}
+          />
+        )}
 
         {/* Modal Procedimento (Novo / Editar) */}
         {isProcModalOpen && (

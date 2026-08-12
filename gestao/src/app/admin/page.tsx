@@ -252,6 +252,30 @@ export default function DashboardPage() {
     })
     .map((p) => ({ p, idade: _h.getFullYear() - new Date(p.nascimento + "T00:00:00").getFullYear() }));
 
+  // Aniversariantes dos próximos 7 dias (exclui hoje).
+  const proximosAniversarios = pacientes
+    .flatMap((p) => {
+      if (!p.nascimento) return [];
+      const n = new Date(p.nascimento + "T00:00:00");
+      if (isNaN(n.getTime())) return [];
+      const hoje0 = new Date(_h.getFullYear(), _h.getMonth(), _h.getDate());
+      const prox = new Date(_h.getFullYear(), n.getMonth(), n.getDate());
+      if (prox < hoje0) prox.setFullYear(prox.getFullYear() + 1);
+      const dias = Math.round((prox.getTime() - hoje0.getTime()) / 86400000);
+      if (dias < 1 || dias > 7) return [];
+      return [{ p, data: prox, idade: prox.getFullYear() - n.getFullYear(), dias }];
+    })
+    .sort((a, b) => a.dias - b.dias);
+
+  // Contas a pagar: despesas pendentes (a data é o vencimento).
+  const hojeIso = hoje();
+  const contasPagar = financeiro
+    .filter((f) => f.tipo === "despesa" && f.status === "pendente")
+    .sort((a, b) => (a.data || "").localeCompare(b.data || ""));
+  const pagarTotal = contasPagar.reduce((s, f) => s + f.valor, 0);
+  const pagarVencidas = contasPagar.filter((f) => f.data && f.data < hojeIso);
+  const pagarVencidasTotal = pagarVencidas.reduce((s, f) => s + f.valor, 0);
+
   const zap = (p: Paciente) => {
     const tel = (p.tel || "").replace(/\D/g, "");
     const fone = tel.length >= 11 ? `55${tel}` : tel;
@@ -269,6 +293,11 @@ export default function DashboardPage() {
   };
 
   const alertas = [
+    pagarVencidas.length > 0 && {
+      href: "/admin/financeiro", cor: "var(--danger)",
+      titulo: `${brl(pagarVencidasTotal)} a pagar vencido`, sub: `${pagarVencidas.length} conta${pagarVencidas.length === 1 ? "" : "s"} de despesa vencida${pagarVencidas.length === 1 ? "" : "s"}`,
+      d: "M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6",
+    },
     m.parcelasAtrasadas.length > 0 && {
       href: "/admin/receber", cor: "var(--danger)",
       titulo: `${brl(m.emAtraso)} em atraso`, sub: `${m.parcelasAtrasadas.length} parcela${m.parcelasAtrasadas.length === 1 ? "" : "s"} vencida${m.parcelasAtrasadas.length === 1 ? "" : "s"}`,
@@ -386,6 +415,110 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Destaques: Aniversariantes + Contas a pagar */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 16, marginTop: 24 }}>
+          {/* Aniversariantes */}
+          <div className="card" style={{ borderLeft: "4px solid #DB2777", padding: "16px 20px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <span style={{ fontSize: 22 }} aria-hidden>🎂</span>
+              <span style={{ fontWeight: 700, fontSize: 15 }}>Aniversariantes</span>
+              {aniversariantes.length > 0 && <span className="badge badge-info">{aniversariantes.length} hoje</span>}
+            </div>
+            {aniversariantes.length === 0 && proximosAniversarios.length === 0 ? (
+              <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                Nenhum aniversariante hoje nem nos próximos 7 dias.
+              </div>
+            ) : (
+              <>
+                {aniversariantes.length > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: proximosAniversarios.length ? 14 : 0 }}>
+                    {aniversariantes.map(({ p, idade }) => (
+                      <div key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, background: "var(--bg2)", borderRadius: 10, padding: "8px 12px" }}>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: 13 }}>{p.nome}</div>
+                          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>Faz {idade} anos hoje · {p.tel || "sem telefone"}</div>
+                        </div>
+                        <button className="btn btn-sm" style={{ background: "#25D366", color: "#fff", flexShrink: 0 }} onClick={() => zap(p)} disabled={!(p.tel || "").replace(/\D/g, "")}>
+                          Parabenizar
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {proximosAniversarios.length > 0 && (
+                  <>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 6 }}>
+                      Próximos 7 dias
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      {proximosAniversarios.map(({ p, data, idade, dias }) => (
+                        <div key={p.id} style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: 12.5, padding: "4px 0" }}>
+                          <span style={{ fontWeight: 600 }}>{p.nome}</span>
+                          <span style={{ color: "var(--text-muted)", flexShrink: 0 }}>
+                            {data.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} · faz {idade} {dias === 1 ? "(amanhã)" : ""}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Contas a pagar */}
+          <div className="card" style={{ borderLeft: "4px solid var(--danger)", padding: "16px 20px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <span style={{ fontSize: 20 }} aria-hidden>💸</span>
+              <span style={{ fontWeight: 700, fontSize: 15 }}>Contas a pagar</span>
+              {pagarVencidas.length > 0 && <span className="badge badge-danger">{pagarVencidas.length} vencida{pagarVencidas.length === 1 ? "" : "s"}</span>}
+              <Link href="/admin/financeiro" className="btn btn-outline btn-sm" style={{ marginLeft: "auto" }}>Financeiro</Link>
+            </div>
+            {contasPagar.length === 0 ? (
+              <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                Nenhuma despesa pendente. Lance despesas com status &quot;pendente&quot; no Financeiro para acompanhar aqui.
+              </div>
+            ) : (
+              <>
+                <div style={{ display: "flex", gap: 20, marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase" }}>Total pendente</div>
+                    <div style={{ fontSize: 20, fontWeight: 800 }}>{brl(pagarTotal)}</div>
+                  </div>
+                  {pagarVencidasTotal > 0 && (
+                    <div>
+                      <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase" }}>Vencido</div>
+                      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--danger)" }}>{brl(pagarVencidasTotal)}</div>
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {contasPagar.slice(0, 5).map((f) => {
+                    const vencida = !!f.data && f.data < hojeIso;
+                    return (
+                      <div key={f.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, background: "var(--bg2)", borderRadius: 8, padding: "7px 10px" }}>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 12.5, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{f.descricao}</div>
+                          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{f.categoria}{f.data ? ` · vence ${rotuloDia(f.data)}` : ""}</div>
+                        </div>
+                        <div style={{ textAlign: "right", flexShrink: 0 }}>
+                          <div style={{ fontSize: 12.5, fontWeight: 700, color: vencida ? "var(--danger)" : "var(--text)" }}>{brl(f.valor)}</div>
+                          {vencida && <span className="badge badge-danger">Vencida</span>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {contasPagar.length > 5 && (
+                    <div style={{ fontSize: 11.5, color: "var(--text-muted)", textAlign: "center" }}>
+                      + {contasPagar.length - 5} outra{contasPagar.length - 5 === 1 ? "" : "s"} pendente{contasPagar.length - 5 === 1 ? "" : "s"}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
         {/* Precisa de atenção */}
         <div className="card" style={{ marginTop: 24, marginBottom: 24, padding: "16px 20px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: alertas.length ? 12 : 0 }}>
@@ -413,29 +546,6 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
-
-        {aniversariantes.length > 0 && (
-          <div className="card" style={{ marginBottom: 24, borderLeft: "4px solid #DB2777", padding: "16px 20px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-              <span style={{ fontSize: 22 }} aria-hidden>🎂</span>
-              <span style={{ fontWeight: 700, fontSize: 15 }}>Aniversariantes de hoje</span>
-              <span className="badge badge-info">{aniversariantes.length}</span>
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-              {aniversariantes.map(({ p, idade }) => (
-                <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--bg2)", borderRadius: 10, padding: "8px 12px" }}>
-                  <div style={{ display: "flex", flexDirection: "column" }}>
-                    <span style={{ fontWeight: 600, fontSize: 13 }}>{p.nome}</span>
-                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{idade} anos · {p.tel || "sem telefone"}</span>
-                  </div>
-                  <button className="btn btn-sm" style={{ background: "#25D366", color: "#fff" }} onClick={() => zap(p)} disabled={!(p.tel || "").replace(/\D/g, "")}>
-                    Parabenizar
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Fluxo de caixa — últimos 6 meses */}
         <div className="card" style={{ marginBottom: 24 }}>
