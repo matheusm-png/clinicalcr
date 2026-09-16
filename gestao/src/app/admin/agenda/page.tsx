@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DB } from "@/lib/db";
+import { DB, nomeNormalizado } from "@/lib/db";
 import { Agendamento, Paciente, Profissional, Marcador, ProcedimentoCatalogo } from "@/lib/types";
 import Topbar from "@/components/Topbar";
 import { useToast } from "@/components/Toast";
@@ -239,8 +239,11 @@ export default function AgendaPage() {
 
     const [h, m] = modalHorario.split(":").map(Number);
 
-    // Buscar ID do paciente se já existir cadastrado
-    const patientObj = patients.find((p) => p.nome === modalPaciente);
+    // Buscar ID do paciente se já existir cadastrado. Compara sem acento e sem
+    // espaço duplo — igualdade exata perdia o vínculo por qualquer diferença de
+    // digitação, e a consulta sumia do histórico do paciente.
+    const alvo = nomeNormalizado(modalPaciente);
+    const patientObj = patients.find((p) => nomeNormalizado(p.nome) === alvo);
 
     const appt: Agendamento = {
       ...(modalId ? { id: Number(modalId) } : {}),

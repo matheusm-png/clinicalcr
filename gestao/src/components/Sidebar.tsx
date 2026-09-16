@@ -111,7 +111,7 @@ export default function Sidebar() {
       </div>
       <nav style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
         <ul className="sidebar-nav">
-          <li className="nav-group-label">Atendimento</li>
+          {/* 1 — Dashboard */}
           <li>
             <Link href="/admin" className={isActive("/admin") ? "active" : ""}>
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
@@ -123,6 +123,9 @@ export default function Sidebar() {
               Dashboard
             </Link>
           </li>
+
+          {/* 2 — Atendimento */}
+          <li className="nav-group-label">Atendimento</li>
           {gate("agenda") && (<>
           <li>
             <Link href="/admin/agenda" className={isActive("/admin/agenda") ? "active" : ""}>
@@ -154,7 +157,8 @@ export default function Sidebar() {
               Pacientes
             </Link>
           </li>
-          <li>
+          {/* Prontuário e Anamnese são as duas faces do paciente → ficam sob ele */}
+          <li className="nav-subitem">
             <Link href="/admin/prontuario" className={isActive("/admin/prontuario") ? "active" : ""}>
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
                 <path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 0 1 2 2v16l-3-2-2 2-2-2-2 2-2-2-3 2V5a2 2 0 0 1 2-2z" />
@@ -162,17 +166,37 @@ export default function Sidebar() {
               Prontuário
             </Link>
           </li>
-          </>)}
-          {gate("clinico") && (<>
-          <li>
-            <Link href="/admin/retornos" className={isActive("/admin/retornos") ? "active" : ""}>
+          <li className="nav-subitem">
+            <Link href="/admin/anamnese" className={isActive("/admin/anamnese") ? "active" : ""}>
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
-                <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
-                <path d="M3 3v5h5" />
+                <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+                <rect x="9" y="3" width="6" height="4" rx="1" />
+                <path d="M9 14l2 2 4-4" />
               </svg>
-              Retornos
+              Anamnese
             </Link>
           </li>
+          <li>
+            <Link href="/admin/importar-ficha" className={isActive("/admin/importar-ficha") ? "active" : ""}>
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
+                <path d="M3 9a2 2 0 0 1 2-2h1l1-2h6l1 2h1a2 2 0 0 1 2 2v3" />
+                <circle cx="11" cy="12" r="3" />
+                <path d="M16 16l2 2 4-4" />
+              </svg>
+              Importar ficha
+            </Link>
+          </li>
+          <li className="nav-subitem">
+            <Link href="/admin/capturar" className={isActive("/admin/capturar") ? "active" : ""}>
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
+                <rect x="7" y="2" width="10" height="20" rx="2" />
+                <path d="M11 18h2" />
+              </svg>
+              Capturar ficha
+            </Link>
+          </li>
+          </>)}
+          {gate("clinico") && (<>
           <li>
             <Link href="/admin/relacionamento" className={isActive("/admin/relacionamento") ? "active" : ""}>
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
@@ -183,18 +207,46 @@ export default function Sidebar() {
               Recuperação
             </Link>
           </li>
-          </>)}
-          {gate("proteses") && (
           <li>
-            <Link href="/admin/proteses" className={isActive("/admin/proteses") ? "active" : ""}>
+            <Link href="/admin/retornos" className={isActive("/admin/retornos") ? "active" : ""}>
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
-                <path d="M12 2c-2.5 0-4 1.5-4 4 0 1.2.4 2.3.4 4 0 4 .6 8 1.6 12 .3 1 1.7 1 2 0 1-4 1.6-8 1.6-12 0-1.7.4-2.8.4-4 0-2.5-1.5-4-4-4z" />
-                <path d="M9 9c1-1 5-1 6 0" />
+                <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+                <path d="M3 3v5h5" />
               </svg>
-              Próteses
+              Retornos
             </Link>
           </li>
-          )}
+          </>)}
+
+          {/* 3 — Gestão */}
+          <li className="nav-group-label">Gestão</li>
+          <li>
+            <Link href="/admin/catalogo" className={isActive("/admin/catalogo") ? "active" : ""}>
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
+                <path d="M4 7h16M4 12h16M4 17h10" />
+              </svg>
+              Catálogo
+            </Link>
+          </li>
+          {gate("financeiro") && (<>
+          <li>
+            <Link href="/admin/financeiro" className={isActive("/admin/financeiro") ? "active" : ""}>
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+              </svg>
+              Financeiro
+            </Link>
+          </li>
+          <li>
+            <Link href="/admin/relatorios" className={isActive("/admin/relatorios") ? "active" : ""}>
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
+                <path d="M3 3v18h18" />
+                <path d="M7 14l4-4 3 3 5-6" />
+              </svg>
+              Relatórios
+            </Link>
+          </li>
+          </>)}
           {gate("orcamentos") && (<>
           <li>
             <Link href="/admin/orcamentos" className={isActive("/admin/orcamentos") ? "active" : ""}>
@@ -216,25 +268,7 @@ export default function Sidebar() {
             </Link>
           </li>
           </>)}
-
-          <li className="nav-group-label">Gestão</li>
-          <li>
-            <Link href="/admin/catalogo" className={isActive("/admin/catalogo") ? "active" : ""}>
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
-                <path d="M4 7h16M4 12h16M4 17h10" />
-              </svg>
-              Catálogo
-            </Link>
-          </li>
           {gate("financeiro") && (<>
-          <li>
-            <Link href="/admin/financeiro" className={isActive("/admin/financeiro") ? "active" : ""}>
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
-                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-              </svg>
-              Financeiro
-            </Link>
-          </li>
           <li>
             <Link href="/admin/receber" className={isActive("/admin/receber") ? "active" : ""}>
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
@@ -242,15 +276,6 @@ export default function Sidebar() {
                 <path d="M2 10h20M6 15h4" />
               </svg>
               A Receber
-            </Link>
-          </li>
-          <li>
-            <Link href="/admin/relatorios" className={isActive("/admin/relatorios") ? "active" : ""}>
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
-                <path d="M3 3v18h18" />
-                <path d="M7 14l4-4 3 3 5-6" />
-              </svg>
-              Relatórios
             </Link>
           </li>
           <li>
@@ -263,48 +288,11 @@ export default function Sidebar() {
             </Link>
           </li>
           </>)}
-          {gate("pacientes") && (<>
-          <li>
-            <Link href="/admin/anamnese" className={isActive("/admin/anamnese") ? "active" : ""}>
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
-                <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
-                <rect x="9" y="3" width="6" height="4" rx="1" />
-                <path d="M9 14l2 2 4-4" />
-              </svg>
-              Anamnese
-            </Link>
-          </li>
-          <li>
-            <Link href="/admin/importar-ficha" className={isActive("/admin/importar-ficha") ? "active" : ""}>
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
-                <path d="M3 9a2 2 0 0 1 2-2h1l1-2h6l1 2h1a2 2 0 0 1 2 2v3" />
-                <circle cx="11" cy="12" r="3" />
-                <path d="M16 16l2 2 4-4" />
-              </svg>
-              Importar ficha
-            </Link>
-          </li>
-          <li>
-            <Link href="/admin/capturar" className={isActive("/admin/capturar") ? "active" : ""}>
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
-                <rect x="7" y="2" width="10" height="20" rx="2" />
-                <path d="M11 18h2" />
-              </svg>
-              Capturar ficha
-            </Link>
-          </li>
-          </>)}
+
+          {/* Controle — o que a Vigilância Sanitária cobra + laboratório */}
+          {(gate("estoque") || gate("proteses")) && <li className="nav-sub-label">Controle</li>}
           {gate("estoque") && (<>
-          <li>
-            <Link href="/admin/estoque" className={isActive("/admin/estoque") ? "active" : ""}>
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
-                <path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" />
-                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-              </svg>
-              Estoque
-            </Link>
-          </li>
-          <li>
+          <li className="nav-subitem">
             <Link href="/admin/frigobar" className={isActive("/admin/frigobar") ? "active" : ""}>
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
                 <path d="M5 3h14a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
@@ -313,7 +301,29 @@ export default function Sidebar() {
               Frigobar
             </Link>
           </li>
+          <li className="nav-subitem">
+            <Link href="/admin/estoque" className={isActive("/admin/estoque") ? "active" : ""}>
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
+                <path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" />
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+              </svg>
+              Estoque
+            </Link>
+          </li>
           </>)}
+          {gate("proteses") && (
+          <li className="nav-subitem">
+            <Link href="/admin/proteses" className={isActive("/admin/proteses") ? "active" : ""}>
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: "17px", height: "17px" }}>
+                <path d="M12 2c-2.5 0-4 1.5-4 4 0 1.2.4 2.3.4 4 0 4 .6 8 1.6 12 .3 1 1.7 1 2 0 1-4 1.6-8 1.6-12 0-1.7.4-2.8.4-4 0-2.5-1.5-4-4-4z" />
+                <path d="M9 9c1-1 5-1 6 0" />
+              </svg>
+              Próteses
+            </Link>
+          </li>
+          )}
+
+          {/* 4, 5 e 6 — administração da clínica */}
           {userPapel === "admin" && (
             <li>
               <Link href="/admin/auditoria" className={isActive("/admin/auditoria") ? "active" : ""}>

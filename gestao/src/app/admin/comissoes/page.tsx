@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { DB } from "@/lib/db";
+import { DB, dataProcedimento } from "@/lib/db";
 import { Procedimento, Profissional, Paciente, Clinica } from "@/lib/types";
 import Topbar from "@/components/Topbar";
 import EmptyState from "@/components/EmptyState";
@@ -103,8 +103,9 @@ export default function ComissoesPage() {
 
   const dados = useMemo(() => {
     const profById = new Map(profissionais.map((p) => [p.id!, p]));
-    // Produção realizada no período = procedimentos concluídos.
-    const realizados = procedimentos.filter((p) => p.status === "Concluído" && noPeriodo(p.criadoEm, de, ate));
+    // Produção realizada no período = procedimentos concluídos, datados pela
+    // data de EXECUÇÃO (não a de digitação) — importa no cadastro retroativo.
+    const realizados = procedimentos.filter((p) => p.status === "Concluído" && noPeriodo(dataProcedimento(p), de, ate));
 
     // Agrupa por profissional.
     type Linha = { prof: Profissional; qtd: number; producao: number; comissao: number; itens: Procedimento[] };

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { DB, usuarioAtual } from "@/lib/db";
+import { DB, usuarioAtual, dataProcedimento, nomeNormalizado } from "@/lib/db";
 import { Paciente, Procedimento, Anamnese, Profissional, ModeloAnamnese, ProcedimentoCatalogo, Orcamento, ContaReceber, Agendamento } from "@/lib/types";
 import Topbar from "@/components/Topbar";
 import Odontograma from "@/components/Odontograma";
@@ -14,6 +14,32 @@ import AnamneseViewModal from "@/components/AnamneseViewModal";
 import EvolucoesTab from "@/components/EvolucoesTab";
 import AnexosTab from "@/components/AnexosTab";
 import DocumentosTab from "@/components/DocumentosTab";
+
+const hojeLocalISO = () => new Date().toLocaleDateString("en-CA"); // yyyy-mm-dd no fuso local
+
+// Data ISO (ou timestamp) → dd/mm/aaaa. O "T00:00:00" força leitura no fuso
+// local: sem ele o ISO puro é lido como UTC e a data volta um dia.
+// Idade em anos completos a partir da data de nascimento (yyyy-mm-dd).
+// Só serve para SUGERIR a dentição do odontograma.
+const idadeEmAnos = (nascimento?: string): number | undefined => {
+  if (!nascimento) return undefined;
+  const n = new Date(nascimento + "T00:00:00");
+  if (isNaN(n.getTime())) return undefined;
+  const hoje = new Date();
+  let anos = hoje.getFullYear() - n.getFullYear();
+  const m = hoje.getMonth() - n.getMonth();
+  if (m < 0 || (m === 0 && hoje.getDate() < n.getDate())) anos--;
+  return anos >= 0 ? anos : undefined;
+};
+
+const dataBR = (iso?: string) => {
+  if (!iso) return "—";
+  const d = new Date(iso.length <= 10 ? iso + "T00:00:00" : iso);
+  return isNaN(d.getTime()) ? "—" : d.toLocaleDateString("pt-BR");
+};
+
+// Formas de pagamento aceitas na clínica (mesma lista do Financeiro).
+const FORMAS_PAGAMENTO = ["PIX", "Cartão de Crédito", "Cartão de Débito", "Dinheiro", "Boleto"];
 
 function ProntuarioContent() {
   const router = useRouter();
@@ -61,6 +87,13 @@ function ProntuarioContent() {
   const [procProfId, setProcProfId] = useState<string>("");
   const [procCusto, setProcCusto] = useState<string>("");
   const [procObs, setProcObs] = useState("");
+  // Data em que o procedimento foi EXECUTADO (não a data da digitação).
+  const [procData, setProcData] = useState<string>(hojeLocalISO());
+  const [procFormaPagto, setProcFormaPagto] = useState("");
+  const [procPago, setProcPago] = useState(false);
+  const [procNf, setProcNf] = useState(false);
+  const [procRetornoEm, setProcRetornoEm] = useState("");
+  const [procRetornoObs, setProcRetornoObs] = useState("");
 
   // Profile Edit Form State
   const [editNome, setEditNome] = useState("");
@@ -128,7 +161,16 @@ function ProntuarioContent() {
       setModelosAnamnese(mods.filter((m) => m.ativo !== false));
       setOrcamentosPac(orcs);
       setContasPac(contas);
-      setConsultasPac(agends.filter((a) => a.pacienteId === currentPaciente!.id));
+      // Casa por id e, como rede de segurança, por nome: agendamento criado
+      // antes do cadastro existir nasce sem paciente_id e sumia do histórico.
+      const alvoNome = nomeNormalizado(currentPaciente!.nome);
+      setConsultasPac(
+        agends.filter(
+          (a) =>
+            a.pacienteId === currentPaciente!.id ||
+            (a.pacienteId == null && !!alvoNome && nomeNormalizado(a.paciente) === alvoNome),
+        ),
+      );
       localStorage.setItem("lcr-selected-paciente", JSON.stringify(currentPaciente));
 
       // Prefill Profile Edit
@@ -165,6 +207,12 @@ function ProntuarioContent() {
     setProcEstado("a-realizar");
     setProcProfId(profissionais.length === 1 ? String(profissionais[0].id) : "");
     setProcCusto("");
+    setProcData(hojeLocalISO());
+    setProcFormaPagto("");
+    setProcPago(false);
+    setProcNf(false);
+    setProcRetornoEm("");
+    setProcRetornoObs("");
 
     if (denteNum) {
       setProcDente(denteNum);
@@ -192,10 +240,29 @@ function ProntuarioContent() {
       custo: procCusto ? Number(procCusto) : 0,
       profissionalId: procProfId ? Number(procProfId) : undefined,
       obs: procObs,
+      data: procData || undefined,
+      formaPagto: procFormaPagto || undefined,
+      pago: procPago,
+      nfEmitida: procNf,
+      retornoEm: procRetornoEm || undefined,
+      retornoObs: procRetornoObs || undefined,
     };
 
     try {
       await DB.procedimentos.save(data);
+
+      // O retorno marcado no procedimento alimenta a tela Retornos, que trabalha
+      // com UMA data por paciente: vale sempre o retorno mais próximo ainda no
+      // futuro. Nunca empurra para frente uma data já combinada manualmente.
+      if (procRetornoEm) {
+        const hoje = hojeLocalISO();
+        const atual = paciente.proximaRevisao || "";
+        const ehFuturo = procRetornoEm >= hoje;
+        if (ehFuturo && (!atual || procRetornoEm < atual)) {
+          await DB.pacientes.save({ ...paciente, proximaRevisao: procRetornoEm });
+        }
+      }
+
       setIsProcModalOpen(false);
       setSelectedTeeth(new Set());
       await loadPaciente();
@@ -213,6 +280,12 @@ function ProntuarioContent() {
     setProcProfId(p.profissionalId ? String(p.profissionalId) : "");
     setProcCusto(p.custo != null ? String(p.custo) : "");
     setProcObs(p.obs || "");
+    setProcData(p.data || (p.criadoEm ? String(p.criadoEm).slice(0, 10) : hojeLocalISO()));
+    setProcFormaPagto(p.formaPagto || "");
+    setProcPago(!!p.pago);
+    setProcNf(!!p.nfEmitida);
+    setProcRetornoEm(p.retornoEm || "");
+    setProcRetornoObs(p.retornoObs || "");
     setIsFichaDenteOpen(false);
     setIsProcModalOpen(true);
   };
@@ -300,7 +373,7 @@ function ProntuarioContent() {
 
   // Financeiro do paciente (derivado das parcelas das contas a receber)
   const brl = (v: number) => (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-  const hojeISO = new Date().toISOString().slice(0, 10);
+  const hojeISO = hojeLocalISO(); // data local (toISOString é UTC e vira o dia seguinte à noite)
   const parcelasPac = contasPac.flatMap((c) => c.parcelas ?? []);
   const finRecebido = parcelasPac.filter((p) => p.pago).reduce((s, p) => s + p.valor, 0);
   const finAberto = parcelasPac.filter((p) => !p.pago).reduce((s, p) => s + p.valor, 0);
@@ -452,7 +525,9 @@ function ProntuarioContent() {
                     <rect x="3" y="4" width="18" height="18" rx="2" />
                     <path d="M16 2v4M8 2v4M3 10h18" />
                   </svg>
-                  {paciente.nascimento ? new Date(paciente.nascimento).toLocaleDateString("pt-BR") : "Nascimento não cadastrado"}
+                  {/* "T00:00:00" força leitura no fuso local — sem isso o ISO puro é lido
+                      como UTC e a data volta um dia (15/03 aparecia como 14/03). */}
+                  {paciente.nascimento ? new Date(paciente.nascimento + "T00:00:00").toLocaleDateString("pt-BR") : "Nascimento não cadastrado"}
                 </span>
                 <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
                   <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: 13, height: 13 }}>
@@ -467,7 +542,15 @@ function ProntuarioContent() {
                   </svg>
                   CPF: {paciente.cpf}
                 </span>
-                <span>{paciente.plano} · Prontuário #{String(paciente.id).substring(0, 4)}</span>
+                {/* Número próprio da clínica — NÃO o id do banco (que pula a cada
+                    cadastro apagado). Sem número ainda = "a definir"; a numeração
+                    definitiva sai por data da anamnese quando o retroativo fechar. */}
+                <span>
+                  {paciente.plano} ·{" "}
+                  {paciente.prontuario
+                    ? `Prontuário #${paciente.prontuario}`
+                    : "Prontuário nº a definir"}
+                </span>
               </div>
             </div>
             <div style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
@@ -705,6 +788,7 @@ function ProntuarioContent() {
                 selectedTeeth={selectedTeeth}
                 onSelectTeeth={setSelectedTeeth}
                 onDenteClick={handleDenteClick}
+                idadePaciente={idadeEmAnos(paciente.nascimento)}
               />
 
               {/* Barra de ação em massa (dentes selecionados) */}
@@ -756,23 +840,29 @@ function ProntuarioContent() {
                 <table>
                   <thead>
                     <tr>
+                      <th>Data</th>
                       <th>Procedimento</th>
                       <th>Dente</th>
                       <th>Estado</th>
-                      <th>Data</th>
+                      <th>Valor</th>
+                      <th>Pagamento</th>
+                      <th>Retorno</th>
                       <th>Ações</th>
                     </tr>
                   </thead>
                   <tbody>
                     {procedimentos.length === 0 ? (
                       <tr>
-                        <td colSpan={5} style={{ textAlign: "center", padding: "20px", color: "var(--text-muted)" }}>
+                        <td colSpan={8} style={{ textAlign: "center", padding: "20px", color: "var(--text-muted)" }}>
                           Nenhum procedimento registrado.
                         </td>
                       </tr>
                     ) : (
-                      procedimentos.map((p: any) => (
+                      [...procedimentos]
+                        .sort((a, b) => (dataProcedimento(b) ?? "").localeCompare(dataProcedimento(a) ?? ""))
+                        .map((p: any) => (
                         <tr key={p.id}>
+                          <td>{dataBR(dataProcedimento(p))}</td>
                           <td>{p.nome || p.procedimento}</td>
                           <td>{p.dente || "—"}</td>
                           <td>
@@ -784,7 +874,26 @@ function ProntuarioContent() {
                               {p.estado || p.status}
                             </span>
                           </td>
-                          <td>{p.data || "—"}</td>
+                          <td>{p.custo ? brl(p.custo) : "—"}</td>
+                          {/* Pago / NF / forma sempre à vista — não dá pra descobrir isso abrindo o registro */}
+                          <td>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}>
+                              <span className={`badge ${p.pago ? "badge-success" : "badge-warning"}`}>
+                                {p.pago ? "Pago" : "Em aberto"}
+                              </span>
+                              {p.nfEmitida && <span className="badge badge-info">NF</span>}
+                              {p.formaPagto && (
+                                <span style={{ fontSize: 11.5, color: "var(--text-muted)" }}>{p.formaPagto}</span>
+                              )}
+                            </div>
+                          </td>
+                          <td>
+                            {p.retornoEm ? (
+                              <span title={p.retornoObs || undefined}>{dataBR(p.retornoEm)}</span>
+                            ) : (
+                              "—"
+                            )}
+                          </td>
                           <td>
                             <div style={{ display: "flex", gap: 6 }}>
                               <button className="btn btn-outline btn-sm" onClick={() => handleEditProc(p)}>
@@ -877,6 +986,9 @@ function ProntuarioContent() {
             anamnese={anamneseView}
             pacienteNome={paciente.nome}
             onClose={() => setAnamneseView(null)}
+            onEditar={() =>
+              router.push(`/admin/anamnese?id=${paciente.id}&anamnese=${anamneseView.id}`)
+            }
           />
         )}
 
@@ -931,6 +1043,18 @@ function ProntuarioContent() {
                 </div>
                 <div className="form-row form-row-2">
                   <div className="form-group">
+                    <label className="form-label">Data de execução *</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={procData}
+                      onChange={(e) => setProcData(e.target.value)}
+                    />
+                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                      Ficha antiga: use a data real do atendimento. É ela que vale em relatórios e comissões.
+                    </span>
+                  </div>
+                  <div className="form-group">
                     <label className="form-label">Dentes (Ex: 16, 21, 45...)</label>
                     <input
                       type="text"
@@ -940,18 +1064,18 @@ function ProntuarioContent() {
                       onChange={(e) => setProcDente(e.target.value)}
                     />
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Estado</label>
-                    <select
-                      className="form-control"
-                      value={procEstado}
-                      onChange={(e) => setProcEstado(e.target.value as any)}
-                    >
-                      <option value="a-realizar">A realizar</option>
-                      <option value="realizado">Realizado</option>
-                      <option value="pre-existente">Pré-existente</option>
-                    </select>
-                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Estado</label>
+                  <select
+                    className="form-control"
+                    value={procEstado}
+                    onChange={(e) => setProcEstado(e.target.value as any)}
+                  >
+                    <option value="a-realizar">A realizar</option>
+                    <option value="realizado">Realizado</option>
+                    <option value="pre-existente">Pré-existente</option>
+                  </select>
                 </div>
                 <div className="form-group">
                   <label className="form-label">Valor (R$)</label>
@@ -989,6 +1113,67 @@ function ProntuarioContent() {
                     value={procObs}
                     onChange={(e) => setProcObs(e.target.value)}
                   />
+                </div>
+
+                {/* ── Pagamento ─────────────────────────────── */}
+                <div style={{ borderTop: "1px solid var(--border)", paddingTop: 14, marginTop: 4 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Pagamento</div>
+                  <div className="form-row form-row-2">
+                    <div className="form-group">
+                      <label className="form-label">Forma de pagamento</label>
+                      <select className="form-control" value={procFormaPagto} onChange={(e) => setProcFormaPagto(e.target.value)}>
+                        <option value="">Não informada</option>
+                        {FORMAS_PAGAMENTO.map((f) => (
+                          <option key={f} value={f}>{f}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Situação</label>
+                      <div style={{ display: "flex", gap: 16, alignItems: "center", paddingTop: 8 }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer" }}>
+                          <input type="checkbox" checked={procPago} onChange={(e) => setProcPago(e.target.checked)} />
+                          Pago
+                        </label>
+                        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer" }}>
+                          <input type="checkbox" checked={procNf} onChange={(e) => setProcNf(e.target.checked)} />
+                          NF emitida
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                    Registro do prontuário. Não gera cobrança em A Receber — isso continua vindo do orçamento aprovado.
+                  </span>
+                </div>
+
+                {/* ── Retorno ───────────────────────────────── */}
+                <div style={{ borderTop: "1px solid var(--border)", paddingTop: 14, marginTop: 14 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Retorno</div>
+                  <div className="form-row form-row-2">
+                    <div className="form-group">
+                      <label className="form-label">Retorno em</label>
+                      <input
+                        type="date"
+                        className="form-control"
+                        value={procRetornoEm}
+                        onChange={(e) => setProcRetornoEm(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Observação do retorno</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Ex: reavaliar canal, trocar provisório…"
+                        value={procRetornoObs}
+                        onChange={(e) => setProcRetornoObs(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                    Ao salvar, se este for o retorno mais próximo do paciente, ele passa a aparecer na tela Retornos.
+                  </span>
                 </div>
               </div>
               <div className="modal-footer">

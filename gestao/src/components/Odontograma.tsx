@@ -1,15 +1,27 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Procedimento } from "@/lib/types";
 
+// ── Dentição permanente (adulto) — notação FDI ───────────────
 const DENTES_SUPERIOR = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
 const DENTES_INFERIOR = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
-const ANTERIORES = new Set([13, 12, 11, 21, 22, 23, 43, 42, 41, 31, 32, 33]);
+
+// ── Dentição decídua (“de leite”) — 20 dentes, FDI 51-55/61-65/71-75/81-85 ──
+const DECIDUOS_SUPERIOR = [55, 54, 53, 52, 51, 61, 62, 63, 64, 65];
+const DECIDUOS_INFERIOR = [85, 84, 83, 82, 81, 71, 72, 73, 74, 75];
+
+export type Denticao = "permanente" | "mista" | "decidua";
+
+// Incisivos e caninos (formato de dente anterior no desenho) das duas dentições.
+const ANTERIORES = new Set([
+  13, 12, 11, 21, 22, 23, 43, 42, 41, 31, 32, 33,
+  53, 52, 51, 61, 62, 63, 83, 82, 81, 71, 72, 73,
+]);
 
 // Sextantes (divisão padrão da boca em 6 grupos) — alguns procedimentos
 // (profilaxia, raspagem) são lançados por sextante inteiro.
-const SEXTANTES: { id: string; label: string; teeth: number[] }[] = [
+const SEXTANTES_PERMANENTE: { id: string; label: string; teeth: number[] }[] = [
   { id: "S1", label: "Sup. dir.", teeth: [18, 17, 16, 15, 14] },
   { id: "S2", label: "Sup. ant.", teeth: [13, 12, 11, 21, 22, 23] },
   { id: "S3", label: "Sup. esq.", teeth: [24, 25, 26, 27, 28] },
@@ -17,6 +29,24 @@ const SEXTANTES: { id: string; label: string; teeth: number[] }[] = [
   { id: "S5", label: "Inf. ant.", teeth: [43, 42, 41, 31, 32, 33] },
   { id: "S6", label: "Inf. dir.", teeth: [44, 45, 46, 47, 48] },
 ];
+
+const SEXTANTES_DECIDUO: { id: string; label: string; teeth: number[] }[] = [
+  { id: "S1", label: "Sup. dir.", teeth: [55, 54] },
+  { id: "S2", label: "Sup. ant.", teeth: [53, 52, 51, 61, 62, 63] },
+  { id: "S3", label: "Sup. esq.", teeth: [64, 65] },
+  { id: "S4", label: "Inf. esq.", teeth: [74, 75] },
+  { id: "S5", label: "Inf. ant.", teeth: [73, 72, 71, 81, 82, 83] },
+  { id: "S6", label: "Inf. dir.", teeth: [84, 85] },
+];
+
+// Sugestão de dentição pela idade. É só o palpite inicial — a dentista troca
+// no seletor quando o caso não segue a média (erupção adiantada/atrasada).
+export function denticaoPorIdade(idade?: number): Denticao {
+  if (idade == null || Number.isNaN(idade)) return "permanente";
+  if (idade < 6) return "decidua";
+  if (idade <= 12) return "mista";
+  return "permanente";
+}
 
 const STATE_COLORS = {
   "a-realizar": { fill: "#3B82F6", stroke: "#2563EB" },
@@ -57,6 +87,8 @@ interface OdontogramaProps {
   selectedTeeth: Set<string>;
   onSelectTeeth: (teeth: Set<string>) => void;
   onDenteClick: (num: string, hasProcs: boolean) => void;
+  /** Idade do paciente — define só a dentição SUGERIDA ao abrir. */
+  idadePaciente?: number;
 }
 
 export default function Odontograma({
@@ -64,8 +96,19 @@ export default function Odontograma({
   selectedTeeth,
   onSelectTeeth,
   onDenteClick,
+  idadePaciente,
 }: OdontogramaProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [denticao, setDenticao] = useState<Denticao>(() => denticaoPorIdade(idadePaciente));
+
+  // Se o paciente trocar (outro prontuário), volta para a sugestão da idade dele.
+  useEffect(() => {
+    setDenticao(denticaoPorIdade(idadePaciente));
+  }, [idadePaciente]);
+
+  const mostraPermanente = denticao === "permanente" || denticao === "mista";
+  const mostraDeciduo = denticao === "decidua" || denticao === "mista";
+  const SEXTANTES = denticao === "decidua" ? SEXTANTES_DECIDUO : SEXTANTES_PERMANENTE;
   const [marquee, setMarquee] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   // Estado do arraste (marquee). moved evita disparar o clique do dente após arrastar.
   const dragRef = useRef<{ startX: number; startY: number; additive: boolean; base: Set<string> } | null>(null);
@@ -265,8 +308,47 @@ export default function Odontograma({
     );
   };
 
+  const OPCOES_DENTICAO: { id: Denticao; label: string; hint: string }[] = [
+    { id: "permanente", label: "Permanente", hint: "32 dentes (adulto)" },
+    { id: "mista", label: "Mista", hint: "permanentes + decíduos (fase de troca)" },
+    { id: "decidua", label: "Decídua", hint: "20 dentes de leite (infantil)" },
+  ];
+
   return (
     <div>
+      {/* Seletor de dentição — infantil/mista/adulto */}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", marginBottom: 10 }}>
+        <span style={{ fontSize: 11, color: "var(--text-muted)", marginRight: 2 }}>Dentição:</span>
+        {OPCOES_DENTICAO.map((o) => {
+          const ativo = denticao === o.id;
+          return (
+            <button
+              key={o.id}
+              type="button"
+              title={o.hint}
+              onClick={() => { setDenticao(o.id); onSelectTeeth(new Set()); }}
+              style={{
+                fontSize: 11,
+                padding: "3px 10px",
+                borderRadius: 4,
+                border: `1px solid ${ativo ? "var(--primary)" : "var(--border-solid, var(--border))"}`,
+                background: ativo ? "var(--primary-light)" : "transparent",
+                color: ativo ? "var(--primary-darker)" : "var(--text-muted)",
+                cursor: "pointer",
+                fontWeight: 600,
+              }}
+            >
+              {o.label}
+            </button>
+          );
+        })}
+        {idadePaciente != null && !Number.isNaN(idadePaciente) && (
+          <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+            · sugerida pela idade ({idadePaciente} ano{idadePaciente === 1 ? "" : "s"})
+          </span>
+        )}
+      </div>
+
       {/* Barra de sextantes */}
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", marginBottom: 10 }}>
         <span style={{ fontSize: 11, color: "var(--text-muted)", marginRight: 2 }}>Selecionar sextante:</span>
@@ -307,12 +389,41 @@ export default function Odontograma({
         onMouseUp={endDrag}
         onMouseLeave={endDrag}
       >
-        <div className="odonto-row" style={{ display: "flex", gap: "8px", alignItems: "flex-end" }}>
-          {DENTES_SUPERIOR.map((n) => renderDenteSVG(n))}
-        </div>
-        <div className="odonto-row bottom" style={{ display: "flex", gap: "8px", alignItems: "flex-start", marginTop: "20px" }}>
-          {DENTES_INFERIOR.map((n) => renderDenteSVG(n))}
-        </div>
+        {mostraPermanente && (
+          <div className="odonto-row" style={{ display: "flex", gap: "8px", alignItems: "flex-end" }}>
+            {DENTES_SUPERIOR.map((n) => renderDenteSVG(n))}
+          </div>
+        )}
+        {mostraDeciduo && (
+          <div
+            className="odonto-row"
+            style={{
+              display: "flex", gap: "8px", alignItems: "flex-end",
+              justifyContent: "center", marginTop: mostraPermanente ? "10px" : 0,
+            }}
+          >
+            {DECIDUOS_SUPERIOR.map((n) => renderDenteSVG(n))}
+          </div>
+        )}
+        {mostraDeciduo && (
+          <div
+            className="odonto-row bottom"
+            style={{
+              display: "flex", gap: "8px", alignItems: "flex-start",
+              justifyContent: "center", marginTop: "20px",
+            }}
+          >
+            {DECIDUOS_INFERIOR.map((n) => renderDenteSVG(n))}
+          </div>
+        )}
+        {mostraPermanente && (
+          <div
+            className="odonto-row bottom"
+            style={{ display: "flex", gap: "8px", alignItems: "flex-start", marginTop: mostraDeciduo ? "10px" : "20px" }}
+          >
+            {DENTES_INFERIOR.map((n) => renderDenteSVG(n))}
+          </div>
+        )}
 
         {marquee && (
           <div

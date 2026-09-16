@@ -21,6 +21,9 @@ export interface Paciente {
   cidade?: string;
   uf?: string;
   proximaRevisao?: string; // data ISO (yyyy-mm-dd) da próxima revisão/recall
+  // Número do prontuário da clínica. undefined = ainda não numerado (a tela
+  // mostra "nº a definir"). Não é o id do banco — ver migration 0031.
+  prontuario?: number;
   // LGPD — consentimento do titular
   consentimentoLgpd?: boolean;       // consente com o tratamento de dados
   consentimentoLgpdEm?: string;      // timestamp ISO em que consentiu
@@ -38,6 +41,16 @@ export interface Procedimento {
   status: 'Pendente' | 'Concluído' | 'Cancelado';
   profissionalId?: number; // a quem a produção é atribuída (base da comissão)
   obs?: string;
+  // Data em que o procedimento foi EXECUTADO (yyyy-mm-dd). Diferente de criadoEm,
+  // que é quando foi digitado — o que importa em cadastro retroativo. Ver 0032.
+  data?: string;
+  // Pagamento (registro do prontuário; não gera cobrança sozinho)
+  formaPagto?: string;
+  pago?: boolean;
+  nfEmitida?: boolean;
+  // Retorno combinado para este procedimento
+  retornoEm?: string;
+  retornoObs?: string;
   criadoEm?: string;
 }
 

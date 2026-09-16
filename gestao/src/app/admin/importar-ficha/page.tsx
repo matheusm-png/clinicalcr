@@ -333,6 +333,8 @@ export default function ImportarFichaPage() {
         status: "Ativo",
       } as Paciente);
       const pacienteId = pac.id as number;
+      // Consultas agendadas antes do cadastro existir ficam sem vínculo — liga pelo nome.
+      try { await DB.agendamentos.vincularPorNome(pacienteId, nome.trim()); } catch {}
 
       // 2) Anamnese (respostas no mesmo formato da ficha digital)
       const respostas: Record<string, any> = {
@@ -367,7 +369,12 @@ export default function ImportarFichaPage() {
           procedimento: p.descricao.trim() || "Procedimento",
           custo: p.valor || 0,
           status: "Concluído",
-          obs: p.data ? `Executado em ${new Date(p.data + "T00:00:00").toLocaleDateString("pt-BR")}` : undefined,
+          // A data agora tem coluna própria (migration 0032). Antes era enfiada
+          // como texto em `obs`, e relatórios/comissões não conseguiam usar.
+          data: p.data || dataFicha || undefined,
+          formaPagto: p.formaPagto || undefined,
+          pago: p.valor > 0,
+          nfEmitida: p.nfEmitida,
         } as Procedimento);
 
         if (p.valor > 0) {
@@ -664,18 +671,18 @@ export default function ImportarFichaPage() {
                     <select style={inputStyle} value={sexo} onChange={(e) => setSexo(e.target.value)}>
                       <option value="F">Feminino</option><option value="M">Masculino</option>
                     </select></div>
-                  <div><label style={labelStyle}>CPF</label>
-                    <input style={{ ...inputStyle, ...rev("cpf") }} value={cpf} onChange={(e) => setCpf(e.target.value)} /></div>
-                  <div><label style={labelStyle}>RG / Identidade</label>
-                    <input style={{ ...inputStyle, ...rev("identidade") }} value={rg} onChange={(e) => setRg(e.target.value)} /></div>
-                  <div><label style={labelStyle}>Telefone</label>
+                  <div><label style={labelStyle}>Tel</label>
                     <input style={{ ...inputStyle, ...rev("tel") }} value={tel} onChange={(e) => setTel(e.target.value)} /></div>
-                  <div><label style={labelStyle}>Profissão</label>
-                    <input style={{ ...inputStyle, ...rev("profissao") }} value={profissao} onChange={(e) => setProfissao(e.target.value)} /></div>
                   <div style={{ gridColumn: "1 / -1" }}><label style={labelStyle}>Endereço</label>
                     <input style={{ ...inputStyle, ...rev("endereco") }} value={endereco} onChange={(e) => setEndereco(e.target.value)} /></div>
+                  <div><label style={labelStyle}>Profissão</label>
+                    <input style={{ ...inputStyle, ...rev("profissao") }} value={profissao} onChange={(e) => setProfissao(e.target.value)} /></div>
                   <div><label style={labelStyle}>Indicado por</label>
                     <input style={inputStyle} value={indicadoPor} onChange={(e) => setIndicadoPor(e.target.value)} /></div>
+                  <div><label style={labelStyle}>Identidade</label>
+                    <input style={{ ...inputStyle, ...rev("identidade") }} value={rg} onChange={(e) => setRg(e.target.value)} /></div>
+                  <div><label style={labelStyle}>CPF</label>
+                    <input style={{ ...inputStyle, ...rev("cpf") }} value={cpf} onChange={(e) => setCpf(e.target.value)} /></div>
                 </div>
               </section>
 

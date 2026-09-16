@@ -10,23 +10,77 @@ import { useToast } from "@/components/Toast";
 import EmptyState from "@/components/EmptyState";
 import AnaliseRiscoIA from "@/components/AnaliseRiscoIA";
 import AnamneseViewModal from "@/components/AnamneseViewModal";
-import { FICHA_SAUDE_TODAS } from "@/lib/fichaSaude";
+import {
+  FICHA_SAUDE_TODAS, FICHA_DOENCAS, FICHA_GERAL, FICHA_TEXTO_LIVRE, FICHA_COMPLEMENTAR,
+  rotuloFicha, type PerguntaSaude,
+} from "@/lib/fichaSaude";
 
-// Rótulos amigáveis dos campos da ficha (para o aviso de revisão).
-const ROTULOS_CAMPO: Record<string, string> = {
-  nome: "Nome", nascimento: "Nascimento", sexo: "Sexo", tel: "Telefone", endereco: "Endereço", numero: "Número",
-  indicado_por: "Indicado por", profissao: "Profissão", cpf: "CPF", identidade: "Identidade/RG", queixa: "Queixa principal",
-  febre_reumatica: "Febre reumática", prob_cardiacos: "Problemas cardíacos", prob_cardiacos_desc: "Descrição (cardíaco)",
-  prob_renais: "Problemas renais", prob_gastricos: "Problemas gástricos", prob_respiratorios: "Problemas respiratórios",
-  prob_articulares: "Problemas articulares", diabetes: "Diabetes", hipertensao: "Hipertensão", gravidez: "Gravidez",
-  fuma: "Fuma", fuma_desc: "Descrição (fumo)", tratamento_medico: "Tratamento médico", medicacao: "Medicação",
-  medicacao_desc: "Descrição (medicação)", alergia: "Alergia", alergia_desc: "Descrição (alergia)", operado: "Já foi operado",
-  operado_desc: "Descrição (cirurgia)", prob_cicatrizacao: "Problemas de cicatrização", alergia_anestesia: "Alergia a anestésico",
-  alergia_anestesia_desc: "Descrição (anestésico)", prob_hemorragia: "Problemas de hemorragia",
-  antecedentes_familiares: "Antecedentes familiares", ultima_vez_dentista: "Última ida ao dentista",
-  higiene_oral: "Higiene oral", habitos: "Hábitos", observacoes: "Observações", autoriza_fotos: "Autoriza fotos",
-  local_data: "Local e data",
-};
+const hojeISO = () => new Date().toLocaleDateString("en-CA"); // yyyy-mm-dd no fuso local
+
+// Uma pergunta sim/não da ficha, com o campo "Qual(is)?" que aparece ao marcar Sim.
+// Fica fora do componente da página de propósito: se fosse declarada dentro, o React
+// remontaria o input a cada tecla e o cursor sairia do campo.
+function PerguntaSimNao({
+  pergunta,
+  respostas,
+  setRespostas,
+  destacar = false,
+}: {
+  pergunta: PerguntaSaude;
+  respostas: Record<string, any>;
+  setRespostas: (r: Record<string, any>) => void;
+  destacar?: boolean;
+}) {
+  const { key, label, desc, placeholder } = pergunta;
+  const valor = respostas[key];
+  return (
+    <div
+      style={{
+        borderBottom: "1px solid var(--border)",
+        paddingBottom: 12,
+        ...(destacar ? { background: "#FFFBEB", borderLeft: "3px solid #F59E0B", paddingLeft: 10, borderRadius: 6 } : {}),
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+        <span>{label}</span>
+        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline"
+            style={{
+              background: valor === "não" ? "#F1F5F9" : "transparent",
+              borderColor: valor === "não" ? "#CBD5E1" : "var(--border-solid)",
+            }}
+            onClick={() => setRespostas({ ...respostas, [key]: "não" })}
+          >
+            Não
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline"
+            style={{
+              background: valor === "sim" ? "var(--primary-light)" : "transparent",
+              borderColor: valor === "sim" ? "var(--primary)" : "var(--border-solid)",
+            }}
+            onClick={() => setRespostas({ ...respostas, [key]: "sim" })}
+          >
+            Sim
+          </button>
+        </div>
+      </div>
+      {desc && valor === "sim" && (
+        <input
+          type="text"
+          className="form-control"
+          style={{ marginTop: 8 }}
+          value={respostas[desc] || ""}
+          onChange={(e) => setRespostas({ ...respostas, [desc]: e.target.value })}
+          placeholder={placeholder}
+        />
+      )}
+    </div>
+  );
+}
 
 const iniciais = (nomeCompleto: string) => {
   if (!nomeCompleto) return "--";
@@ -41,6 +95,7 @@ function AnamneseContent() {
   const searchParams = useSearchParams();
   const patientId = searchParams.get("id");
   const novoParam = searchParams.get("novo"); // modo "novo paciente": a ficha cria o paciente + a anamnese
+  const anamneseIdParam = searchParams.get("anamnese"); // modo edição: corrige uma anamnese já salva
   const { showToast } = useToast();
 
   // State for list view
@@ -65,36 +120,39 @@ function AnamneseContent() {
   const [cpf, setCpf] = useState("");
   const [endereco, setEndereco] = useState("");
   const [queixa, setQueixa] = useState("");
-  // Campos extras que o OCR extrai (antes sem input no wizard)
   const [profissao, setProfissao] = useState("");
   const [identidade, setIdentidade] = useState("");
-  const [habitos, setHabitos] = useState("");
-  const [observacoes, setObservacoes] = useState("");
+  const [indicadoPor, setIndicadoPor] = useState("");
 
-  // Step 2 Questionario Saúde State — chaves geradas da fonte única da ficha
-  // (todas as perguntas do papel, exceto alergia_anestesia, que fica no passo 3).
+  // Data em que a anamnese foi feita. Editável — fichas antigas entram com a
+  // data real do papel, não com a data da digitação.
+  const [dataAnamnese, setDataAnamnese] = useState(hojeISO());
+
+  // Id da anamnese quando estamos EDITANDO uma já salva (null = nova).
+  const [editAnamneseId, setEditAnamneseId] = useState<number | null>(null);
+
+  // Step 2 — todas as perguntas de saúde do papel, na ordem do papel.
   const [saudeRespostas, setSaudeRespostas] = useState<Record<string, any>>(() => {
     const init: Record<string, any> = {};
     FICHA_SAUDE_TODAS.forEach((q) => {
-      if (q.key === "alergia_anestesia") return;
       init[q.key] = "não";
       if (q.desc) init[q.desc] = "";
     });
     return init;
   });
 
-  // Step 3 Habits/Dental State
-  const [dentalRespostas, setDentalRespostas] = useState<Record<string, any>>({
-    sangramento_gengiva: "não",
-    ranger_dentes: "não",
-    sensibilidade_frio_calor: "não",
-    alergia_anestesia: "não",
-    alergia_anestesia_desc: "",
-    ultima_vez_dentista: "",
-    higiene_oral: "",
+  // Step 3 — campos de texto livre do papel (antecedentes → observações)
+  // + as perguntas complementares, que não constam no impresso.
+  const [dentalRespostas, setDentalRespostas] = useState<Record<string, any>>(() => {
+    const init: Record<string, any> = {};
+    FICHA_TEXTO_LIVRE.forEach((c) => { init[c.key] = ""; });
+    FICHA_COMPLEMENTAR.forEach((q) => { init[q.key] = "não"; });
+    return init;
   });
 
   // Step 4 Verification & Sign
+  const [assinaturaAnterior, setAssinaturaAnterior] = useState(""); // assinatura já salva (modo edição)
+  const [assinaturaDesenhada, setAssinaturaDesenhada] = useState(false); // assinou nesta sessão
   const [checkDeclaro, setCheckDeclaro] = useState(false);
   const [checkFoto, setCheckFoto] = useState(false);
   const [signatureSigned, setSignatureSigned] = useState(false);
@@ -129,9 +187,11 @@ function AnamneseContent() {
 
   // Pré-preenche o formulário com o que a IA extraiu. NADA é salvo aqui — só preenche para revisão humana.
   const aplicarOCR = (dados: Record<string, any>, revisar: string[]) => {
+    // Campos que têm input próprio no passo 1 — não devem cair no questionário.
+    // (habitos/observacoes/antecedentes ficam no passo 3 e entram via `dental`.)
     const pessoais = new Set([
       "nome", "nascimento", "sexo", "tel", "endereco", "cpf", "queixa", "numero", "autoriza_fotos",
-      "profissao", "identidade", "habitos", "observacoes", "indicado_por", "local_data",
+      "profissao", "identidade", "indicado_por", "local_data",
     ]);
     if (dados.nome) setNome(String(dados.nome));
     if (dados.nascimento) setNascimento(normData(dados.nascimento));
@@ -143,9 +203,11 @@ function AnamneseContent() {
     if (dados.queixa) setQueixa(String(dados.queixa));
     if (dados.profissao) setProfissao(String(dados.profissao));
     if (dados.identidade) setIdentidade(String(dados.identidade));
-    if (dados.habitos) setHabitos(String(dados.habitos));
-    if (dados.observacoes) setObservacoes(String(dados.observacoes));
+    if (dados.indicado_por) setIndicadoPor(String(dados.indicado_por));
     if (dados.autoriza_fotos != null) setCheckFoto(dados.autoriza_fotos === "sim" || dados.autoriza_fotos === true);
+    // "Local / Data" do papel: se a IA leu uma data, ela vira a data da anamnese.
+    const dataDoPapel = normData(String(dados.local_data ?? ""));
+    if (dataDoPapel) setDataAnamnese(dataDoPapel);
 
     const saude = { ...saudeRespostas };
     const dental = { ...dentalRespostas };
@@ -199,7 +261,7 @@ function AnamneseContent() {
 
   useEffect(() => {
     loadData();
-  }, [patientId]);
+  }, [patientId, anamneseIdParam]);
 
   useEffect(() => {
     (async () => {
@@ -207,6 +269,37 @@ function AnamneseContent() {
       if (u?.nome) setAutorAtual(u.nome);
     })();
   }, []);
+
+  // Preenche o wizard com uma anamnese já salva, para correção.
+  // Grava o id: o salvar vira UPDATE do mesmo registro, não um novo.
+  const carregarParaEdicao = (a: Anamnese) => {
+    const r = a.respostas || {};
+    setEditAnamneseId(a.id ?? null);
+    setDataAnamnese(a.data || (a.criadoEm ? a.criadoEm.slice(0, 10) : hojeISO()));
+
+    if (typeof r.queixa === "string") setQueixa(r.queixa);
+    if (typeof r.profissao === "string") setProfissao(r.profissao);
+    if (typeof r.identidade === "string") setIdentidade(r.identidade);
+    if (typeof r.indicado_por === "string") setIndicadoPor(r.indicado_por);
+    setCheckFoto(r.autorizacaoFoto === true || r.autorizacaoFoto === "sim" || r.autoriza_fotos === "sim");
+
+    setSaudeRespostas((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((k) => { if (r[k] != null) next[k] = r[k]; });
+      return next;
+    });
+    setDentalRespostas((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((k) => { if (r[k] != null) next[k] = r[k]; });
+      return next;
+    });
+
+    // A assinatura anterior continua valendo até o paciente assinar de novo.
+    setSignatureSigned(!!a.assinatura);
+    setAssinaturaAnterior(a.assinatura || "");
+    setCheckDeclaro(true);
+    setCurrentStep(1);
+  };
 
   const loadData = async () => {
     const allPatients = await DB.pacientes.list();
@@ -224,6 +317,13 @@ function AnamneseContent() {
         setEndereco([p.endereco, p.numero].filter(Boolean).join(", "));
         setIdentidade(p.rg || "");
         setCurrentStep(1);
+      }
+      // Modo edição: ?anamnese=<id> carrega a anamnese já salva para corrigir.
+      if (anamneseIdParam) {
+        const salvas = await DB.anamneses.list(Number(patientId));
+        const alvo = salvas.find((a) => String(a.id) === String(anamneseIdParam));
+        if (alvo) carregarParaEdicao(alvo);
+        else showToast("Anamnese não encontrada — abrindo uma nova.", "error");
       }
     } else {
       // Carregar todas as anamneses criadas
@@ -257,6 +357,7 @@ function AnamneseContent() {
     setLastPos(pos);
     setDrawing(true);
     setSignatureSigned(true);
+    setAssinaturaDesenhada(true); // assinou agora — substitui a assinatura antiga
   };
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
@@ -288,6 +389,8 @@ function AnamneseContent() {
     if (!ctx) return;
     ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
     setSignatureSigned(false);
+    setAssinaturaDesenhada(false);
+    setAssinaturaAnterior(""); // limpou de propósito: não reaproveita a antiga
   };
 
   const handleNextStep = () => {
@@ -311,6 +414,11 @@ function AnamneseContent() {
       showToast("Assine no campo de assinatura antes de finalizar.", "error");
       return;
     }
+    if (!dataAnamnese) {
+      showToast("Informe a data da anamnese (passo 1).", "error");
+      setCurrentStep(1);
+      return;
+    }
     // A ficha cria/atualiza a ficha do paciente → Nome e Telefone são obrigatórios.
     if (!nome || !tel) {
       showToast("Preencha ao menos Nome e Telefone (passo 1).", "error");
@@ -318,8 +426,9 @@ function AnamneseContent() {
       return;
     }
 
-    let assinaturaImagem = "";
-    if (canvasRef.current) {
+    // Em edição sem nova assinatura, mantém a assinatura original.
+    let assinaturaImagem = assinaturaAnterior;
+    if (canvasRef.current && assinaturaDesenhada) {
       assinaturaImagem = canvasRef.current.toDataURL("image/png");
     }
 
@@ -329,8 +438,7 @@ function AnamneseContent() {
       ...(queixa ? { queixa } : {}),
       ...(profissao ? { profissao } : {}),
       ...(identidade ? { identidade } : {}),
-      ...(habitos ? { habitos } : {}),
-      ...(observacoes ? { observacoes } : {}),
+      ...(indicadoPor ? { indicado_por: indicadoPor } : {}),
       autorizacaoFoto: checkFoto,
       ...(autorAtual ? { _autor: autorAtual } : {}),
     };
@@ -349,17 +457,30 @@ function AnamneseContent() {
         rg: identidade || base.rg,
       };
       const savedPac = await DB.pacientes.save(pacPayload);
+      // Consultas agendadas antes do cadastro existir ficam sem vínculo — liga pelo nome.
+      if (!paciente && savedPac?.id) {
+        try { await DB.agendamentos.vincularPorNome(savedPac.id, nome); } catch {}
+      }
 
       const payload: Anamnese = {
+        // Com id → atualiza a mesma anamnese (correção); sem id → cria nova.
+        ...(editAnamneseId ? { id: editAnamneseId } : {}),
         pacienteId: savedPac.id as number,
         respostas: answers,
         pacienteNome: nome,
-        data: new Date().toISOString().split("T")[0],
+        data: dataAnamnese,
         assinatura: assinaturaImagem,
         status: "Assinado",
       };
       await DB.anamneses.save(payload);
-      showToast(paciente ? "Anamnese finalizada com sucesso!" : "Paciente criado e anamnese finalizada!", "success");
+      showToast(
+        editAnamneseId
+          ? "Anamnese corrigida."
+          : paciente
+          ? "Anamnese finalizada com sucesso!"
+          : "Paciente criado e anamnese finalizada!",
+        "success",
+      );
       router.push(`/admin/prontuario?id=${savedPac.id}`);
     } catch {
       showToast("Não foi possível salvar. Tente novamente.", "error");
@@ -518,7 +639,15 @@ function AnamneseContent() {
 
           {/* Modal Visualizar Anamnese */}
           {anamneseView && (
-            <AnamneseViewModal anamnese={anamneseView} onClose={() => setAnamneseView(null)} />
+            <AnamneseViewModal
+              anamnese={anamneseView}
+              onClose={() => setAnamneseView(null)}
+              onEditar={
+                anamneseView.pacienteId && anamneseView.id
+                  ? () => router.push(`/admin/anamnese?id=${anamneseView.pacienteId}&anamnese=${anamneseView.id}`)
+                  : undefined
+              }
+            />
           )}
 
           {/* Modal Selecionar Paciente para Nova Anamnese */}
@@ -633,9 +762,26 @@ function AnamneseContent() {
                 <strong>{camposRevisar.size} campo(s)</strong> com baixa confiança na leitura — confira antes de salvar
                 {" "}(os que aparecem no formulário estão destacados em amarelo).
                 <span style={{ display: "block", marginTop: 4, fontWeight: 600 }}>
-                  {[...camposRevisar].map((k) => ROTULOS_CAMPO[k] || k).join(" · ")}
+                  {[...camposRevisar].map((k) => rotuloFicha(k)).join(" · ")}
                 </span>
               </span>
+            </div>
+          )}
+
+          {/* Modo edição — deixa claro que é correção, não anamnese nova */}
+          {editAnamneseId && (
+            <div
+              style={{
+                background: "var(--primary-light)",
+                border: "1px solid var(--primary)",
+                borderRadius: "var(--radius-lg)",
+                padding: "12px 16px",
+                marginBottom: 24,
+                fontSize: 13,
+              }}
+            >
+              <strong>Corrigindo a anamnese já registrada.</strong> As alterações substituem a anamnese
+              atual — não é criada uma segunda. A assinatura anterior é mantida, a menos que o paciente assine de novo.
             </div>
           )}
 
@@ -682,6 +828,31 @@ function AnamneseContent() {
           {/* Wizard Panels */}
           {currentStep === 1 && (
             <div className="card">
+              {/* Data da anamnese — primeiro campo de propósito: em ficha antiga
+                  é a data do papel que vale, não a data da digitação. */}
+              <div
+                style={{
+                  border: "1px solid var(--border-solid)",
+                  borderRadius: "var(--radius)",
+                  padding: "12px 14px",
+                  marginBottom: 20,
+                  background: "var(--bg2)",
+                }}
+              >
+                <label className="form-label" style={{ marginBottom: 4 }}>Data da anamnese *</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  style={{ maxWidth: 220 }}
+                  value={dataAnamnese}
+                  max={hojeISO()}
+                  onChange={(e) => setDataAnamnese(e.target.value)}
+                />
+                <span style={{ fontSize: 11, color: "var(--text-muted)", display: "block", marginTop: 5 }}>
+                  Ficha antiga: coloque a data em que a anamnese foi feita no papel.
+                </span>
+              </div>
+
               <h3 className="section-title">Dados Pessoais</h3>
               <div className="form-group">
                 <label className="form-label">Nome Completo *</label>
@@ -696,7 +867,7 @@ function AnamneseContent() {
               </div>
               <div className="form-row form-row-2">
                 <div className="form-group">
-                  <label className="form-label">Data de Nascimento *</label>
+                  <label className="form-label">Nascimento *</label>
                   <input
                     type="date"
                     className="form-control"
@@ -706,16 +877,39 @@ function AnamneseContent() {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Telefone *</label>
-                  <input
-                    type="tel"
+                  <label className="form-label">Sexo</label>
+                  <select
                     className="form-control"
-                    value={tel}
-                    onChange={(e) => setTel(e.target.value)}
-                    placeholder="(00) 00000-0000"
-                    style={revStyle("tel")}
-                  />
+                    value={sexo}
+                    onChange={(e) => setSexo(e.target.value)}
+                    style={revStyle("sexo")}
+                  >
+                    <option value="F">Feminino</option>
+                    <option value="M">Masculino</option>
+                  </select>
                 </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Tel *</label>
+                <input
+                  type="tel"
+                  className="form-control"
+                  value={tel}
+                  onChange={(e) => setTel(e.target.value)}
+                  placeholder="(00) 00000-0000"
+                  style={revStyle("tel")}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Endereço</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={endereco}
+                  onChange={(e) => setEndereco(e.target.value)}
+                  placeholder="Endereço do paciente"
+                  style={revStyle("endereco")}
+                />
               </div>
               <div className="form-row form-row-2">
                 <div className="form-group">
@@ -730,7 +924,20 @@ function AnamneseContent() {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Identidade / RG</label>
+                  <label className="form-label">Indicado por</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={indicadoPor}
+                    onChange={(e) => setIndicadoPor(e.target.value)}
+                    placeholder="Quem indicou a clínica"
+                    style={revStyle("indicado_por")}
+                  />
+                </div>
+              </div>
+              <div className="form-row form-row-2">
+                <div className="form-group">
+                  <label className="form-label">Identidade</label>
                   <input
                     type="text"
                     className="form-control"
@@ -740,20 +947,20 @@ function AnamneseContent() {
                     style={revStyle("identidade")}
                   />
                 </div>
+                <div className="form-group">
+                  <label className="form-label">CPF</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={cpf}
+                    onChange={(e) => setCpf(e.target.value)}
+                    placeholder="000.000.000-00"
+                    style={revStyle("cpf")}
+                  />
+                </div>
               </div>
               <div className="form-group">
-                <label className="form-label">Endereço</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={endereco}
-                  onChange={(e) => setEndereco(e.target.value)}
-                  placeholder="Endereço do paciente"
-                  style={revStyle("endereco")}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Queixa Principal / Motivo da Consulta</label>
+                <label className="form-label">Queixa principal e evolução da doença atual</label>
                 <textarea
                   className="form-control"
                   rows={3}
@@ -775,60 +982,35 @@ function AnamneseContent() {
 
           {currentStep === 2 && (
             <div className="card">
-              <h3 className="section-title">Questionário de Saúde Geral</h3>
+              <h3 className="section-title">Questionário de Saúde</h3>
+              <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: -8, marginBottom: 16 }}>
+                Mesma ordem e mesmas palavras da ficha impressa — confira de cima para baixo.
+              </p>
+
+              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>
+                Sofre de alguma das seguintes doenças?
+              </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                {FICHA_SAUDE_TODAS
-                  .filter((q) => q.key !== "alergia_anestesia")
-                  .map((q) => ({ key: q.key, label: q.label, descKey: q.desc ?? "", descPlaceholder: q.placeholder ?? "" }))
-                  .map((q) => (
-                  <div
+                {FICHA_DOENCAS.map((q) => (
+                  <PerguntaSimNao
                     key={q.key}
-                    style={{
-                      borderBottom: "1px solid var(--border)",
-                      paddingBottom: 12,
-                      ...(camposRevisar.has(q.key)
-                        ? { background: "#FFFBEB", borderLeft: "3px solid #F59E0B", paddingLeft: 10, borderRadius: 6 }
-                        : {}),
-                    }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span>{q.label}</span>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-outline"
-                          style={{
-                            background: saudeRespostas[q.key] === "não" ? "#F1F5F9" : "transparent",
-                            borderColor: saudeRespostas[q.key] === "não" ? "#CBD5E1" : "var(--border-solid)",
-                          }}
-                          onClick={() => setSaudeRespostas({ ...saudeRespostas, [q.key]: "não" })}
-                        >
-                          Não
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-outline"
-                          style={{
-                            background: saudeRespostas[q.key] === "sim" ? "var(--primary-light)" : "transparent",
-                            borderColor: saudeRespostas[q.key] === "sim" ? "var(--primary)" : "var(--border-solid)",
-                          }}
-                          onClick={() => setSaudeRespostas({ ...saudeRespostas, [q.key]: "sim" })}
-                        >
-                          Sim
-                        </button>
-                      </div>
-                    </div>
-                    {q.descKey && saudeRespostas[q.key] === "sim" && (
-                      <input
-                        type="text"
-                        className="form-control"
-                        style={{ marginTop: 8 }}
-                        value={saudeRespostas[q.descKey] || ""}
-                        onChange={(e) => setSaudeRespostas({ ...saudeRespostas, [q.descKey]: e.target.value })}
-                        placeholder={q.descPlaceholder}
-                      />
-                    )}
-                  </div>
+                    pergunta={q}
+                    respostas={saudeRespostas}
+                    setRespostas={setSaudeRespostas}
+                    destacar={camposRevisar.has(q.key)}
+                  />
+                ))}
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 22 }}>
+                {FICHA_GERAL.map((q) => (
+                  <PerguntaSimNao
+                    key={q.key}
+                    pergunta={q}
+                    respostas={saudeRespostas}
+                    setRespostas={setSaudeRespostas}
+                    destacar={camposRevisar.has(q.key)}
+                  />
                 ))}
               </div>
 
@@ -845,110 +1027,57 @@ function AnamneseContent() {
 
           {currentStep === 3 && (
             <div className="card">
-              <h3 className="section-title">Histórico Dental & Hábitos</h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                {[
-                  { key: "sangramento_gengiva", label: "Gengiva sangra durante a escovação?" },
-                  { key: "ranger_dentes", label: "Tem o hábito de ranger ou apertar os dentes (bruxismo)?" },
-                  { key: "sensibilidade_frio_calor", label: "Sente sensibilidade ao frio ou calor?" },
-                  { key: "alergia_anestesia", label: "Teve alguma reação ou alergia a anestésicos odontológicos?", descKey: "alergia_anestesia_desc", descPlaceholder: "Descreva a reação..." },
-                ].map((q) => (
-                  <div
-                    key={q.key}
-                    style={{
-                      borderBottom: "1px solid var(--border)",
-                      paddingBottom: 12,
-                      ...(camposRevisar.has(q.key)
-                        ? { background: "#FFFBEB", borderLeft: "3px solid #F59E0B", paddingLeft: 10, borderRadius: 6 }
-                        : {}),
-                    }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span>{q.label}</span>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-outline"
-                          style={{
-                            background: dentalRespostas[q.key] === "não" ? "#F1F5F9" : "transparent",
-                            borderColor: dentalRespostas[q.key] === "não" ? "#CBD5E1" : "var(--border-solid)",
-                          }}
-                          onClick={() => setDentalRespostas({ ...dentalRespostas, [q.key]: "não" })}
-                        >
-                          Não
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-outline"
-                          style={{
-                            background: dentalRespostas[q.key] === "sim" ? "var(--primary-light)" : "transparent",
-                            borderColor: dentalRespostas[q.key] === "sim" ? "var(--primary)" : "var(--border-solid)",
-                          }}
-                          onClick={() => setDentalRespostas({ ...dentalRespostas, [q.key]: "sim" })}
-                        >
-                          Sim
-                        </button>
-                      </div>
-                    </div>
-                    {q.descKey && dentalRespostas[q.key] === "sim" && (
-                      <input
-                        type="text"
-                        className="form-control"
-                        style={{ marginTop: 8 }}
-                        value={dentalRespostas[q.descKey] || ""}
-                        onChange={(e) => setDentalRespostas({ ...dentalRespostas, [q.descKey]: e.target.value })}
-                        placeholder={q.descPlaceholder}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
+              <h3 className="section-title">Antecedentes, Hábitos e Observações</h3>
+              <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: -8, marginBottom: 16 }}>
+                Continuação da ficha impressa, na mesma sequência.
+              </p>
 
-              <div className="form-row form-row-2" style={{ marginTop: 16 }}>
-                <div className="form-group">
-                  <label className="form-label">Qual a última vez que foi ao dentista?</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={dentalRespostas.ultima_vez_dentista || ""}
-                    onChange={(e) => setDentalRespostas({ ...dentalRespostas, ultima_vez_dentista: e.target.value })}
-                    placeholder="Ex: há 6 meses, ano passado…"
-                    style={revStyle("ultima_vez_dentista")}
-                  />
+              {/* Campos de texto livre do papel: antecedentes → observações */}
+              {FICHA_TEXTO_LIVRE.map((c) =>
+                c.key === "observacoes" ? (
+                  <div className="form-group" key={c.key}>
+                    <label className="form-label">{c.label}</label>
+                    <textarea
+                      className="form-control"
+                      rows={3}
+                      value={dentalRespostas[c.key] || ""}
+                      onChange={(e) => setDentalRespostas({ ...dentalRespostas, [c.key]: e.target.value })}
+                      placeholder={c.placeholder}
+                      style={revStyle(c.key)}
+                    />
+                  </div>
+                ) : (
+                  <div className="form-group" key={c.key}>
+                    <label className="form-label">{c.label}</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={dentalRespostas[c.key] || ""}
+                      onChange={(e) => setDentalRespostas({ ...dentalRespostas, [c.key]: e.target.value })}
+                      placeholder={c.placeholder}
+                      style={revStyle(c.key)}
+                    />
+                  </div>
+                ),
+              )}
+
+              {/* Fora do impresso — fica no fim, separado, para não bagunçar a conferência */}
+              <div style={{ marginTop: 26, paddingTop: 18, borderTop: "1px dashed var(--border-solid)" }}>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>Complementar</div>
+                <p style={{ fontSize: 12, color: "var(--text-muted)", margin: "2px 0 14px" }}>
+                  Perguntas que não constam na ficha de papel.
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  {FICHA_COMPLEMENTAR.map((q) => (
+                    <PerguntaSimNao
+                      key={q.key}
+                      pergunta={q}
+                      respostas={dentalRespostas}
+                      setRespostas={setDentalRespostas}
+                      destacar={camposRevisar.has(q.key)}
+                    />
+                  ))}
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Como realiza a higiene oral?</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={dentalRespostas.higiene_oral || ""}
-                    onChange={(e) => setDentalRespostas({ ...dentalRespostas, higiene_oral: e.target.value })}
-                    placeholder="Ex: escova 3x ao dia, usa fio dental…"
-                    style={revStyle("higiene_oral")}
-                  />
-                </div>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Hábitos</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={habitos}
-                  onChange={(e) => setHabitos(e.target.value)}
-                  placeholder="Ex: fumante, roer unhas, apertar objetos…"
-                  style={revStyle("habitos")}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Observações</label>
-                <textarea
-                  className="form-control"
-                  rows={3}
-                  value={observacoes}
-                  onChange={(e) => setObservacoes(e.target.value)}
-                  placeholder="Outras observações clínicas relevantes…"
-                  style={revStyle("observacoes")}
-                />
               </div>
 
               <div className="step-nav">

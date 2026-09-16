@@ -63,6 +63,13 @@ export default function PacientesPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"dados" | "contato" | "endereco" | "lgpd">("dados");
 
+  // Numeração de prontuários (por data da anamnese)
+  const [numeracaoOpen, setNumeracaoOpen] = useState(false);
+  const [numeracaoPreview, setNumeracaoPreview] = useState<
+    { paciente: Paciente; numero: number; data: string; origem: string }[]
+  >([]);
+  const [numerando, setNumerando] = useState(false);
+
   // Form State
   const [nome, setNome] = useState("");
   const [nascimento, setNascimento] = useState("");
@@ -163,6 +170,68 @@ export default function PacientesPage() {
     setConsentVersao(p?.consentimentoLgpdVersao ?? "");
   };
 
+  // ── Numeração de prontuários ────────────────────────────────
+  // O número do prontuário NÃO é o id do banco (que pula a cada cadastro de
+  // teste apagado). É atribuído de uma vez, por ordem da DATA DA ANAMNESE:
+  // quem fez a anamnese primeiro é o #1. Só roda quando a clínica mandar,
+  // e mostra a ordem completa para conferência antes de gravar.
+  const abrirNumeracao = async () => {
+    const [todos, anamneses] = await Promise.all([DB.pacientes.list(), DB.anamneses.list()]);
+
+    // Data de referência de cada paciente = a anamnese MAIS ANTIGA dele.
+    const primeiraAnamnese = new Map<number, string>();
+    anamneses.forEach((a) => {
+      if (a.pacienteId == null) return;
+      const d = (a.data || a.criadoEm || "").slice(0, 10);
+      if (!d) return;
+      const atual = primeiraAnamnese.get(a.pacienteId);
+      if (!atual || d < atual) primeiraAnamnese.set(a.pacienteId, d);
+    });
+
+    const comData = todos.map((p) => {
+      const daAnamnese = p.id != null ? primeiraAnamnese.get(p.id) : undefined;
+      return {
+        paciente: p,
+        // Sem anamnese, cai para a data do cadastro — e a tela avisa,
+        // para a clínica decidir se ajusta antes de aplicar.
+        data: daAnamnese || (p.criadoEm || "").slice(0, 10) || "",
+        origem: daAnamnese ? "anamnese" : "cadastro",
+      };
+    });
+
+    comData.sort((a, b) => {
+      if (a.data && b.data && a.data !== b.data) return a.data.localeCompare(b.data);
+      if (a.data && !b.data) return -1;
+      if (!a.data && b.data) return 1;
+      return a.paciente.nome.localeCompare(b.paciente.nome, "pt-BR");
+    });
+
+    setNumeracaoPreview(comData.map((x, i) => ({ ...x, numero: i + 1 })));
+    setNumeracaoOpen(true);
+  };
+
+  const aplicarNumeracao = async () => {
+    if (!(await confirm(
+      `Isto vai gravar o número do prontuário de ${numeracaoPreview.length} paciente(s), começando no #1. ` +
+      `Números já existentes serão substituídos. Confirma?`,
+      { okLabel: "Numerar" },
+    ))) return;
+
+    setNumerando(true);
+    try {
+      for (const item of numeracaoPreview) {
+        await DB.pacientes.save({ ...item.paciente, prontuario: item.numero });
+      }
+      setNumeracaoOpen(false);
+      await loadData();
+      showToast(`${numeracaoPreview.length} prontuário(s) numerados.`, "success");
+    } catch {
+      showToast("Não foi possível concluir a numeração.", "error");
+    } finally {
+      setNumerando(false);
+    }
+  };
+
   const handleOpenNewModal = () => {
     setEditingId(null);
     preencherForm();
@@ -204,10 +273,25 @@ export default function PacientesPage() {
     };
 
     try {
-      await DB.pacientes.save(paciente);
+      const salvo = await DB.pacientes.save(paciente);
+
+      // Consultas agendadas ANTES do cadastro existir ficaram sem paciente_id e
+      // não apareciam no histórico dele. Liga essas agora, pelo nome.
+      let vinculadas = 0;
+      if (salvo?.id) {
+        try {
+          vinculadas = await DB.agendamentos.vincularPorNome(salvo.id, nome);
+        } catch { /* vínculo é um extra: nunca derruba o cadastro */ }
+      }
+
       setIsModalOpen(false);
       await loadData();
-      showToast(editingId ? "Paciente atualizado." : "Paciente cadastrado.", "success");
+      showToast(
+        vinculadas > 0
+          ? `${editingId ? "Paciente atualizado" : "Paciente cadastrado"}. ${vinculadas} consulta(s) da agenda vinculada(s) ao histórico.`
+          : editingId ? "Paciente atualizado." : "Paciente cadastrado.",
+        "success",
+      );
     } catch {
       showToast("Não foi possível salvar o paciente. Tente novamente.", "error");
     }
@@ -261,6 +345,12 @@ export default function PacientesPage() {
             <circle cx="12" cy="12" r="3" />
           </svg>
           Importar com IA
+        </button>
+        <button className="btn btn-outline" onClick={abrirNumeracao} title="Atribuir o número do prontuário por ordem da data da anamnese">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: 15, height: 15 }}>
+            <path d="M4 6h16M4 12h16M4 18h16M8 3v3M8 15v3" />
+          </svg>
+          Numerar prontuários
         </button>
         <button className="btn btn-primary" onClick={handleOpenNewModal}>
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: 15, height: 15 }}>
@@ -701,6 +791,66 @@ export default function PacientesPage() {
           </div>
         )}
 
+        {/* Numerar prontuários (por data da anamnese) */}
+        {numeracaoOpen && (
+          <div className="modal-overlay open" onClick={(e) => e.target === e.currentTarget && setNumeracaoOpen(false)}>
+            <div className="modal modal-lg">
+              <div className="modal-header">
+                <span className="modal-title">Numerar prontuários</span>
+                <button className="modal-close" onClick={() => setNumeracaoOpen(false)}>&times;</button>
+              </div>
+              <div className="modal-body">
+                <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 14 }}>
+                  Os números são atribuídos pela <strong>data da anamnese</strong>: quem fez a anamnese
+                  primeiro fica com o <strong>#1</strong>. Confira a ordem abaixo antes de gravar.
+                </p>
+
+                {numeracaoPreview.some((x) => x.origem === "cadastro") && (
+                  <div
+                    style={{
+                      background: "#FFFBEB", border: "1px solid #F59E0B", color: "#92400E",
+                      borderRadius: "var(--radius)", padding: "10px 14px", marginBottom: 14, fontSize: 12.5,
+                    }}
+                  >
+                    Alguns pacientes ainda <strong>não têm anamnese</strong> — para eles foi usada a data do
+                    cadastro (marcada na lista). Se a ordem deles importa, registre a anamnese com a data
+                    correta antes de numerar.
+                  </div>
+                )}
+
+                <div className="table-wrapper" style={{ maxHeight: 420, overflowY: "auto" }}>
+                  <table>
+                    <thead>
+                      <tr><th style={{ width: 70 }}>Nº</th><th>Paciente</th><th>Data</th><th>Origem da data</th></tr>
+                    </thead>
+                    <tbody>
+                      {numeracaoPreview.map((x) => (
+                        <tr key={x.paciente.id}>
+                          <td><strong>#{x.numero}</strong></td>
+                          <td>{x.paciente.nome}</td>
+                          <td>{x.data ? new Date(x.data + "T00:00:00").toLocaleDateString("pt-BR") : "—"}</td>
+                          <td>
+                            {x.origem === "anamnese" ? (
+                              <span className="badge badge-success">Anamnese</span>
+                            ) : (
+                              <span className="badge badge-warning">Cadastro</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-outline" onClick={() => setNumeracaoOpen(false)}>Cancelar</button>
+                <button className="btn btn-primary" onClick={aplicarNumeracao} disabled={numerando || numeracaoPreview.length === 0}>
+                  {numerando ? "Numerando…" : `Numerar ${numeracaoPreview.length} prontuário(s)`}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Importar pacientes (CSV) */}
         {importOpen && (
           <div className="modal-overlay open" onClick={(e) => e.target === e.currentTarget && setImportOpen(false)}>

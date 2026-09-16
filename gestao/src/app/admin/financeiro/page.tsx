@@ -256,7 +256,13 @@ export default function FinanceiroPage() {
                         <strong>{t.descricao}</strong>
                       </td>
                       <td>{t.categoria}</td>
-                      <td>{(t as any).formaPagto || "PIX"}</td>
+                      {/* Sem forma registrada era exibido como "PIX" — a tela afirmava
+                          uma forma de pagamento que ninguém informou. */}
+                      <td>
+                        {(t as any).formaPagto || (
+                          <span style={{ color: "var(--text-muted)" }}>Não informada</span>
+                        )}
+                      </td>
                       <td style={{ color: t.tipo === "receita" ? "var(--success)" : "var(--danger)", fontWeight: 600 }}>
                         {t.tipo === "receita" ? "+" : "-"} R$ {t.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                       </td>

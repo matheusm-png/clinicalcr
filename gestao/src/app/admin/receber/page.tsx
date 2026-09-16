@@ -8,8 +8,13 @@ import { useToast } from "@/components/Toast";
 import EmptyState from "@/components/EmptyState";
 
 const brl = (v: number) => (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-const hoje = () => new Date().toISOString().split("T")[0];
+const hoje = () => new Date().toLocaleDateString("en-CA"); // data local (toISOString é UTC)
 const isAtrasada = (p: Parcela) => !p.pago && !!p.vencimento && p.vencimento < hoje();
+
+// Mesma lista do Financeiro e do prontuário.
+const FORMAS_PAGAMENTO = ["PIX", "Cartão de Crédito", "Cartão de Débito", "Dinheiro", "Boleto"];
+
+const dataBR = (iso?: string) => (iso ? new Date(iso + "T00:00:00").toLocaleDateString("pt-BR") : "—");
 
 const STATUS_BADGE: Record<string, string> = { aberta: "badge-info", quitada: "badge-success", cancelada: "badge-danger" };
 const STATUS_LABEL: Record<string, string> = { aberta: "Aberta", quitada: "Quitada", cancelada: "Cancelada" };
@@ -37,6 +42,12 @@ export default function ReceberPage() {
 
   // Geração de link de pagamento InfinitePay
   const [gerandoLink, setGerandoLink] = useState<number | null>(null);
+
+  // Baixa de parcela: pergunta COMO foi pago (antes gravava sem forma nenhuma,
+  // e o relatório de formas de pagamento ficava vazio).
+  const [baixa, setBaixa] = useState<{ conta: ContaReceber; parcela: Parcela } | null>(null);
+  const [baixaForma, setBaixaForma] = useState("PIX");
+  const [baixando, setBaixando] = useState(false);
 
   useEffect(() => { load(); }, []);
 
@@ -93,14 +104,36 @@ export default function ReceberPage() {
     }
   };
 
-  const marcarPaga = async (conta: ContaReceber, parcela: Parcela) => {
+  const abrirBaixa = (conta: ContaReceber, parcela: Parcela) => {
+    setBaixaForma("PIX");
+    setBaixa({ conta, parcela });
+  };
+
+  const confirmarBaixa = async () => {
+    if (!baixa) return;
+    const { conta, parcela } = baixa;
     if (parcela.id == null || conta.id == null) return;
+    setBaixando(true);
     try {
-      await DB.contas.marcarParcela(parcela.id, conta.id);
+      await DB.contas.marcarParcela(parcela.id, conta.id, baixaForma);
+      setBaixa(null);
       await load(); // o modal de detalhe lê as parcelas direto de `contas`
-      showToast("Parcela registrada como paga.", "success");
+      showToast(`Parcela registrada como paga (${baixaForma}).`, "success");
     } catch {
       showToast("Não foi possível registrar o pagamento.", "error");
+    } finally {
+      setBaixando(false);
+    }
+  };
+
+  // NF é marcador por cobrança — alternável direto na lista.
+  const alternarNf = async (conta: ContaReceber) => {
+    try {
+      await DB.contas.definirNf(conta.id!, !conta.nfEmitida);
+      await load();
+      showToast(conta.nfEmitida ? "NF desmarcada." : "NF marcada como emitida.", "success");
+    } catch {
+      showToast("Não foi possível atualizar a NF.", "error");
     }
   };
 
@@ -244,6 +277,8 @@ export default function ReceberPage() {
                     <th>Parcelas</th>
                     <th>Próx. venc.</th>
                     <th>Status</th>
+                    <th>Pagamento</th>
+                    <th>NF</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
@@ -264,6 +299,28 @@ export default function ReceberPage() {
                           ) : "—"}
                         </td>
                         <td><span className={`badge ${STATUS_BADGE[c.status]}`}>{STATUS_LABEL[c.status]}</span></td>
+                        {/* Formas efetivamente usadas nas parcelas já pagas */}
+                        <td style={{ fontSize: 12 }}>
+                          {(() => {
+                            const formas = Array.from(
+                              new Set((c.parcelas ?? []).filter((p) => p.pago && p.formaPagamento).map((p) => p.formaPagamento!)),
+                            );
+                            if (formas.length === 0) {
+                              return <span style={{ color: "var(--text-muted)" }}>{r.pagas > 0 ? "Não informada" : "—"}</span>;
+                            }
+                            return formas.join(" · ");
+                          })()}
+                        </td>
+                        <td>
+                          <button
+                            className={`badge ${c.nfEmitida ? "badge-success" : "badge-warning"}`}
+                            style={{ border: "none", cursor: "pointer" }}
+                            title={c.nfEmitida ? "NF emitida — clique para desmarcar" : "Sem NF — clique para marcar como emitida"}
+                            onClick={() => alternarNf(c)}
+                          >
+                            {c.nfEmitida ? "NF emitida" : "Sem NF"}
+                          </button>
+                        </td>
                         <td>
                           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                             <button className="btn btn-outline btn-sm" onClick={() => setDetalhe(c)}>Parcelas</button>
@@ -298,7 +355,7 @@ export default function ReceberPage() {
                 <div className="table-wrapper">
                   <table>
                     <thead>
-                      <tr><th>#</th><th>Valor</th><th>Vencimento</th><th>Status</th><th></th></tr>
+                      <tr><th>#</th><th>Valor</th><th>Vencimento</th><th>Status</th><th>Pago em</th><th>Forma</th><th></th></tr>
                     </thead>
                     <tbody>
                       {(contas.find((c) => c.id === detalhe.id)?.parcelas ?? []).map((p) => (
@@ -315,6 +372,12 @@ export default function ReceberPage() {
                               <span className="badge badge-info">A vencer</span>
                             )}
                           </td>
+                          <td style={{ fontSize: 12.5 }}>{p.pago ? dataBR(p.pagoEm) : "—"}</td>
+                          <td style={{ fontSize: 12.5 }}>
+                            {p.pago
+                              ? (p.formaPagamento || <span style={{ color: "var(--text-muted)" }}>Não informada</span>)
+                              : "—"}
+                          </td>
                           <td>
                             {!p.pago && (
                               <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
@@ -328,7 +391,7 @@ export default function ReceberPage() {
                                     {gerandoLink === p.id ? "Gerando…" : "Gerar link"}
                                   </button>
                                 )}
-                                <button className="btn btn-primary btn-sm" onClick={() => marcarPaga(detalhe, p)}>
+                                <button className="btn btn-primary btn-sm" onClick={() => abrirBaixa(detalhe, p)}>
                                   Marcar pago
                                 </button>
                               </div>
@@ -342,6 +405,41 @@ export default function ReceberPage() {
               </div>
               <div className="modal-footer">
                 <button className="btn btn-primary" onClick={() => setDetalhe(null)}>Fechar</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Baixa de parcela — pergunta a forma de pagamento */}
+        {baixa && (
+          <div className="modal-overlay open" onClick={(e) => e.target === e.currentTarget && setBaixa(null)}>
+            <div className="modal" style={{ maxWidth: 420 }}>
+              <div className="modal-header">
+                <span className="modal-title">Registrar pagamento</span>
+                <button className="modal-close" onClick={() => setBaixa(null)}>&times;</button>
+              </div>
+              <div className="modal-body">
+                <p style={{ fontSize: 13, marginBottom: 14 }}>
+                  Parcela <strong>{baixa.parcela.numero}</strong> — <strong>{brl(baixa.parcela.valor)}</strong>
+                  {baixa.parcela.vencimento ? ` · venc. ${dataBR(baixa.parcela.vencimento)}` : ""}
+                </p>
+                <div className="form-group">
+                  <label className="form-label">Forma de pagamento *</label>
+                  <select className="form-control" value={baixaForma} onChange={(e) => setBaixaForma(e.target.value)}>
+                    {FORMAS_PAGAMENTO.map((f) => (
+                      <option key={f} value={f}>{f}</option>
+                    ))}
+                  </select>
+                  <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                    Fica registrada na parcela e alimenta o relatório de formas de pagamento.
+                  </span>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-outline" onClick={() => setBaixa(null)}>Cancelar</button>
+                <button className="btn btn-primary" onClick={confirmarBaixa} disabled={baixando}>
+                  {baixando ? "Registrando…" : "Registrar pago"}
+                </button>
               </div>
             </div>
           </div>

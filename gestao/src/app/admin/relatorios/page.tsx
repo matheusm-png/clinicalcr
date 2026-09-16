@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { DB } from "@/lib/db";
+import { DB, dataProcedimento } from "@/lib/db";
 import {
   Paciente,
   Procedimento,
@@ -234,8 +234,10 @@ export default function RelatoriosPage() {
       }).length,
     );
 
-    // Produção: procedimentos concluídos no período, agrupados por nome
-    const procPeriodo = procedimentos.filter((p) => p.status === "Concluído" && noPeriodo(p.criadoEm, de, ate));
+    // Produção: procedimentos concluídos no período, agrupados por nome.
+    // Conta pela data em que foi EXECUTADO (não pela data de digitação), senão
+    // todo o cadastro retroativo cairia no mês em que foi digitado.
+    const procPeriodo = procedimentos.filter((p) => p.status === "Concluído" && noPeriodo(dataProcedimento(p), de, ate));
     const porProc: Record<string, { qtd: number; valor: number }> = {};
     procPeriodo.forEach((p) => {
       const k = p.procedimento || "(sem nome)";

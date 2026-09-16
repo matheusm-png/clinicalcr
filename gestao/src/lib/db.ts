@@ -80,6 +80,7 @@ const fromPaciente = (r: any): Paciente => ({
   cidade: r.cidade ?? "",
   uf: r.uf ?? "",
   proximaRevisao: r.proxima_revisao ?? "",
+  prontuario: r.prontuario ?? undefined,
   consentimentoLgpd: r.consentimento_lgpd ?? false,
   consentimentoLgpdEm: r.consentimento_lgpd_em ?? "",
   consentimentoLgpdVersao: r.consentimento_lgpd_versao ?? "",
@@ -108,6 +109,10 @@ const toPaciente = (p: Paciente) => ({
   cidade: orNull(p.cidade),
   uf: orNull(p.uf),
   proxima_revisao: orNull(p.proximaRevisao),
+  // Só envia a coluna quando há número atribuído. Assim o cadastro de paciente
+  // continua funcionando mesmo antes da migration 0031 ser aplicada; só a
+  // numeração em lote depende dela.
+  ...(p.prontuario != null ? { prontuario: p.prontuario } : {}),
   consentimento_lgpd: p.consentimentoLgpd ?? false,
   consentimento_lgpd_em: orNull(p.consentimentoLgpdEm),
   consentimento_lgpd_versao: orNull(p.consentimentoLgpdVersao),
@@ -123,6 +128,12 @@ const fromProcedimento = (r: any): Procedimento => ({
   status: r.status,
   profissionalId: r.profissional_id ?? undefined,
   obs: r.obs ?? "",
+  data: r.data ?? "",
+  formaPagto: r.forma_pagamento ?? "",
+  pago: r.pago ?? false,
+  nfEmitida: r.nf_emitida ?? false,
+  retornoEm: r.retorno_em ?? "",
+  retornoObs: r.retorno_obs ?? "",
   criadoEm: r.created_at,
 });
 const toProcedimento = (p: Procedimento) => ({
@@ -133,7 +144,31 @@ const toProcedimento = (p: Procedimento) => ({
   status: p.status,
   profissional_id: p.profissionalId ?? null,
   obs: orNull(p.obs),
+  data: orNull(p.data),
+  forma_pagamento: orNull(p.formaPagto),
+  pago: p.pago ?? false,
+  nf_emitida: p.nfEmitida ?? false,
+  retorno_em: orNull(p.retornoEm),
+  retorno_obs: orNull(p.retornoObs),
 });
+
+
+// Nome "achatado" para comparação: sem acento, sem espaço duplo, minúsculo.
+// A agenda aceita nome digitado livre, então o vínculo por texto precisa
+// tolerar acento e espaçamento diferentes ("José  Silva" == "jose silva").
+export const nomeNormalizado = (s?: string): string =>
+  (s ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+
+// Data em que o procedimento foi EXECUTADO. Usa a data informada; registros
+// anteriores à migration 0032 caem para a data de digitação (created_at).
+// Fonte única para relatórios, comissões e ordenação no prontuário.
+export const dataProcedimento = (p: Procedimento): string | undefined =>
+  p.data || p.criadoEm;
 
 const fromAnamnese = (r: any): Anamnese => ({
   id: r.id,
@@ -574,6 +609,26 @@ export const DB = {
 
   agendamentos: {
     list: () => listTable<Agendamento>("agendamentos", fromAgendamento),
+
+    // Liga ao paciente os agendamentos que foram criados só com o nome digitado
+    // (sem paciente_id) — caso comum: a pessoa liga e agenda ANTES de existir
+    // cadastro. Sem isso o histórico de consultas dela nasce vazio para sempre.
+    // Devolve quantos foram vinculados.
+    async vincularPorNome(pacienteId: number, nome: string): Promise<number> {
+      if (semBackend()) return 0;
+      const alvo = nomeNormalizado(nome);
+      if (!alvo) return 0;
+      const { data, error } = await sb()
+        .from("agendamentos")
+        .select("id, paciente")
+        .is("paciente_id", null);
+      if (error || !data) return 0;
+      const ids = data.filter((a) => nomeNormalizado(a.paciente) === alvo).map((a) => a.id);
+      if (!ids.length) return 0;
+      const { error: upErr } = await sb().from("agendamentos").update({ paciente_id: pacienteId }).in("id", ids);
+      if (upErr) return 0;
+      return ids.length;
+    },
     get: (id: number | string) => getTable<Agendamento>("agendamentos", fromAgendamento, id),
     save: (a: Agendamento) =>
       saveTable<Agendamento>("agendamentos", toAgendamento, fromAgendamento, a),
@@ -717,6 +772,16 @@ export const DB = {
       });
       lista.forEach((c) => (c.parcelas = porConta[c.id!] ?? []));
       return lista;
+    },
+
+    // Marca/desmarca a NF emitida de uma cobrança.
+    async definirNf(contaId: number, emitida: boolean): Promise<void> {
+      if (semBackend()) return;
+      const { error } = await sb()
+        .from("contas_receber")
+        .update({ nf_emitida: emitida })
+        .eq("id", contaId);
+      if (error) throw error;
     },
 
     // Cria uma conta + suas parcelas.

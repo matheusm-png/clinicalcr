@@ -129,6 +129,28 @@ body {
 .sidebar-nav li a svg { width: 17px; height: 17px; flex-shrink: 0; opacity: .85; }
 .sidebar-nav li a.active svg { opacity: 1; }
 
+/* Item filho (ex.: Prontuário e Anamnese sob Pacientes) — recuo + guia à esquerda */
+.sidebar-nav li.nav-subitem a {
+  padding-left: 30px;
+  font-size: 13px;
+  border-left: 1px solid rgba(255,255,255,.14);
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: 17px;
+}
+.sidebar-nav li.nav-subitem a svg { width: 15px; height: 15px; }
+
+/* Subtítulo dentro de um grupo (ex.: "Controle" dentro de Gestão) */
+.nav-sub-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.22);
+  padding: 10px 12px 4px;
+  list-style: none;
+}
+
 .sidebar-footer {
   padding: 14px 16px;
   border-top: 1px solid rgba(255,255,255,.08);
