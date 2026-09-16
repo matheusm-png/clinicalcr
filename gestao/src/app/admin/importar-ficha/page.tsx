@@ -10,6 +10,7 @@ import Odontograma from "@/components/Odontograma";
 import { useToast } from "@/components/Toast";
 import { comprimirImagem } from "@/lib/imagem";
 import { FICHA_DOENCAS, FICHA_GERAL, FICHA_SAUDE_TODAS } from "@/lib/fichaSaude";
+import { dentesDoTexto, facesParaTexto, limparFaces, parseFaces } from "@/lib/faces";
 
 const hojeISO = () => new Date().toLocaleDateString("en-CA"); // yyyy-mm-dd no fuso local
 
@@ -34,6 +35,7 @@ type ProcRev = {
   data: string;        // yyyy-mm-dd (para o input date)
   descricao: string;
   dente: string;
+  facesTxt: string;    // "16 MC; 15 DM" — editável; vira faces ao salvar
   valor: number;
   nfEmitida: boolean;
   formaPagto: string;
@@ -270,6 +272,7 @@ export default function ImportarFichaPage() {
       data: paraISO(p?.data),
       descricao: p?.descricao ? String(p.descricao) : "",
       dente: p?.dente != null ? String(p.dente) : "",
+      facesTxt: p?.faces ? facesParaTexto(parseFaces(Object.entries(p.faces).map(([d, f]) => `${d} ${f}`).join("; "))) : "",
       valor: typeof p?.valorPago === "number" ? p.valorPago : Number(p?.valorPago) || 0,
       nfEmitida: normSimNao(p?.nf) === "sim",
       formaPagto: "",
@@ -283,7 +286,7 @@ export default function ImportarFichaPage() {
   const setProc = (i: number, patch: Partial<ProcRev>) =>
     setProcs((p) => p.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
   const addProc = () =>
-    setProcs((p) => [...p, { data: dataFicha || "", descricao: "", dente: "", valor: 0, nfEmitida: false, formaPagto: "" }]);
+    setProcs((p) => [...p, { data: dataFicha || "", descricao: "", dente: "", facesTxt: "", valor: 0, nfEmitida: false, formaPagto: "" }]);
   const removerProc = (i: number) => setProcs((p) => p.filter((_, idx) => idx !== i));
 
   const totalPago = useMemo(() => procs.reduce((s, p) => s + (p.valor || 0), 0), [procs]);
@@ -297,6 +300,7 @@ export default function ImportarFichaPage() {
           id: i,
           pacienteId: 0,
           dente: p.dente,
+          faces: limparFaces(parseFaces(p.facesTxt), dentesDoTexto(p.dente)),
           procedimento: p.descricao || "Procedimento",
           custo: p.valor,
           status: "Concluído",
@@ -368,6 +372,7 @@ export default function ImportarFichaPage() {
         await DB.procedimentos.save({
           pacienteId,
           dente: p.dente || "",
+          faces: limparFaces(parseFaces(p.facesTxt), dentesDoTexto(p.dente)),
           procedimento: p.descricao.trim() || "Procedimento",
           custo: p.valor || 0,
           status: "Concluído",
@@ -777,6 +782,12 @@ export default function ImportarFichaPage() {
                           value={p.dente}
                           onChange={(e) => setProc(i, { dente: e.target.value })}
                           style={{ ...inputStyle, width: 100, textAlign: "center", ...rev(`procedimentos[${i}].dente`) }}
+                        />
+                        <input
+                          placeholder="Faces (ex: 16 MC)" title="Faces por dente: M, D, O/I, V, L/P, C. Ex.: 16 MC; 15 DM"
+                          value={p.facesTxt}
+                          onChange={(e) => setProc(i, { facesTxt: e.target.value.toUpperCase() })}
+                          style={{ ...inputStyle, width: 150, ...rev(`procedimentos[${i}].faces`) }}
                         />
                       </div>
                     ))}

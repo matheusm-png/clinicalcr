@@ -131,7 +131,7 @@ export function montarPrompt(task: AiTask, input: any): AiMessage[] | null {
             "Estrutura EXATA do JSON:\n" +
             "{\n" +
             '  "anamnese": { ...campos abaixo... },\n' +
-            '  "procedimentos": [ { "data": "dd/mm/aaaa", "descricao": "texto", "dente": "NN|null", "valorPago": number|null, "pago": "sim"|"não"|null, "nf": "sim"|"não"|null } ],\n' +
+            '  "procedimentos": [ { "data": "dd/mm/aaaa", "descricao": "texto", "dente": "NN|null", "faces": { "NN": "letras" }|null, "valorPago": number|null, "pago": "sim"|"não"|null, "nf": "sim"|"não"|null } ],\n' +
             '  "_revisar": [ "nomes.dos.campos.de.baixa.confianca" ]\n' +
             "}\n\n" +
             "Campos de \"anamnese\" (use EXATAMENTE estas chaves):\n" +
@@ -150,7 +150,10 @@ export function montarPrompt(task: AiTask, input: any): AiMessage[] | null {
             "- Um item do array por LINHA preenchida da tabela. Se a tabela estiver vazia, use [].\n" +
             "- 'data': a data da linha em dd/mm/aaaa (ou null).\n" +
             "- 'descricao': o texto do procedimento executado, transcrito como está (ex.: \"Restauração palatina na unidade 23. RC A3\").\n" +
-            "- 'dente': APENAS o número do dente (notação FDI, ex.: \"23\") se a descrição citar uma unidade/dente. Se citar vários, separe por vírgula (\"14,15\"). Se não citar, null. Não invente números.\n" +
+            "- 'dente': APENAS o número do dente (notação FDI, ex.: \"23\") se a descrição citar uma unidade/dente. Se citar vários, separe por vírgula (\"14,15\"). A dentista costuma escrever com ponto (\"uni. 1.6\" = dente 16). Se não citar, null. Não invente números.\n" +
+            "- 'faces': as FACES do dente anotadas entre parênteses ou após o número, por dente. Ex.: \"Rest. uni. 1.6(MC); 1.5(DM); 1.4(D)\" → {\"16\": \"MC\", \"15\": \"DM\", \"14\": \"D\"}. " +
+            "Letras possíveis: M (mesial), D (distal), O (oclusal), I (incisal), V (vestibular), L (lingual), P (palatina), C (cervical). " +
+            "Palavras por extenso também contam (\"palatina na unidade 23\" → {\"23\": \"P\"}). Sem face anotada → null.\n" +
             "- 'valorPago': o valor pago daquela linha como número (ex.: \"Pago 80,00\" → 80.0). Se não houver, null.\n" +
             "- 'pago': \"sim\" se a linha tiver indicação de pagamento (ex.: \"Pago\", \"OK\", valor anotado); \"não\" se indicar pendente/não pago; sem indicação → null.\n" +
             "- 'nf': \"sim\" se a linha indicar nota fiscal emitida (ex.: \"NF\", \"NF ✓\", \"c/ NF\", \"nota\"); \"não\" se indicar sem nota (ex.: \"s/ NF\"); sem indicação → null.\n\n" +

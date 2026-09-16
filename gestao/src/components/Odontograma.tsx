@@ -2,6 +2,8 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Procedimento } from "@/lib/types";
+import { Face, FACES, ehSuperior } from "@/lib/faces";
+import FacesDente from "@/components/FacesDente";
 
 // ── Dentição permanente (adulto) — notação FDI ───────────────
 const DENTES_SUPERIOR = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
@@ -48,6 +50,13 @@ export function denticaoPorIdade(idade?: number): Denticao {
   return "permanente";
 }
 
+// Status gravado no banco → cor (mesma legenda do prontuário).
+const STATUS_COR: Record<string, string> = {
+  Pendente: "#3B82F6",
+  "Concluído": "#22C55E",
+  Cancelado: "#F59E0B",
+};
+
 const STATE_COLORS = {
   "a-realizar": { fill: "#3B82F6", stroke: "#2563EB" },
   realizado: { fill: "#22C55E", stroke: "#16A34A" },
@@ -70,7 +79,7 @@ const CAT_COLOR: Record<Exclude<CatVisual, "">, string> = {
   protese: "#10B981",
   clareamento: "#6ee7b7",
 };
-function catProc(nome: string): CatVisual {
+export function catProc(nome: string): CatVisual {
   const n = (nome || "").toLowerCase();
   if (/(exodontia|extra[çc][aã]o|extrair|extra[íi]d)/.test(n)) return "extracao";
   if (/(canal|endod|pulpar|pulpotomia)/.test(n)) return "canal";
@@ -223,6 +232,14 @@ export default function Odontograma({
 
     if (isProtese) fillOpacity = "0.5";
 
+    // Faces marcadas neste dente: vale a cor do procedimento mais recente que marcou a face.
+    const coresFaces: Partial<Record<Face, string>> = {};
+    procs.forEach((p) => {
+      const cor = STATUS_COR[p.status] ?? CAT_COLOR.restauracao;
+      (p.faces?.[numStr] ?? []).forEach((f) => { coresFaces[f] = cor; });
+    });
+    const facesMarcadas = FACES.filter((f) => coresFaces[f]);
+
     let overlays = "";
     procs.forEach((p) => {
       const cat = catProc(p.procedimento);
@@ -237,7 +254,8 @@ export default function Odontograma({
         overlays += `<path d="M12,22 L16,22 L14,32 Z M10,24 L18,24 M11,27 L17,27 M12,30 L16,30" stroke="${color}" fill="${color}" stroke-width="1" />`;
       } else if (cat === "canal") {
         overlays += `<path d="M14,15 L14,30" stroke="${color}" stroke-width="2.5" stroke-linecap="round" opacity="0.8" />`;
-      } else if (cat === "restauracao") {
+      } else if (cat === "restauracao" && !p.faces?.[numStr]?.length) {
+        // Com face informada, a restauração aparece no quadradinho de faces.
         overlays += `<circle cx="14" cy="14" r="5" fill="${color}" fill-opacity="0.6" stroke="${color}" stroke-width="1" />`;
       } else if (cat === "clareamento") {
         overlays += `<circle cx="14" cy="16" r="7" fill="none" stroke="${color}" stroke-width="1.5" opacity="0.7" />`;
@@ -245,6 +263,20 @@ export default function Odontograma({
     });
 
     const isAnterior = ANTERIORES.has(num);
+    const superior = ehSuperior(numStr);
+    const quadroFaces = (
+      <FacesDente
+        dente={numStr}
+        faces={facesMarcadas}
+        cores={coresFaces}
+        size={24}
+      />
+    );
+    const numero = (
+      <div className="dente-num" style={{ fontSize: "9px", fontWeight: 600, color: "var(--text-muted)" }}>
+        {numStr}
+      </div>
+    );
 
     return (
       <div
@@ -265,9 +297,8 @@ export default function Odontograma({
           outline: isSelected ? "2px solid var(--primary)" : "none",
         }}
       >
-        <div className="dente-num" style={{ fontSize: "9px", fontWeight: 600, color: "var(--text-muted)" }}>
-          {numStr}
-        </div>
+        {/* Como no papel: número por fora, quadradinho de faces virado para a linha média. */}
+        {superior ? numero : quadroFaces}
         {isAnterior ? (
           <svg className="dente-svg" width="22" height="34" viewBox="0 0 22 34">
             <path
@@ -304,6 +335,7 @@ export default function Odontograma({
             <g className="overlays" dangerouslySetInnerHTML={{ __html: overlays }} />
           </svg>
         )}
+        {superior ? quadroFaces : numero}
       </div>
     );
   };

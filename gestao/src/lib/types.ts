@@ -36,6 +36,8 @@ export interface Procedimento {
   id?: number;
   pacienteId: number;
   dente: string | number;
+  // Faces do dente por dente: { "16": ["M","C"] } (ver lib/faces.ts, migration 0033)
+  faces?: Record<string, ("M" | "D" | "O" | "V" | "L" | "C")[]>;
   procedimento: string;
   custo: number;
   status: 'Pendente' | 'Concluído' | 'Cancelado';

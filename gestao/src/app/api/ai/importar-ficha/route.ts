@@ -17,6 +17,7 @@ type Proc = {
   data: string | null;
   descricao: string;
   dente: string | null;
+  faces: Record<string, string> | null; // { "16": "MC" } — convertido para códigos na tela
   valorPago: number | null;
   pago: "sim" | "não" | null;
   nf: "sim" | "não" | null;
@@ -102,6 +103,14 @@ export async function POST(req: Request) {
         data: p.data != null ? String(p.data) : null,
         descricao: p.descricao != null ? String(p.descricao) : "",
         dente: p.dente != null && String(p.dente).trim() !== "" ? String(p.dente).trim() : null,
+        faces:
+          p.faces && typeof p.faces === "object" && !Array.isArray(p.faces)
+            ? Object.fromEntries(
+                Object.entries(p.faces as Record<string, unknown>)
+                  .filter(([, v]) => v != null && String(v).trim() !== "")
+                  .map(([k, v]) => [k.replace(/\./g, ""), Array.isArray(v) ? v.join("") : String(v)]),
+              )
+            : null,
         valorPago: parseValor(p.valorPago),
         pago: parseSimNao(p.pago),
         nf: parseSimNao(p.nf),

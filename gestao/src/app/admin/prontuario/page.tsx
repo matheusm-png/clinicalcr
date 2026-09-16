@@ -6,7 +6,9 @@ import Link from "next/link";
 import { DB, usuarioAtual, dataProcedimento, nomeNormalizado } from "@/lib/db";
 import { Paciente, Procedimento, Anamnese, Profissional, ModeloAnamnese, ProcedimentoCatalogo, Orcamento, ContaReceber, Agendamento } from "@/lib/types";
 import Topbar from "@/components/Topbar";
-import Odontograma from "@/components/Odontograma";
+import Odontograma, { catProc } from "@/components/Odontograma";
+import FacesDente from "@/components/FacesDente";
+import { Face, FacesPorDente, dentesDoTexto, denteValido, denteComFaces, limparFaces, rotuloFaces } from "@/lib/faces";
 import { useToast } from "@/components/Toast";
 import { exportarPaciente, baixarJson } from "@/lib/lgpd/exportar";
 import AnaliseRiscoIA from "@/components/AnaliseRiscoIA";
@@ -40,6 +42,13 @@ const dataBR = (iso?: string) => {
 
 // Formas de pagamento aceitas na clínica (mesma lista do Financeiro).
 const FORMAS_PAGAMENTO = ["PIX", "Cartão de Crédito", "Cartão de Débito", "Dinheiro", "Boleto"];
+
+// Um item do formulário de procedimento. Num atendimento com várias coisas
+// (ex.: três restaurações no mesmo dia) cada item vira um registro próprio,
+// com seus dentes, faces e valor; data, estado, profissional e pagamento são
+// comuns a todos.
+type ItemProc = { nome: string; dente: string; faces: FacesPorDente; custo: string; mostrarFaces: boolean };
+const itemVazio = (dente = ""): ItemProc => ({ nome: "", dente, faces: {}, custo: "", mostrarFaces: false });
 
 function ProntuarioContent() {
   const router = useRouter();
@@ -81,11 +90,9 @@ function ProntuarioContent() {
 
   // Proc Form State
   const [editProcId, setEditProcId] = useState<number | null>(null);
-  const [procNome, setProcNome] = useState("");
-  const [procDente, setProcDente] = useState("");
+  const [procItens, setProcItens] = useState<ItemProc[]>([itemVazio()]);
   const [procEstado, setProcEstado] = useState<"a-realizar" | "realizado" | "pre-existente">("a-realizar");
   const [procProfId, setProcProfId] = useState<string>("");
-  const [procCusto, setProcCusto] = useState<string>("");
   const [procObs, setProcObs] = useState("");
   // Data em que o procedimento foi EXECUTADO (não a data da digitação).
   const [procData, setProcData] = useState<string>(hojeLocalISO());
@@ -202,11 +209,9 @@ function ProntuarioContent() {
 
   const handleOpenProcModal = (denteNum?: string) => {
     setEditProcId(null);
-    setProcNome("");
     setProcObs("");
     setProcEstado("a-realizar");
     setProcProfId(profissionais.length === 1 ? String(profissionais[0].id) : "");
-    setProcCusto("");
     setProcData(hojeLocalISO());
     setProcFormaPagto("");
     setProcPago(false);
@@ -215,29 +220,26 @@ function ProntuarioContent() {
     setProcRetornoObs("");
 
     if (denteNum) {
-      setProcDente(denteNum);
+      setProcItens([itemVazio(denteNum)]);
     } else if (selectedTeeth.size > 0) {
-      setProcDente(Array.from(selectedTeeth).sort().join(", "));
+      setProcItens([itemVazio(Array.from(selectedTeeth).sort().join(", "))]);
     } else {
-      setProcDente("");
+      setProcItens([itemVazio()]);
     }
 
     setIsProcModalOpen(true);
   };
 
   const handleSaveProcedimento = async () => {
-    if (!procNome) {
-      showToast("Selecione um procedimento.", "error");
+    const semNome = procItens.findIndex((it) => !it.nome);
+    if (semNome >= 0) {
+      showToast(procItens.length > 1 ? `Selecione o procedimento ${semNome + 1}.` : "Selecione um procedimento.", "error");
       return;
     }
 
-    const data: Procedimento = {
-      ...(editProcId ? { id: editProcId } : {}),
+    const comuns = {
       pacienteId: paciente.id!,
-      procedimento: procNome,
-      dente: procDente,
-      status: procEstado === "realizado" ? "Concluído" : procEstado === "a-realizar" ? "Pendente" : "Cancelado",
-      custo: procCusto ? Number(procCusto) : 0,
+      status: (procEstado === "realizado" ? "Concluído" : procEstado === "a-realizar" ? "Pendente" : "Cancelado") as Procedimento["status"],
       profissionalId: procProfId ? Number(procProfId) : undefined,
       obs: procObs,
       data: procData || undefined,
@@ -247,9 +249,23 @@ function ProntuarioContent() {
       retornoEm: procRetornoEm || undefined,
       retornoObs: procRetornoObs || undefined,
     };
+    const registros: Procedimento[] = procItens.map((it, i) => ({
+      ...comuns,
+      // Edição é sempre de um item só: o primeiro mantém o id do registro.
+      ...(editProcId && i === 0 ? { id: editProcId } : {}),
+      procedimento: it.nome,
+      dente: it.dente.trim(),
+      faces: limparFaces(it.faces, dentesDoTexto(it.dente)),
+      custo: it.custo ? Number(it.custo) : 0,
+    }));
 
+    let salvos = 0;
     try {
-      await DB.procedimentos.save(data);
+      // Em sequência (não Promise.all) para a lista sair na ordem digitada.
+      for (const r of registros) {
+        await DB.procedimentos.save(r);
+        salvos++;
+      }
 
       // O retorno marcado no procedimento alimenta a tela Retornos, que trabalha
       // com UMA data por paciente: vale sempre o retorno mais próximo ainda no
@@ -266,19 +282,30 @@ function ProntuarioContent() {
       setIsProcModalOpen(false);
       setSelectedTeeth(new Set());
       await loadPaciente();
-      showToast("Procedimento salvo.", "success");
+      showToast(registros.length > 1 ? `${registros.length} procedimentos salvos.` : "Procedimento salvo.", "success");
     } catch {
-      showToast("Não foi possível salvar o procedimento.", "error");
+      if (salvos > 0) {
+        // Tira do formulário o que já foi gravado, para "Salvar" de novo não duplicar.
+        setProcItens((its) => its.slice(salvos));
+        await loadPaciente();
+        showToast(`${salvos} de ${registros.length} salvos. Os que faltam continuam no formulário — tente de novo.`, "error");
+      } else {
+        showToast("Não foi possível salvar o procedimento.", "error");
+      }
     }
   };
 
   const handleEditProc = (p: any) => {
     setEditProcId(p.id);
-    setProcNome(p.nome || p.procedimento);
-    setProcDente(p.dente);
+    setProcItens([{
+      nome: p.nome || p.procedimento,
+      dente: String(p.dente ?? ""),
+      faces: p.faces ?? {},
+      custo: p.custo != null ? String(p.custo) : "",
+      mostrarFaces: !!p.faces && Object.keys(p.faces).length > 0,
+    }]);
     setProcEstado(p.estado || (p.status === "Concluído" ? "realizado" : "a-realizar"));
     setProcProfId(p.profissionalId ? String(p.profissionalId) : "");
-    setProcCusto(p.custo != null ? String(p.custo) : "");
     setProcObs(p.obs || "");
     setProcData(p.data || (p.criadoEm ? String(p.criadoEm).slice(0, 10) : hojeLocalISO()));
     setProcFormaPagto(p.formaPagto || "");
@@ -289,6 +316,34 @@ function ProntuarioContent() {
     setIsFichaDenteOpen(false);
     setIsProcModalOpen(true);
   };
+
+  // ── Itens do formulário de procedimento ─────────────────────
+  const setItem = (i: number, patch: Partial<ItemProc>) =>
+    setProcItens((its) => its.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
+
+  const toggleFace = (i: number, dente: string, face: Face) =>
+    setProcItens((its) =>
+      its.map((it, idx) => {
+        if (idx !== i) return it;
+        const atuais = it.faces[dente] ?? [];
+        const novas = atuais.includes(face) ? atuais.filter((f) => f !== face) : [...atuais, face];
+        return { ...it, faces: { ...it.faces, [dente]: novas } };
+      }),
+    );
+
+  // "16, 15, 14" num item só → um item por dente (cada um com sua face e valor).
+  const separarPorDente = (i: number) =>
+    setProcItens((its) =>
+      its.flatMap((it, idx) =>
+        idx !== i
+          ? [it]
+          : dentesDoTexto(it.dente).map((d) => ({
+              ...it,
+              dente: d,
+              faces: it.faces[d] ? { [d]: it.faces[d] } : {},
+            })),
+      ),
+    );
 
   const handleRemoveProcedimento = async (id?: number) => {
     if (id == null) return;
@@ -864,7 +919,7 @@ function ProntuarioContent() {
                         <tr key={p.id}>
                           <td>{dataBR(dataProcedimento(p))}</td>
                           <td>{p.nome || p.procedimento}</td>
-                          <td>{p.dente || "—"}</td>
+                          <td>{denteComFaces(p.dente, p.faces) || "—"}</td>
                           <td>
                             <span
                               className={`badge badge-${
@@ -1003,44 +1058,6 @@ function ProntuarioContent() {
                 </button>
               </div>
               <div className="modal-body">
-                <div className="form-group">
-                  <label className="form-label">Procedimento *</label>
-                  <select
-                    className="form-control"
-                    value={procNome}
-                    onChange={(e) => {
-                      const nome = e.target.value;
-                      setProcNome(nome);
-                      const item = catalogo.find((c) => c.nome === nome);
-                      if (item) setProcCusto(String(item.preco));
-                    }}
-                  >
-                    <option value="">Selecionar...</option>
-                    {/* preserva valor legado que não esteja no catálogo (ao editar) */}
-                    {procNome && !catalogo.some((c) => c.nome === procNome) && (
-                      <option value={procNome}>{procNome}</option>
-                    )}
-                    {catalogo.length > 0
-                      ? catalogo.map((c) => (
-                          <option key={c.id} value={c.nome}>
-                            {c.nome}
-                            {c.preco ? ` — R$ ${c.preco.toLocaleString("pt-BR")}` : ""}
-                          </option>
-                        ))
-                      : ["Restauração", "Extração", "Canal (Endodontia)", "Implante", "Ortodontia", "Prótese", "Clareamento"].map(
-                          (n) => (
-                            <option key={n} value={n}>
-                              {n}
-                            </option>
-                          ),
-                        )}
-                  </select>
-                  {catalogo.length === 0 && (
-                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                      Importe o catálogo padrão em Catálogo para ter preços sugeridos.
-                    </span>
-                  )}
-                </div>
                 <div className="form-row form-row-2">
                   <div className="form-group">
                     <label className="form-label">Data de execução *</label>
@@ -1055,41 +1072,186 @@ function ProntuarioContent() {
                     </span>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Dentes (Ex: 16, 21, 45...)</label>
-                    <input
-                      type="text"
+                    <label className="form-label">Estado</label>
+                    <select
                       className="form-control"
-                      placeholder="Ex: 16, 21, 45…"
-                      value={procDente}
-                      onChange={(e) => setProcDente(e.target.value)}
-                    />
+                      value={procEstado}
+                      onChange={(e) => setProcEstado(e.target.value as any)}
+                    >
+                      <option value="a-realizar">A realizar</option>
+                      <option value="realizado">Realizado</option>
+                      <option value="pre-existente">Pré-existente</option>
+                    </select>
                   </div>
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Estado</label>
-                  <select
-                    className="form-control"
-                    value={procEstado}
-                    onChange={(e) => setProcEstado(e.target.value as any)}
-                  >
-                    <option value="a-realizar">A realizar</option>
-                    <option value="realizado">Realizado</option>
-                    <option value="pre-existente">Pré-existente</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Valor (R$)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    className="form-control"
-                    placeholder="0,00"
-                    value={procCusto}
-                    onChange={(e) => setProcCusto(e.target.value)}
-                  />
+
+                {/* ── Itens: um por procedimento feito no atendimento ── */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
+                  {procItens.map((it, i) => {
+                    const dentesOk = dentesDoTexto(it.dente).filter(denteValido);
+                    const facesAbertas =
+                      dentesOk.length > 0 &&
+                      (it.mostrarFaces || catProc(it.nome) === "restauracao" || Object.values(it.faces).some((f) => f.length));
+                    return (
+                      <div
+                        key={i}
+                        style={{ border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: 12, background: "var(--bg2)" }}
+                      >
+                        {procItens.length > 1 && (
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                            <strong style={{ fontSize: 12, color: "var(--text-muted)" }}>Procedimento {i + 1}</strong>
+                            <button
+                              type="button"
+                              title="Remover este item"
+                              onClick={() => setProcItens((its) => its.filter((_, idx) => idx !== i))}
+                              style={{ border: "none", background: "transparent", color: "var(--danger)", cursor: "pointer", fontSize: 18, lineHeight: 1 }}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        )}
+                        <div className="form-group">
+                          <label className="form-label">Procedimento *</label>
+                          <select
+                            className="form-control"
+                            value={it.nome}
+                            onChange={(e) => {
+                              const nome = e.target.value;
+                              const item = catalogo.find((c) => c.nome === nome);
+                              setItem(i, { nome, ...(item ? { custo: String(item.preco) } : {}) });
+                            }}
+                          >
+                            <option value="">Selecionar...</option>
+                            {/* preserva valor legado que não esteja no catálogo (ao editar) */}
+                            {it.nome && !catalogo.some((c) => c.nome === it.nome) && (
+                              <option value={it.nome}>{it.nome}</option>
+                            )}
+                            {catalogo.length > 0
+                              ? catalogo.map((c) => (
+                                  <option key={c.id} value={c.nome}>
+                                    {c.nome}
+                                    {c.preco ? ` — R$ ${c.preco.toLocaleString("pt-BR")}` : ""}
+                                  </option>
+                                ))
+                              : ["Restauração", "Extração", "Canal (Endodontia)", "Implante", "Ortodontia", "Prótese", "Clareamento"].map(
+                                  (n) => (
+                                    <option key={n} value={n}>
+                                      {n}
+                                    </option>
+                                  ),
+                                )}
+                          </select>
+                          {catalogo.length === 0 && i === 0 && (
+                            <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                              Importe o catálogo padrão em Catálogo para ter preços sugeridos.
+                            </span>
+                          )}
+                        </div>
+                        <div className="form-row form-row-2">
+                          <div className="form-group">
+                            <label className="form-label">Dentes</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              placeholder="Ex: 16, 21, 45…"
+                              value={it.dente}
+                              onChange={(e) => setItem(i, { dente: e.target.value })}
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label className="form-label">Valor (R$)</label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              className="form-control"
+                              placeholder="0,00"
+                              value={it.custo}
+                              onChange={(e) => setItem(i, { custo: e.target.value })}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Faces do dente — o quadradinho do odontograma de papel */}
+                        {dentesOk.length > 0 && !facesAbertas && (
+                          <button
+                            type="button"
+                            className="btn btn-outline btn-sm"
+                            onClick={() => setItem(i, { mostrarFaces: true })}
+                          >
+                            Marcar faces do dente
+                          </button>
+                        )}
+                        {facesAbertas && (
+                          <div>
+                            <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>
+                              Faces{" "}
+                              <span style={{ fontWeight: 400, color: "var(--text-muted)" }}>
+                                · clique na face tratada · faixa tracejada = cervical
+                              </span>
+                            </div>
+                            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                              {dentesOk.map((d) => (
+                                <div key={d} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                                  <strong style={{ fontSize: 12 }}>{d}</strong>
+                                  <FacesDente
+                                    dente={d}
+                                    faces={it.faces[d] ?? []}
+                                    size={64}
+                                    mostrarLetras
+                                    onToggle={(f) => toggleFace(i, d, f)}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleFace(i, d, "C")}
+                                    style={{
+                                      fontSize: 11, padding: "2px 8px", borderRadius: 4, cursor: "pointer",
+                                      border: `1px solid ${it.faces[d]?.includes("C") ? "var(--primary)" : "var(--border)"}`,
+                                      background: it.faces[d]?.includes("C") ? "var(--primary-light)" : "transparent",
+                                      color: it.faces[d]?.includes("C") ? "var(--primary-darker)" : "var(--text-muted)",
+                                    }}
+                                  >
+                                    Cervical
+                                  </button>
+                                  <span style={{ fontSize: 12, fontWeight: 700, minHeight: 16 }}>
+                                    {rotuloFaces(d, limparFaces(it.faces, [d])[d]) || "—"}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {!editProcId && dentesDoTexto(it.dente).length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => separarPorDente(i)}
+                            style={{ marginTop: 10, border: "none", background: "transparent", color: "var(--primary)", cursor: "pointer", fontSize: 12, padding: 0 }}
+                          >
+                            Valores diferentes por dente? Separar em um procedimento por dente
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {!editProcId && (
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                      <button
+                        type="button"
+                        className="btn btn-sm"
+                        style={{ border: "1px dashed var(--border)" }}
+                        onClick={() => setProcItens((its) => [...its, itemVazio()])}
+                      >
+                        + Outro procedimento no mesmo atendimento
+                      </button>
+                      {procItens.length > 1 && (
+                        <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                          Total: <strong style={{ color: "var(--text)" }}>{brl(procItens.reduce((t, it) => t + (Number(it.custo) || 0), 0))}</strong>
+                        </span>
+                      )}
+                    </div>
+                  )}
                   <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                    Sugerido pelo catálogo ao escolher o procedimento; ajuste se necessário. Usado em relatórios e comissões.
+                    Valor sugerido pelo catálogo ao escolher o procedimento; ajuste se necessário. Usado em relatórios e comissões.
                   </span>
                 </div>
                 <div className="form-group">
@@ -1181,7 +1343,7 @@ function ProntuarioContent() {
                   Cancelar
                 </button>
                 <button className="btn btn-primary" onClick={handleSaveProcedimento}>
-                  Salvar
+                  {procItens.length > 1 ? `Salvar ${procItens.length} procedimentos` : "Salvar"}
                 </button>
               </div>
             </div>
@@ -1211,7 +1373,12 @@ function ProntuarioContent() {
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                         <div>
                           <div style={{ fontWeight: 600, fontSize: 14, color: "var(--text-dark)" }}>{p.nome || p.procedimento}</div>
-                          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{p.data || "Sem data"}</div>
+                          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{p.data ? dataBR(p.data) : "Sem data"}</div>
+                          {p.faces?.[selectedDenteNum]?.length > 0 && (
+                            <div style={{ fontSize: 12, marginTop: 4 }}>
+                              Faces: <strong>{rotuloFaces(selectedDenteNum, p.faces[selectedDenteNum])}</strong>
+                            </div>
+                          )}
                         </div>
                         <span className={`badge badge-${p.estado === "realizado" ? "success" : p.estado === "a-realizar" ? "info" : "warning"}`}>
                           {p.estado || p.status}

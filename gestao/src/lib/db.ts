@@ -1,4 +1,5 @@
 import { createClient, isSupabaseConfigured } from "./supabase/client";
+import { facesDoJson } from "./faces";
 import {
   Paciente,
   Procedimento,
@@ -123,6 +124,7 @@ const fromProcedimento = (r: any): Procedimento => ({
   id: r.id,
   pacienteId: r.paciente_id,
   dente: r.dente,
+  faces: facesDoJson(r.faces),
   procedimento: r.procedimento,
   custo: Number(r.custo),
   status: r.status,
@@ -139,6 +141,8 @@ const fromProcedimento = (r: any): Procedimento => ({
 const toProcedimento = (p: Procedimento) => ({
   paciente_id: p.pacienteId,
   dente: String(p.dente),
+  // Só vai quando a tela informa faces (undefined = não mexe na coluna).
+  ...(p.faces !== undefined ? { faces: p.faces && Object.keys(p.faces).length ? p.faces : null } : {}),
   procedimento: p.procedimento,
   custo: p.custo,
   status: p.status,
