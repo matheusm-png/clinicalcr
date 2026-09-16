@@ -11,6 +11,8 @@ import { useToast } from "@/components/Toast";
 import { comprimirImagem } from "@/lib/imagem";
 import { FICHA_DOENCAS, FICHA_GERAL, FICHA_SAUDE_TODAS } from "@/lib/fichaSaude";
 
+const hojeISO = () => new Date().toLocaleDateString("en-CA"); // yyyy-mm-dd no fuso local
+
 // ── Fluxo "Importar ficha por foto" ─────────────────────────────
 // 1 foto (ou as 2 páginas) → IA de visão lê anamnese + procedimentos →
 // você revisa tudo numa tela → 1 clique cria paciente + anamnese +
@@ -356,7 +358,7 @@ export default function ImportarFichaPage() {
         pacienteId,
         respostas,
         pacienteNome: nome.trim(),
-        data: dataFicha || new Date().toISOString().split("T")[0],
+        data: dataFicha || hojeISO(),
         status: "Assinado",
       });
 
@@ -661,6 +663,17 @@ export default function ImportarFichaPage() {
               <section className="card" style={{ padding: 20 }}>
                 <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 14 }}>Paciente</h3>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
+                  {/* Data da anamnese: a do papel ("Local / Data"), não a da digitação.
+                      A IA preenche quando consegue ler; aqui dá para corrigir. */}
+                  <div style={{ gridColumn: "1 / -1" }}>
+                    <label style={labelStyle}>Data da anamnese</label>
+                    <input type="date" style={{ ...inputStyle, maxWidth: 220, ...rev("local_data") }} value={dataFicha} max={hojeISO()} onChange={(e) => setDataFicha(e.target.value)} />
+                    {!dataFicha && (
+                      <span style={{ fontSize: 11, color: "var(--text-muted)", display: "block", marginTop: 4 }}>
+                        Não foi lida na ficha — se ficar vazia, salva com a data de hoje.
+                      </span>
+                    )}
+                  </div>
                   <div style={{ gridColumn: "1 / -1" }}>
                     <label style={labelStyle}>Nome *</label>
                     <input style={{ ...inputStyle, ...rev("nome") }} value={nome} onChange={(e) => setNome(e.target.value)} />
