@@ -111,6 +111,22 @@
   window.addEventListener('scroll', updateHeader, { passive: true });
   updateHeader();
 
+  /* ============ Menu mobile ============ */
+  const navToggle = document.getElementById('nav-toggle');
+  if (navToggle && siteHeader) {
+    navToggle.addEventListener('click', function () {
+      const open = siteHeader.classList.toggle('nav-open');
+      navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      navToggle.setAttribute('aria-label', open ? 'Fechar menu' : 'Abrir menu');
+    });
+    siteHeader.querySelectorAll('.site-nav a').forEach(function (a) {
+      a.addEventListener('click', function () {
+        siteHeader.classList.remove('nav-open');
+        navToggle.setAttribute('aria-expanded', 'false');
+      });
+    });
+  }
+
   /* ============ Dock de navegação (home) ============ */
   const dock = document.getElementById('dock');
   const dockLinks = dock ? Array.from(dock.querySelectorAll('a')) : [];
@@ -170,6 +186,9 @@
     }
     toggle.addEventListener('click', function () { chat.classList.contains('open') ? closeChat() : openChat(); });
     closeBtn.addEventListener('click', closeChat);
+    // Barra fixa do mobile: Agendar abre o chat (qualifica e manda pro WhatsApp com contexto)
+    const mobileAgendar = document.getElementById('mobile-agendar');
+    if (mobileAgendar) mobileAgendar.addEventListener('click', function () { chat.classList.contains('open') ? closeChat() : openChat(); });
 
     function addMsg(text, who) {
       const d = document.createElement('div');

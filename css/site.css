@@ -897,3 +897,80 @@ footer { background: var(--deep); color: #FDFCF8; padding: 80px 0 36px; margin-t
   .doctor-blob-bg, .team-card .team-avatar, .doctor-photo img,
   .doctor-photo-wrapper, .doctor-badge { animation: none !important; }
 }
+
+/* ============ ETAPA 2 — header com âncoras, prova, barra mobile ============ */
+.site-nav { display: flex; align-items: center; gap: 26px; }
+.site-nav a {
+  font-size: 14.5px; font-weight: 600; color: rgba(253,252,248,0.82);
+  padding: 6px 0; border-bottom: 2px solid transparent; transition: 0.25s;
+}
+.site-nav a:hover { color: #FDFCF8; border-bottom-color: var(--sun); }
+header.scrolled .site-nav a { color: var(--ink-soft); }
+header.scrolled .site-nav a:hover { color: var(--ink); }
+.nav-toggle {
+  display: none; width: 42px; height: 42px; border-radius: 12px; border: 1px solid rgba(253,252,248,0.3);
+  background: transparent; cursor: pointer; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+}
+.nav-toggle span { width: 18px; height: 2px; background: #FDFCF8; border-radius: 2px; transition: 0.25s; }
+header.scrolled .nav-toggle { border-color: var(--line); }
+header.scrolled .nav-toggle span, header.nav-open .nav-toggle span { background: var(--ink); }
+header.nav-open { background: var(--bg); border-bottom-color: var(--line); }
+header.nav-open .wordmark { color: var(--ink); }
+header.nav-open .nav-toggle span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+header.nav-open .nav-toggle span:nth-child(2) { opacity: 0; }
+header.nav-open .nav-toggle span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+.hero-eyebrow {
+  font-size: 13px !important; font-weight: 700 !important; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--aqua-200) !important; margin-bottom: 14px !important;
+}
+
+.proof-panel .trust-item { gap: 6px; }
+.proof-num {
+  font-family: var(--font-display); font-size: 40px; font-weight: 800; line-height: 1;
+  color: var(--aqua-600); letter-spacing: -0.03em; margin-bottom: 6px;
+}
+.proof-panel .trust-item h4 { font-size: 16px; }
+/* Placeholder visível de material pendente (some quando o dado real entra) */
+.placeholder { position: relative; color: var(--ink-soft); }
+.placeholder::after {
+  content: attr(data-placeholder); display: inline-block; margin-left: 8px; vertical-align: middle;
+  font: 700 10.5px/1.5 var(--font-sans); letter-spacing: 0.04em; text-transform: uppercase;
+  color: #8a4b00; background: #FFE7B8; border: 1px dashed #F09E14; border-radius: 6px; padding: 1px 6px;
+}
+
+.footer-admin { font-size: 12px; opacity: 0.55; letter-spacing: 0.04em; text-transform: uppercase; }
+.footer-admin:hover { opacity: 1; }
+
+.mobile-bar {
+  display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 9990;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(253,252,248,0.92); backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  border-top: 1px solid var(--line); gap: 10px;
+}
+.mobile-bar-btn {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 14px 12px; border-radius: var(--r-chip); font: 700 15px var(--font-sans);
+  border: 2px solid rgba(18,54,52,0.18); color: var(--ink); background: transparent; cursor: pointer;
+}
+.mobile-bar-btn.primary { background: var(--sun); border-color: var(--sun); color: var(--deep); box-shadow: 0 8px 20px rgba(255,180,59,0.35); }
+.mobile-bar-btn:active { transform: scale(0.97); }
+
+@media (max-width: 968px) {
+  .site-nav {
+    position: absolute; top: 100%; left: 0; right: 0; flex-direction: column; align-items: stretch; gap: 0;
+    background: var(--bg); border-bottom: 1px solid var(--line); padding: 8px 5% 14px;
+    display: none; box-shadow: 0 20px 40px rgba(10,48,46,0.12);
+  }
+  header.nav-open .site-nav { display: flex; }
+  .site-nav a, header.scrolled .site-nav a { color: var(--ink); font-size: 17px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .site-nav a:last-child { border-bottom: none; }
+  .nav-toggle { display: flex; }
+}
+@media (max-width: 768px) {
+  .mobile-bar { display: flex; }
+  body { padding-bottom: 76px; }
+  .whatsapp-btn { display: none; }
+  .wa-chat { bottom: 90px; right: 12px; left: 12px; width: auto; max-width: none; }
+  .proof-num { font-size: 32px; }
+}
