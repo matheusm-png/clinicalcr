@@ -1212,3 +1212,46 @@ header.header-solid .nav-toggle span { background: var(--ink); }
 .reviews-empty { background: var(--card); border-radius: 16px; padding: 18px; }
 @media (max-width: 1024px) { .visit-steps-5 { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 768px) { .visit-steps-5 { grid-template-columns: 1fr; } .reviews-grid { grid-template-columns: 1fr; } }
+
+/* ============ ETAPA 6 — clínica, equipe, sobre ============ */
+.clinic-media { display: grid; grid-template-columns: 1.2fr 1fr; gap: 18px; margin-bottom: 40px; }
+.clinic-video { border-radius: var(--r-card); overflow: hidden; background: var(--deep); box-shadow: var(--shadow-card); position: relative; }
+.clinic-video video { width: 100%; height: auto; display: block; aspect-ratio: 16 / 9; object-fit: cover; }
+.clinic-video figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 18px; font-size: 13px; color: #FDFCF8; background: linear-gradient(transparent, rgba(10,48,46,0.75)); pointer-events: none; }
+.gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.gal-item { display: block; border-radius: 18px; overflow: hidden; background: var(--aqua-100); aspect-ratio: 16 / 9; }
+.gal-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s var(--ease-smooth); }
+.gal-item:hover img { transform: scale(1.04); }
+.gal-item:nth-child(1) { grid-column: span 2; }
+.place-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
+.lightbox { border: none; padding: 0; background: transparent; max-width: min(96vw, 1200px); width: auto; }
+.lightbox::backdrop { background: rgba(10,48,46,0.9); backdrop-filter: blur(6px); }
+.lightbox img { width: 100%; height: auto; border-radius: 18px; display: block; }
+.lightbox p { color: #FDFCF8; text-align: center; margin-top: 12px; font-size: 14px; }
+.lightbox-close { position: absolute; top: -6px; right: -6px; width: 40px; height: 40px; border-radius: 50%; border: none; background: #FDFCF8; color: var(--deep); font-size: 26px; line-height: 1; cursor: pointer; z-index: 2; }
+
+.team-grid-photos { grid-template-columns: repeat(4, 1fr); align-items: start; }
+.team-grid-photos .team-card { text-align: left; align-items: flex-start; padding: 16px 16px 22px; }
+.team-photo { width: 100%; aspect-ratio: 4 / 5; border-radius: 18px; overflow: hidden; background: var(--aqua-100); margin-bottom: 16px; }
+.team-photo img { width: 100%; height: 100%; object-fit: cover; }
+.photo-placeholder { display: flex; align-items: center; justify-content: center; border: 2px dashed #F09E14; background: #FFF5E3; color: #8a4b00; font: 700 13px var(--font-sans); letter-spacing: 0.04em; text-transform: uppercase; text-align: center; padding: 12px; }
+.photo-placeholder::after { content: attr(data-placeholder); }
+.team-grid-photos h3 { font-size: 18px; margin-bottom: 4px; }
+.team-grid-photos .team-role { font-size: 13px; color: var(--ink-soft); line-height: 1.4; margin-bottom: 4px; }
+.team-quote { font-size: 14px; line-height: 1.55; color: var(--ink); margin-top: 10px; font-style: italic; }
+.team-featured { border-color: var(--aqua-400); box-shadow: var(--shadow-card); }
+.team-note { text-align: center; font-size: 13px; color: var(--ink-soft); margin-top: 22px; }
+#sobre .diff-panel { margin-top: 72px; }
+
+@media (max-width: 1024px) {
+  .clinic-media { grid-template-columns: 1fr; }
+  .team-grid-photos { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 768px) {
+  .gallery { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .gal-item { border-radius: 12px; }
+  .team-grid-photos { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .team-grid-photos .team-card { padding: 10px 10px 16px; }
+  .team-photo { border-radius: 12px; }
+  .lightbox-close { top: 8px; right: 8px; }
+}

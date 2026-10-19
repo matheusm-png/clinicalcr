@@ -46,8 +46,13 @@
     "@context": "https://schema.org",
     "@type": "Dentist",
     "name": "Clínica LCR Odontologia",
-    "image": "https://www.clinicalcr.com/assets/foto-lara-camila.jpg",
+    "image": [
+      "https://www.clinicalcr.com/assets/clinica/recepcao.webp",
+      "https://www.clinicalcr.com/assets/clinica/consultorio.webp",
+      "https://www.clinicalcr.com/assets/foto-lara-camila.jpg"
+    ],
     "url": "https://www.clinicalcr.com/",
+    "hasMap": "https://maps.app.goo.gl/RV3zCA5skEBB8r4Y6",
     "telephone": "+5574991266602",
     "email": "clinicalcr@outlook.com",
     "priceRange": "$$",
@@ -634,7 +639,134 @@
     </div>
   </section>
 
-  <!-- 4. Quem cuida -->
+  <!-- 10. A clínica: o pai quer ver onde o filho vai entrar -->
+  <section id="clinica">
+    <div class="container">
+      <div class="section-header">
+        <span class="chip">A clínica</span>
+        <h2>Veja onde seu filho <span class="squiggle">vai entrar</span></h2>
+        <p>No centro de Irecê, uma clínica clara, organizada e pensada pra criança se sentir segura e o adulto se sentir em casa.</p>
+      </div>
+      <div class="clinic-media">
+        <figure class="clinic-video">
+          <video id="tour-video" poster="assets/clinica/tour-poster.webp" preload="none" controls playsinline width="1280" height="720" aria-label="Tour pela Clínica LCR">
+            <source src="assets/clinica/tour.mp4" type="video/mp4">
+          </video>
+          <figcaption>Tour de 20 segundos: da porta ao consultório.</figcaption>
+        </figure>
+        <div class="gallery" id="gallery">
+          <a class="gal-item" href="assets/clinica/recepcao.webp" data-gallery data-caption="Recepção" data-track="gallery_open" data-item="recepcao">
+            <img src="assets/clinica/recepcao-800.webp" srcset="assets/clinica/recepcao-800.webp 800w, assets/clinica/recepcao.webp 1600w" sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" width="800" height="450" loading="lazy" decoding="async" alt="Recepção da Clínica LCR, com balcão e cadeiras de espera">
+          </a>
+          <a class="gal-item" href="assets/clinica/consultorio.webp" data-gallery data-caption="Consultório" data-track="gallery_open" data-item="consultorio">
+            <img src="assets/clinica/consultorio-800.webp" srcset="assets/clinica/consultorio-800.webp 800w, assets/clinica/consultorio.webp 1600w" sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" width="800" height="450" loading="lazy" decoding="async" alt="Consultório da Clínica LCR com a cadeira odontológica">
+          </a>
+          <a class="gal-item" href="assets/clinica/sala-porta.webp" data-gallery data-caption="Consultório, visto da porta" data-track="gallery_open" data-item="sala-porta">
+            <img src="assets/clinica/sala-porta-800.webp" srcset="assets/clinica/sala-porta-800.webp 800w, assets/clinica/sala-porta.webp 1600w" sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" width="800" height="450" loading="lazy" decoding="async" alt="Vista do consultório a partir da porta">
+          </a>
+          <a class="gal-item" href="assets/clinica/mesa.webp" data-gallery data-caption="Mesa de atendimento" data-track="gallery_open" data-item="mesa">
+            <img src="assets/clinica/mesa-800.webp" srcset="assets/clinica/mesa-800.webp 800w, assets/clinica/mesa.webp 1600w" sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" width="800" height="450" loading="lazy" decoding="async" alt="Mesa de atendimento da doutora, com flores">
+          </a>
+          <a class="gal-item" href="assets/clinica/cafe.webp" data-gallery data-caption="Cafezinho na recepção" data-track="gallery_open" data-item="cafe">
+            <img src="assets/clinica/cafe-800.webp" srcset="assets/clinica/cafe-800.webp 800w, assets/clinica/cafe.webp 1600w" sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" width="800" height="450" loading="lazy" decoding="async" alt="Café sendo servido na recepção">
+          </a>
+          <a class="gal-item" href="assets/clinica/escovas.webp" data-gallery data-caption="Escovas pros pequenos" data-track="gallery_open" data-item="escovas">
+            <img src="assets/clinica/escovas-800.webp" srcset="assets/clinica/escovas-800.webp 800w, assets/clinica/escovas.webp 1600w" sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" width="800" height="450" loading="lazy" decoding="async" alt="Escovas coloridas e livros infantis no consultório">
+          </a>
+          <a class="gal-item" href="assets/clinica/logo-parede.webp" data-gallery data-caption="A marca na parede" data-track="gallery_open" data-item="logo-parede">
+            <img src="assets/clinica/logo-parede-800.webp" srcset="assets/clinica/logo-parede-800.webp 800w, assets/clinica/logo-parede.webp 1600w" sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" width="800" height="450" loading="lazy" decoding="async" alt="Logo da Clínica LCR na parede da recepção">
+          </a>
+        </div>
+      </div>
+      <div class="place-grid">
+        <div class="place-card">
+          <h3>Como chegar e quando vir</h3>
+          <ul class="place-list">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span><strong>Rua Réggio Emília, 210 E, Centro</strong><br>Irecê - BA · CEP 44860-111</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span><strong>Seg a Sex:</strong> 8h–12h e 14h–18h<br><strong>Sábado:</strong> com agendamento prévio</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z"/></svg>
+              <span><strong>WhatsApp:</strong> (74) 99126-6602<br><strong>Telefone:</strong> (74) 99930-8146</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="12" rx="2"/><path d="M7 7V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/></svg>
+              <span><strong>Estacionamento:</strong> <span class="placeholder" data-placeholder="Confirmar com a clínica">—</span></span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="4" r="2"/><path d="M19 13v-2a7 7 0 0 0-14 0v2"/><path d="M5 13h14l-1 8H6z"/></svg>
+              <span><strong>Acessibilidade:</strong> <span class="placeholder" data-placeholder="Confirmar com a clínica">—</span></span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>
+              <span><strong>Atendimento:</strong> particular. As condições a gente explica no WhatsApp.</span>
+            </li>
+          </ul>
+          <div class="place-actions">
+            <a href="https://maps.app.goo.gl/RV3zCA5skEBB8r4Y6" target="_blank" rel="noopener" class="btn btn-aqua" data-track="como_chegar_click" data-origem="clinica">Como chegar</a>
+            <a href="https://wa.me/5574991266602" data-wa data-origem="clinica" data-servico="clinica" class="btn btn-outline-ink">Agendar uma visita</a>
+          </div>
+        </div>
+        <div class="place-map">
+          <iframe
+            src="https://www.google.com/maps?q=-11.3056314,-41.8557926&z=17&output=embed"
+            title="Mapa da Clínica LCR em Irecê-BA"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. Equipe: quem está por trás (foto real, nome, CRO, área, frase) -->
+  <section id="equipe" class="bg-soft">
+    <div class="container">
+      <div class="section-header">
+        <span class="chip">Quem cuida</span>
+        <h2>Quatro dentistas, <span class="squiggle">uma equipe</span></h2>
+        <p>Cada profissional com o próprio CRO-BA e a própria área, na mesma clínica. Seu filho e você conhecem a equipe pelo nome.</p>
+      </div>
+      <div class="team-grid team-grid-photos">
+        <article class="team-card team-featured">
+          <div class="team-photo"><img src="assets/foto-lara-camila.jpg" alt="Dra. Lara Camila, fundadora da Clínica LCR" width="480" height="480" loading="lazy"></div>
+          <h3>Dra. Lara Camila</h3>
+          <span class="team-role">Fundadora e responsável técnica · clínica geral e atendimento infantil</span>
+          <span class="team-cro">CRO-BA 15.247</span>
+          <p class="team-quote placeholder" data-placeholder="Frase pessoal: pedir à Dra. Lara">"Consultório pode ser um lugar leve, onde a criança entra curiosa e sai sorrindo."</p>
+        </article>
+        <article class="team-card">
+          <div class="team-photo photo-placeholder" data-placeholder="[FOTO: Dr. Welington]"></div>
+          <h3>Dr. Welington dos Santos Jr.</h3>
+          <span class="team-role">Implantodontia e cirurgia</span>
+          <span class="team-cro">CRO-BA 16.633</span>
+          <p class="team-quote placeholder" data-placeholder="Frase pessoal: pedir">—</p>
+        </article>
+        <article class="team-card">
+          <div class="team-photo photo-placeholder" data-placeholder="[FOTO: Dra. Talita]"></div>
+          <h3>Dra. Talita Fernandes</h3>
+          <span class="team-role">Ortodontia</span>
+          <span class="team-cro">CRO-BA 15.705</span>
+          <p class="team-quote placeholder" data-placeholder="Frase pessoal: pedir">—</p>
+        </article>
+        <article class="team-card">
+          <div class="team-photo photo-placeholder" data-placeholder="[FOTO: Dra. Paloma]"></div>
+          <h3>Dra. Paloma Vieira</h3>
+          <span class="team-role">Endodontia</span>
+          <span class="team-cro">CRO-BA 15.377</span>
+          <p class="team-quote placeholder" data-placeholder="Frase pessoal: pedir">—</p>
+        </article>
+      </div>
+      <p class="team-note"><span class="placeholder" data-placeholder="Confirmar especialidades registradas no CRO-BA">As áreas acima são as de atuação de cada profissional.</span></p>
+    </div>
+  </section>
+
+  <!-- 12. Sobre: a fundadora, a clínica e os 4 pilares (fecha o ciclo família/gerações do hero) -->
   <section id="sobre">
     <div class="container">
       <div class="doctor-grid">
@@ -662,80 +794,28 @@
         </div>
       </div>
 
-      <div class="team-grid">
-        <div class="team-card">
-          <div class="team-avatar">LC</div>
-          <h4>Dra. Lara Camila</h4>
-          <span class="team-role">Clínica Geral</span>
-          <span class="team-cro">CRO-BA 15.247</span>
-        </div>
-        <div class="team-card">
-          <div class="team-avatar">WS</div>
-          <h4>Dr. Welington dos Santos Jr.</h4>
-          <span class="team-role">Implantodontia</span>
-          <span class="team-cro">CRO-BA 16.633</span>
-        </div>
-        <div class="team-card">
-          <div class="team-avatar">TF</div>
-          <h4>Dra. Talita Fernandes</h4>
-          <span class="team-role">Ortodontia</span>
-          <span class="team-cro">CRO-BA 15.705</span>
-        </div>
-        <div class="team-card">
-          <div class="team-avatar">PV</div>
-          <h4>Dra. Paloma Vieira</h4>
-          <span class="team-role">Endodontia</span>
-          <span class="team-cro">CRO-BA 15.377</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 6. Diferenciais -->
-  <section>
-    <div class="container">
       <div class="diff-panel on-dark">
         <div class="section-header">
           <span class="chip">Do nosso jeito</span>
           <h2>Por que as famílias ficam</h2>
-          <p>O que muda quando a clínica cuida de você no longo prazo, e não só quando dói.</p>
+          <p>Muitos pais chegam trazendo o filho e acabam cuidando do próprio sorriso aqui. É assim que uma clínica vira a clínica da família.</p>
         </div>
         <div class="diff-grid">
           <div class="diff-card">
-            <div class="diff-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            </div>
-            <div>
-              <h4>A gente lembra por você</h4>
-              <p>Retornos e revisões combinados e lembrados. Prevenção só funciona com constância, e a constância é nossa responsabilidade também.</p>
-            </div>
+            <div class="diff-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+            <div><h4>A gente lembra por você</h4><p>Retornos e revisões combinados e lembrados. Prevenção só funciona com constância, e a constância é nossa responsabilidade também.</p></div>
           </div>
           <div class="diff-card">
-            <div class="diff-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            </div>
-            <div>
-              <h4>Tudo em um lugar só</h4>
-              <p>Clínica geral, orto, canal, próteses e implantes com equipe própria. Sua família não precisa peregrinar por consultórios.</p>
-            </div>
+            <div class="diff-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+            <div><h4>Tudo em um lugar só</h4><p>Clínica geral, orto, canal, próteses e cirurgia com equipe própria. Sua família não precisa peregrinar por consultórios.</p></div>
           </div>
           <div class="diff-card">
-            <div class="diff-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            </div>
-            <div>
-              <h4>Horário que cabe na rotina</h4>
-              <p>Agendamento online em 1 minuto, atendimento de segunda a sexta e sábado com horário combinado.</p>
-            </div>
+            <div class="diff-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div><h4>Horário que cabe na rotina</h4><p>Atendimento de segunda a sexta e sábado com horário combinado. Chamou no WhatsApp, a gente encaixa.</p></div>
           </div>
           <div class="diff-card">
-            <div class="diff-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-            </div>
-            <div>
-              <h4>Conversa de gente</h4>
-              <p>Explicamos cada passo do tratamento com transparência, sem "dentistês": você decide sabendo o que está decidindo.</p>
-            </div>
+            <div class="diff-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+            <div><h4>Conversa de gente</h4><p>Explicamos cada passo do tratamento com transparência, sem "dentistês": você decide sabendo o que está decidindo.</p></div>
           </div>
         </div>
       </div>
@@ -798,49 +878,7 @@
     </div>
   </section>
 
-  <!-- 8. Onde estamos -->
-  <section id="clinica">
-    <div class="container">
-      <div class="section-header">
-        <span class="chip">Vem cá</span>
-        <h2>No centro de Irecê, <span class="squiggle">pertinho</span> de você</h2>
-      </div>
-      <div class="place-grid">
-        <div class="place-card">
-          <h3>Clínica LCR</h3>
-          <ul class="place-list">
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              <span><strong>Rua Réggio Emília, 210 E, Centro</strong><br>Irecê - BA · CEP 44860-111</span>
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <span><strong>Seg a Sex:</strong> 8h–12h e 14h–18h<br><strong>Sábado:</strong> com agendamento prévio</span>
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-              <span><strong>WhatsApp:</strong> (74) 99126-6602<br><strong>Telefone:</strong> (74) 99930-8146</span>
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-              <span>clinicalcr@outlook.com</span>
-            </li>
-          </ul>
-          <a href="https://maps.app.goo.gl/RV3zCA5skEBB8r4Y6" target="_blank" rel="noopener" class="btn btn-aqua">Como chegar</a>
-        </div>
-        <div class="place-map">
-          <iframe
-            src="https://www.google.com/maps?q=-11.3056314,-41.8557926&z=17&output=embed"
-            title="Mapa da Clínica LCR em Irecê-BA"
-            loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade"
-            allowfullscreen></iframe>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 9. CTA final -->
+  <!-- 14. CTA final -->
   <section aria-label="Agendar consulta">
     <div class="container">
       <div class="cta-panel on-dark">
@@ -868,6 +906,7 @@
             </div>
           </div>
           <p>Prevenção, atendimento infantil e especialidades odontológicas em Irecê - BA, com acompanhamento de longo prazo pra sua família.</p>
+          <p><a href="guias/" style="color:var(--aqua-400);font-weight:700">Guias gratuitos</a> · <a href="#clinica" style="color:var(--aqua-400);font-weight:700">A clínica</a> · <a href="#equipe" style="color:var(--aqua-400);font-weight:700">Equipe</a></p>
           <div class="footer-social">
             <a href="https://www.instagram.com/clinica.lcr/" target="_blank" rel="noopener" aria-label="Instagram da Clínica LCR">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zm0 10.162a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
@@ -893,7 +932,7 @@
         </div>
       </div>
       <div class="copyright">
-        LCR Clínica Odontológica · CNPJ 27.211.223/0001-54<br>
+        LCR Clínica Odontológica · CNPJ 27.211.223/0001-54 · Inscrição no CRO-BA: <span class="placeholder" data-placeholder="[CRO DA CLÍNICA]">—</span><br>
         Responsável técnica: Dra. Lara Camila Moitinho Moura, CRO-BA 15.247<br>
         © 2026 Clínica LCR. Todos os direitos reservados.
       </div>
@@ -911,6 +950,13 @@
       Como chegar
     </a>
   </div>
+
+  <!-- Lightbox da galeria -->
+  <dialog class="lightbox" id="lightbox" aria-label="Foto da clínica">
+    <button type="button" class="lightbox-close" id="lightbox-close" aria-label="Fechar">&times;</button>
+    <img id="lightbox-img" src="" alt="" width="1600" height="900">
+    <p id="lightbox-cap"></p>
+  </dialog>
 
   <!-- Chat de pré-atendimento -->
   <div class="wa-chat" id="wa-chat" role="dialog" aria-label="Atendimento Clínica LCR" aria-hidden="true">

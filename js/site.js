@@ -246,6 +246,35 @@
     }
   })();
 
+  /* ============ Galeria (lightbox) + vídeo do tour ============ */
+  (function () {
+    const lb = document.getElementById('lightbox');
+    const img = document.getElementById('lightbox-img');
+    const cap = document.getElementById('lightbox-cap');
+    if (lb && img && typeof lb.showModal === 'function') {
+      document.querySelectorAll('a[data-gallery]').forEach(function (a) {
+        a.addEventListener('click', function (e) {
+          e.preventDefault();
+          img.src = a.getAttribute('href');
+          img.alt = (a.querySelector('img') || {}).alt || '';
+          cap.textContent = a.dataset.caption || '';
+          lb.showModal();
+        });
+      });
+      const close = function () { lb.close(); img.src = ''; };
+      document.getElementById('lightbox-close').addEventListener('click', close);
+      lb.addEventListener('click', function (e) { if (e.target === lb) close(); });
+    }
+    const video = document.getElementById('tour-video');
+    if (video) {
+      let played = false;
+      video.addEventListener('play', function () {
+        if (played) return; played = true;
+        track('video_play', { item: 'tour-clinica' });
+      });
+    }
+  })();
+
   /* ============ Depoimentos: filtro por tema + ver mais ============ */
   (function () {
     const grid = document.getElementById('reviews-grid');
