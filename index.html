@@ -91,6 +91,94 @@
     ]
   }
   </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "A partir de que idade devo trazer meu filho?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A recomendação é fazer a primeira consulta quando nasce o primeiro dentinho, ou até o primeiro aniversário. Quanto mais cedo a criança conhece o dentista de forma tranquila, mais natural o cuidado se torna pra ela. Se o seu filho já passou disso, não tem problema: a primeira consulta é boa em qualquer idade."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "E se meu filho tiver medo de dentista?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "É mais comum do que parece, e é exatamente por isso que a primeira visita aqui é de adaptação: sem procedimento forçado, no ritmo da criança. Ela conhece o espaço, brinca, entende o que vai acontecer. O medo costuma ir embora quando a criança sente que tem controle. Temos um guia sobre como preparar a criança em casa."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Quanto custa a primeira consulta?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A primeira consulta inclui a avaliação completa, a conversa com a família e o plano de cuidado por prioridade. O valor e as condições a gente informa no WhatsApp na hora de agendar, sem surpresa no dia."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Vocês atendem convênio?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No momento o atendimento é particular. Chama a gente no WhatsApp que explicamos as condições e montamos o melhor caminho pro seu caso."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Vocês atendem adultos ou só crianças?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Atendemos a família inteira. Além do atendimento infantil, a LCR tem clínica geral, ortodontia, canal, cirurgia, prótese e estética pra adolescentes e adultos, com quatro dentistas na mesma clínica. Muitos pais começam trazendo o filho e acabam se tratando aqui também."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Meu filho adolescente pode colocar aparelho com vocês?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Pode. A avaliação ortodôntica define o momento certo e o tipo de aparelho, convencional ou autoligado. A gente conversa direto com o adolescente também: o tratamento é dele."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "O tratamento dói?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A maioria das consultas preventivas (limpeza, flúor, selante) é tranquila e não precisa de anestesia. Quando um procedimento exige, usamos anestesia moderna e técnica adequada, e explicamos tudo antes, pra você (ou seu filho) não ser pego de surpresa."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Faz tempo que não vou ao dentista. Vou ser julgado?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Aqui não. Seja 1 ano ou 15 sem consulta, o que importa é que você veio. A avaliação é completa, a conversa é honesta e o plano de tratamento é montado por prioridade, junto com você."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Meu filho bateu a boca. Vocês atendem urgência?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Chama no WhatsApp e mande uma foto do dente: a gente orienta os primeiros passos na hora e procura o encaixe mais rápido. Enquanto isso, siga o guia de emergência."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Qual o horário de funcionamento?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Segunda a sexta, das 8h às 12h e das 14h às 18h. Aos sábados atendemos com agendamento prévio. O WhatsApp recebe mensagem a qualquer hora."
+        }
+      }
+    ]
+  }
+  </script>
   <link rel="stylesheet" href="css/site.css">
   <!-- GSAP -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -463,40 +551,86 @@
   </section>
   <!-- guias:home:end -->
 
-  <!-- 3. Como é a primeira visita -->
+  <!-- 8. Primeira consulta em 5 passos: tira a ansiedade do desconhecido -->
   <section id="primeira-visita">
     <div class="container">
       <div class="visit-panel">
         <div class="section-header">
-          <span class="chip">Primeira visita</span>
-          <h2>A primeira consulta, <span class="squiggle">sem medo</span></h2>
-          <p>A gente sabe que a primeira vez no dentista pode dar um frio na barriga, tanto na criança quanto nos pais. Por isso ela acontece assim:</p>
+          <span class="chip">Primeira consulta</span>
+          <h2>Como é a primeira vez, <span class="squiggle">sem medo</span></h2>
+          <p>A gente sabe que a primeira vez no dentista dá um frio na barriga, na criança e nos pais. Por isso ela acontece assim, passo a passo:</p>
         </div>
-        <div class="visit-steps">
+        <div class="visit-steps visit-steps-5">
           <div class="step-card">
             <span class="step-num">1</span>
-            <h3>Boas-vindas sem pressa</h3>
-            <p>A criança conhece o espaço, a cadeira e os "instrumentos de astronauta". Nada acontece sem ela entender antes.</p>
+            <h3>Agendar no WhatsApp</h3>
+            <p>Você conta a idade e o motivo. A recepção separa o melhor horário, de preferência de manhã pros pequenos.</p>
           </div>
           <div class="step-card">
             <span class="step-num">2</span>
-            <h3>Exame brincando</h3>
-            <p>Contamos os dentinhos, olhamos como estão crescendo e conversamos, tudo no ritmo dela.</p>
+            <h3>Boas-vindas sem pressa</h3>
+            <p>A criança conhece a recepção, a sala, a cadeira e os "instrumentos de astronauta". Colo liberado. Nada acontece sem ela entender antes.</p>
           </div>
           <div class="step-card">
             <span class="step-num">3</span>
-            <h3>Prevenção na prática</h3>
-            <p>Limpeza suave, flúor quando indicado e orientação de escovação pra família levar pra casa.</p>
+            <h3>Exame brincando</h3>
+            <p>Contamos os dentinhos, olhamos como estão crescendo e conversamos com você sobre escovação, alimentação e hábitos.</p>
           </div>
           <div class="step-card">
             <span class="step-num">4</span>
-            <h3>Plano pra família</h3>
-            <p>Explicamos tudo com transparência, montamos o plano de cuidado e já deixamos o retorno combinado.</p>
+            <h3>Cuidado já no primeiro dia</h3>
+            <p>Se a criança topar, a limpeza suave e o flúor já acontecem na mesma consulta. Se não topar, fica pra próxima. Ninguém força.</p>
+          </div>
+          <div class="step-card">
+            <span class="step-num">5</span>
+            <h3>Saída com lembrança</h3>
+            <p>A criança sai com o plano combinado, o retorno marcado e <span class="placeholder" data-placeholder="Definir com a Dra. Lara">uma lembrança da LCR</span> pra levar pra casa.</p>
           </div>
           <div class="steps-line" aria-hidden="true"></div>
         </div>
-        <p class="visit-note">Vale pros adultos também: avaliação completa, sem julgamento, mesmo se você não vai ao dentista há anos. 😉</p>
+        <p class="visit-note">Vale pros adultos também: avaliação completa, sem julgamento, mesmo se você não vai ao dentista há anos.</p>
+        <div class="visit-cta">
+          <a href="https://wa.me/5574991266602" data-wa data-origem="primeira-consulta" data-servico="primeira-consulta" class="btn btn-sun">Agendar a primeira consulta</a>
+          <a href="guias/primeira-consulta/" class="btn btn-outline-ink" data-track="guide_view" data-guia="primeira-consulta">Como preparar a criança em casa</a>
+        </div>
       </div>
+    </div>
+  </section>
+
+  <!-- 9. Depoimentos com filtro. FICA OCULTA (hidden) até entrarem avaliações reais do Google.
+       Pra publicar: 1) preencher o total e a nota, 2) trocar os cards de exemplo por trechos reais
+       (inicial + cidade, sem nome de criança), 3) remover o atributo hidden da <section>. -->
+  <section id="depoimentos" class="bg-soft" hidden>
+    <div class="container">
+      <div class="section-header">
+        <span class="chip">O que as famílias dizem</span>
+        <h2>Do medo à <span class="squiggle">vontade de voltar</span></h2>
+        <p>Histórias reais de pais e pacientes, publicadas nas avaliações do Google da Clínica LCR.</p>
+      </div>
+      <div class="reviews-total">
+        <strong class="placeholder" data-placeholder="[GOOGLE: nº]">—</strong>
+        <span>avaliações no Google · nota <span class="placeholder" data-placeholder="[GOOGLE: nota]">—</span></span>
+        <a href="https://maps.app.goo.gl/RV3zCA5skEBB8r4Y6" target="_blank" rel="noopener">Ver no Google</a>
+      </div>
+      <div class="filter-row reviews-filters" role="group" aria-label="Filtrar depoimentos por tema">
+        <button type="button" class="filter-btn active" data-filter-tag="todos">Todos</button>
+        <button type="button" class="filter-btn" data-filter-tag="medo">Medo de dentista</button>
+        <button type="button" class="filter-btn" data-filter-tag="bebes">Bebês e pequenos</button>
+        <button type="button" class="filter-btn" data-filter-tag="adultos">Adultos</button>
+        <button type="button" class="filter-btn" data-filter-tag="familias">Famílias</button>
+      </div>
+      <div class="reviews-grid" id="reviews-grid">
+        <!-- MODELO DE CARD (duplicar com avaliação real):
+        <blockquote class="review" data-tags="medo bebes">
+          <h3>Entrou com medo e saiu perguntando quando ia voltar</h3>
+          <p>Trecho literal da avaliação pública no Google, sem nome de criança [...]</p>
+          <footer><span class="review-avatar">M</span><span><strong>M. S.</strong><br>Irecê · avaliação no Google</span></footer>
+        </blockquote>
+        -->
+      </div>
+      <p class="reviews-empty" id="reviews-empty" hidden>Ainda não temos histórias com esse tema por aqui. Veja todas no Google.</p>
+      <p style="text-align:center;margin-top:28px"><button type="button" class="btn btn-outline-ink" id="reviews-more" hidden>Ver mais histórias</button></p>
+      <p class="reviews-note">Trechos de avaliações públicas no Google. Nomes de crianças foram omitidos.</p>
     </div>
   </section>
 
@@ -608,7 +742,7 @@
     </div>
   </section>
 
-  <!-- 7. FAQ -->
+  <!-- 13. FAQ (com schema FAQPage no <head>) -->
   <section class="bg-soft" id="faq">
     <div class="container">
       <div class="section-header">
@@ -618,28 +752,48 @@
       <div class="faq-wrap">
         <details class="faq-item">
           <summary>A partir de que idade devo trazer meu filho?<span class="faq-plus">+</span></summary>
-          <div class="faq-body">A recomendação é fazer a primeira consulta quando nasce o primeiro dentinho, ou até o primeiro aniversário. Quanto mais cedo a criança conhece o dentista de forma tranquila, mais natural o cuidado se torna pra ela.</div>
+          <div class="faq-body">A recomendação é fazer a primeira consulta quando nasce o primeiro dentinho, ou até o primeiro aniversário. Quanto mais cedo a criança conhece o dentista de forma tranquila, mais natural o cuidado se torna pra ela. Se o seu filho já passou disso, não tem problema: a primeira consulta é boa em qualquer idade.</div>
         </details>
         <details class="faq-item">
           <summary>E se meu filho tiver medo de dentista?<span class="faq-plus">+</span></summary>
-          <div class="faq-body">É mais comum do que parece, e é exatamente por isso que a primeira visita aqui é de adaptação: sem procedimento forçado, no ritmo da criança. Ela conhece o espaço, brinca, entende o que vai acontecer. O medo costuma ir embora quando a criança sente que tem controle.</div>
+          <div class="faq-body">É mais comum do que parece, e é exatamente por isso que a primeira visita aqui é de adaptação: sem procedimento forçado, no ritmo da criança. Ela conhece o espaço, brinca, entende o que vai acontecer. O medo costuma ir embora quando a criança sente que tem controle. Temos um <a href="guias/primeira-consulta/" data-track="guide_view" data-guia="primeira-consulta">guia sobre como preparar a criança em casa</a>.</div>
         </details>
         <details class="faq-item">
-          <summary>O tratamento dói?<span class="faq-plus">+</span></summary>
-          <div class="faq-body">A maioria das consultas preventivas (limpeza, flúor, selante) é tranquila e não precisa de anestesia. Quando um procedimento exige, usamos anestesia moderna e técnica adequada, e explicamos tudo antes, pra você (ou seu filho) não ser pego de surpresa.</div>
+          <summary>Quanto custa a primeira consulta?<span class="faq-plus">+</span></summary>
+          <div class="faq-body">A primeira consulta inclui a avaliação completa, a conversa com a família e o plano de cuidado por prioridade. O valor e as condições a gente informa no WhatsApp na hora de agendar, sem surpresa no dia.</div>
         </details>
         <details class="faq-item">
           <summary>Vocês atendem convênio?<span class="faq-plus">+</span></summary>
           <div class="faq-body">No momento o atendimento é particular. Chama a gente no WhatsApp que explicamos as condições e montamos o melhor caminho pro seu caso.</div>
         </details>
         <details class="faq-item">
+          <summary>Vocês atendem adultos ou só crianças?<span class="faq-plus">+</span></summary>
+          <div class="faq-body">Atendemos a família inteira. Além do atendimento infantil, a LCR tem clínica geral, ortodontia, canal, cirurgia, prótese e estética pra adolescentes e adultos, com quatro dentistas na mesma clínica. Muitos pais começam trazendo o filho e acabam se tratando aqui também.</div>
+        </details>
+        <details class="faq-item">
+          <summary>Meu filho adolescente pode colocar aparelho com vocês?<span class="faq-plus">+</span></summary>
+          <div class="faq-body">Pode. A avaliação ortodôntica define o momento certo e o tipo de aparelho, convencional ou autoligado. A gente conversa direto com o adolescente também: o tratamento é dele.</div>
+        </details>
+        <details class="faq-item">
+          <summary>O tratamento dói?<span class="faq-plus">+</span></summary>
+          <div class="faq-body">A maioria das consultas preventivas (limpeza, flúor, selante) é tranquila e não precisa de anestesia. Quando um procedimento exige, usamos anestesia moderna e técnica adequada, e explicamos tudo antes, pra você (ou seu filho) não ser pego de surpresa.</div>
+        </details>
+        <details class="faq-item">
           <summary>Faz tempo que não vou ao dentista. Vou ser julgado?<span class="faq-plus">+</span></summary>
           <div class="faq-body">Aqui não. Seja 1 ano ou 15 sem consulta, o que importa é que você veio. A avaliação é completa, a conversa é honesta e o plano de tratamento é montado por prioridade, junto com você.</div>
         </details>
         <details class="faq-item">
-          <summary>Qual o horário de funcionamento?<span class="faq-plus">+</span></summary>
-          <div class="faq-body">Segunda a sexta, das 8h às 12h e das 14h às 18h. Aos sábados atendemos com agendamento prévio. Você pode agendar online a qualquer hora do dia.</div>
+          <summary>Meu filho bateu a boca. Vocês atendem urgência?<span class="faq-plus">+</span></summary>
+          <div class="faq-body">Chama no WhatsApp e mande uma foto do dente: a gente orienta os primeiros passos na hora e procura o encaixe mais rápido. Enquanto isso, siga o <a href="guias/trauma-dentario/" data-track="emergency_click" data-origem="faq">guia de emergência</a>.</div>
         </details>
+        <details class="faq-item">
+          <summary>Qual o horário de funcionamento?<span class="faq-plus">+</span></summary>
+          <div class="faq-body">Segunda a sexta, das 8h às 12h e das 14h às 18h. Aos sábados atendemos com agendamento prévio. O WhatsApp recebe mensagem a qualquer hora.</div>
+        </details>
+      </div>
+      <div class="services-cta">
+        <p>Não achou a sua dúvida? Manda no WhatsApp que a gente responde.</p>
+        <a href="https://wa.me/5574991266602" data-wa data-origem="faq" data-servico="geral" data-msg="Olá! Vim pelo site da Clínica LCR e tenho uma dúvida: " class="btn btn-outline-ink">Perguntar no WhatsApp</a>
       </div>
     </div>
   </section>

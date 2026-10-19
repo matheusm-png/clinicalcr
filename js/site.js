@@ -246,6 +246,38 @@
     }
   })();
 
+  /* ============ Depoimentos: filtro por tema + ver mais ============ */
+  (function () {
+    const grid = document.getElementById('reviews-grid');
+    if (!grid) return;
+    const cards = Array.from(grid.querySelectorAll('.review'));
+    const empty = document.getElementById('reviews-empty');
+    const more = document.getElementById('reviews-more');
+    const LIMIT = 4;
+    let tag = 'todos', expanded = false;
+    function apply() {
+      let shown = 0;
+      cards.forEach(function (c) {
+        const ok = tag === 'todos' || (c.dataset.tags || '').split(' ').indexOf(tag) !== -1;
+        const show = ok && (expanded || shown < LIMIT);
+        if (ok) shown++;
+        c.hidden = !show;
+      });
+      if (empty) empty.hidden = shown > 0;
+      if (more) more.hidden = expanded || shown <= LIMIT;
+    }
+    document.querySelectorAll('[data-filter-tag]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        tag = b.dataset.filterTag; expanded = false;
+        document.querySelectorAll('[data-filter-tag]').forEach(function (x) { x.classList.toggle('active', x === b); });
+        apply();
+        track('review_filter', { item: tag });
+      });
+    });
+    if (more) more.addEventListener('click', function () { expanded = true; apply(); });
+    apply();
+  })();
+
   /* ============ Scroll reveal ============ */
   const revealSel = '.section-header:not(.visit-panel .section-header), .trust-item, .step-card, .team-card, .service-card, .diff-card, .faq-item, .place-card, .place-map';
   document.querySelectorAll(revealSel).forEach(function (el) { el.classList.add('reveal'); });
