@@ -12,3 +12,10 @@ PRINTS/
 # Dados de paciente (LGPD) — nunca versionar
 FICHA_PACIENTES/
 PROMPT_OCR_FICHAS.md
+
+# Mídia bruta da clínica (4K, GB) — fica fora do repo
+FOTOS\ E\ VIDEOS/
+ID_VISUAL_REF/
+Identidade\ LCR.pdf
+assets/FRENTE.png
+assets/INTERIOR.png
