@@ -9,7 +9,7 @@ import { comprimirImagem } from "@/lib/imagem";
 
 // ── Capturar ficha pelo celular ─────────────────────────────
 // Fluxo pensado para a recepção: fotografa as páginas da ficha de papel
-// aqui no celular e ENVIA — as fotos aparecem na tela "Importar ficha"
+// aqui no celular e ENVIA — as fotos aparecem na tela "Adicionar fichas"
 // do computador, onde a leitura por IA e a revisão continuam com teclado
 // e tela grande. Nada além das fotos é criado neste passo.
 
@@ -48,11 +48,18 @@ export default function CapturarPage() {
     try {
       const blobs: Blob[] = [];
       for (const f of fotos) blobs.push(await comprimirImagem(f));
-      await DB.capturas.enviar(clinicaId, blobs, label);
+      const pasta = await DB.capturas.enviar(clinicaId, blobs, label);
+      // Já manda a IA ler em segundo plano: quando abrir no computador, a ficha está pronta.
+      fetch("/api/ai/ler-captura", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pasta }),
+        keepalive: true,
+      }).catch(() => {});
       setFotos([]);
       setLabel("");
       setEnviadas((n) => n + 1);
-      showToast("Fotos enviadas! Já aparecem no computador em Importar ficha.", "success");
+      showToast("Enviada! A IA já está lendo — confira no computador em Adicionar fichas.", "success");
     } catch {
       showToast("Falha ao enviar as fotos. Verifique a internet e tente de novo.", "error");
     } finally {
@@ -69,8 +76,8 @@ export default function CapturarPage() {
             <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 4 }}>📱 Fotografe aqui, continue no computador</h2>
             <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 16 }}>
               Tire as fotos das páginas da ficha e toque em <strong>Enviar</strong>.
-              Elas aparecem na tela <strong>Importar ficha</strong> do computador,
-              onde a leitura por IA e a revisão continuam na tela grande.
+              Elas aparecem na tela <strong>Adicionar fichas</strong> do computador já lidas pela IA,
+              e você só confere na tela grande. Pode enviar uma atrás da outra.
             </p>
 
             <div className="form-group">
@@ -139,7 +146,7 @@ export default function CapturarPage() {
 
           <div style={{ textAlign: "center", marginTop: 14 }}>
             <Link href="/admin/importar-ficha" style={{ fontSize: 13, color: "var(--text-muted)" }}>
-              Estou no computador → abrir Importar ficha
+              Estou no computador → abrir Adicionar fichas
             </Link>
           </div>
         </div>

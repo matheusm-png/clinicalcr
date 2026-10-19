@@ -1188,7 +1188,8 @@ export const DB = {
   // satisfaz a policy de RLS do bucket "anexos". O lote é removido
   // quando a ficha é importada no computador.
   capturas: {
-    async enviar(clinicaId: number, imagens: Blob[], label?: string): Promise<void> {
+    // Devolve o nome da pasta do lote (usado para disparar a leitura por IA).
+    async enviar(clinicaId: number, imagens: Blob[], label?: string): Promise<string> {
       if (semBackend()) throw new Error("Supabase não configurado — não é possível enviar.");
       const slug = (label || "")
         .trim().toLowerCase().normalize("NFD")
@@ -1205,6 +1206,7 @@ export const DB = {
           throw error;
         }
       }
+      return pasta;
     },
 
     // Lotes pendentes, do mais novo para o mais antigo.
@@ -1219,7 +1221,8 @@ export const DB = {
       for (const p of pastas) {
         if (p.id) continue; // entradas com id são arquivos soltos; pastas vêm com id null
         const { data: arquivos } = await sb().storage.from("anexos").list(`${base}/${p.name}`);
-        const paths = (arquivos ?? []).filter((a) => a.id).map((a) => `${base}/${p.name}/${a.name}`).sort();
+        const todos = (arquivos ?? []).filter((a) => a.id).map((a) => `${base}/${p.name}/${a.name}`).sort();
+        const paths = todos.filter((x) => /\.(jpe?g|png|webp)$/i.test(x));
         if (!paths.length) continue;
         const [ts, ...resto] = p.name.split("_");
         lotes.push({
@@ -1227,14 +1230,30 @@ export const DB = {
           label: resto.join("_").replace(/-/g, " "),
           quando: Number(ts) ? new Date(Number(ts)).toISOString() : "",
           paths,
+          todos,
+          temLeitura: todos.some((x) => x.endsWith("/leitura.json")),
         });
       }
       return lotes;
     },
 
+    // Resultado da leitura por IA gravado por /api/ai/ler-captura (ou null se ainda não leu).
+    async leitura(clinicaId: number, pasta: string): Promise<Record<string, any> | null> {
+      if (semBackend()) return null;
+      const { data, error } = await sb()
+        .storage.from("anexos")
+        .download(`${clinicaId}/capturas/${pasta}/leitura.json`);
+      if (error || !data) return null;
+      try {
+        return JSON.parse(await data.text());
+      } catch {
+        return null;
+      }
+    },
+
     async remover(lote: CapturaLote): Promise<void> {
       if (semBackend()) return;
-      const { error } = await sb().storage.from("anexos").remove(lote.paths);
+      const { error } = await sb().storage.from("anexos").remove(lote.todos?.length ? lote.todos : lote.paths);
       if (error) console.error("[DB] remover captura:", error.message);
     },
   },

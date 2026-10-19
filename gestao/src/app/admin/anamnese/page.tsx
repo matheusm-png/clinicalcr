@@ -393,9 +393,13 @@ function AnamneseContent() {
     setAssinaturaAnterior(""); // limpou de propósito: não reaproveita a antiga
   };
 
+  // Ficha antiga (data anterior a hoje) sendo passada do papel: o paciente já
+  // assinou no papel — não dá pra exigir declaração/assinatura na tela.
+  const fichaRetroativa = !!dataAnamnese && dataAnamnese < hojeISO();
+
   const handleNextStep = () => {
-    if (currentStep === 1 && (!nome || !tel)) {
-      showToast("Preencha o Nome e o Telefone.", "error");
+    if (currentStep === 1 && !nome) {
+      showToast("Preencha o Nome.", "error");
       return;
     }
     setCurrentStep((prev) => Math.min(prev + 1, 4));
@@ -406,11 +410,11 @@ function AnamneseContent() {
   };
 
   const handleSaveAnamnese = async () => {
-    if (!checkDeclaro) {
+    if (!checkDeclaro && !fichaRetroativa) {
       showToast("Leia e aceite a declaração de veracidade das informações.", "error");
       return;
     }
-    if (!signatureSigned) {
+    if (!signatureSigned && !fichaRetroativa) {
       showToast("Assine no campo de assinatura antes de finalizar.", "error");
       return;
     }
@@ -419,9 +423,10 @@ function AnamneseContent() {
       setCurrentStep(1);
       return;
     }
-    // A ficha cria/atualiza a ficha do paciente → Nome e Telefone são obrigatórios.
-    if (!nome || !tel) {
-      showToast("Preencha ao menos Nome e Telefone (passo 1).", "error");
+    // A ficha cria/atualiza a ficha do paciente → o Nome é obrigatório
+    // (telefone não: muita ficha antiga não tem).
+    if (!nome) {
+      showToast("Preencha ao menos o Nome (passo 1).", "error");
       setCurrentStep(1);
       return;
     }
@@ -507,7 +512,7 @@ function AnamneseContent() {
     return (
       <>
         <Topbar title="Anamnese">
-          <button className="btn btn-outline" onClick={() => router.push("/admin/anamnese?novo=1")}>
+          <button className="btn btn-outline" onClick={() => router.push("/admin/importar-ficha")}>
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: 15, height: 15 }}>
               <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
               <circle cx="12" cy="13" r="4" />
@@ -890,7 +895,7 @@ function AnamneseContent() {
                 </div>
               </div>
               <div className="form-group">
-                <label className="form-label">Tel *</label>
+                <label className="form-label">Tel</label>
                 <input
                   type="tel"
                   className="form-control"
@@ -1126,8 +1131,14 @@ function AnamneseContent() {
                 }}
               >
                 <input type="checkbox" checked={checkDeclaro} onChange={(e) => setCheckDeclaro(e.target.checked)} />
-                <span style={{ fontSize: 13, fontWeight: 600 }}>Declaro e aceito os termos acima *</span>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>Declaro e aceito os termos acima{fichaRetroativa ? "" : " *"}</span>
               </label>
+              {fichaRetroativa && (
+                <div style={{ fontSize: 12.5, color: "var(--text-muted)", margin: "-10px 0 16px" }}>
+                  Ficha antiga (data da anamnese anterior a hoje): a declaração e a assinatura estão no papel,
+                  então aqui são opcionais.
+                </div>
+              )}
 
               <label
                 className="accept-row"
