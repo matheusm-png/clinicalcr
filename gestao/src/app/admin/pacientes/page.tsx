@@ -106,6 +106,12 @@ export default function PacientesPage() {
     loadData();
   }, []);
 
+  // Fechar sem salvar pede confirmação se já tem algo digitado (antes perdia tudo num clique fora).
+  const fecharModal = () => {
+    if (nome.trim() && !confirm("Fechar sem salvar? O que foi digitado será perdido.")) return;
+    setIsModalOpen(false);
+  };
+
   const onArquivoCsv = (file?: File) => {
     if (!file) return;
     const reader = new FileReader();
@@ -239,6 +245,15 @@ export default function PacientesPage() {
     setIsModalOpen(true);
   };
 
+  // Atalho do dashboard ("Novo paciente") chega com ?novo=1 → já abre o cadastro.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("novo") === "1") {
+      window.history.replaceState(null, "", "/admin/pacientes");
+      setTimeout(handleOpenNewModal, 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleOpenEditModal = (p: Paciente) => {
     setEditingId(p.id ?? null);
     preencherForm(p);
@@ -247,8 +262,8 @@ export default function PacientesPage() {
   };
 
   const handleSave = async () => {
-    if (!nome || !tel) {
-      showToast("Preencha os campos obrigatórios (Nome e Telefone).", "error");
+    if (!nome) {
+      showToast("Preencha o nome do paciente.", "error");
       return;
     }
 
@@ -344,7 +359,7 @@ export default function PacientesPage() {
             <path d="M9 9l-1.5-1.5M16.5 16.5L15 15M15 9l1.5-1.5M7.5 16.5L9 15" />
             <circle cx="12" cy="12" r="3" />
           </svg>
-          Importar com IA
+          Adicionar fichas (IA)
         </button>
         <button className="btn btn-outline" onClick={abrirNumeracao} title="Atribuir o número do prontuário por ordem da data da anamnese">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: 15, height: 15 }}>
@@ -495,11 +510,11 @@ export default function PacientesPage() {
 
         {/* Modal Novo Paciente */}
         {isModalOpen && (
-          <div className="modal-overlay open" onClick={(e) => e.target === e.currentTarget && setIsModalOpen(false)}>
+          <div className="modal-overlay open" onClick={(e) => e.target === e.currentTarget && fecharModal()}>
             <div className="modal modal-lg">
               <div className="modal-header">
                 <span className="modal-title">{editingId ? "Editar Paciente" : "Cadastro de Paciente"}</span>
-                <button className="modal-close" onClick={() => setIsModalOpen(false)}>
+                <button className="modal-close" onClick={fecharModal}>
                   &times;
                 </button>
               </div>
@@ -641,7 +656,7 @@ export default function PacientesPage() {
                   <div className="tab-panel active">
                     <div className="form-row form-row-2">
                       <div className="form-group">
-                        <label className="form-label">Telefone *</label>
+                        <label className="form-label">Telefone</label>
                         <input
                           type="tel"
                           className="form-control"
@@ -777,7 +792,7 @@ export default function PacientesPage() {
                 )}
               </div>
               <div className="modal-footer">
-                <button className="btn btn-outline" onClick={() => setIsModalOpen(false)}>
+                <button className="btn btn-outline" onClick={fecharModal}>
                   Cancelar
                 </button>
                 <button className="btn btn-primary" onClick={handleSave}>

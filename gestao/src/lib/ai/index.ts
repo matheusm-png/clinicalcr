@@ -22,6 +22,7 @@ export function aiConfigurado(): boolean {
 interface ChatOpts {
   maxTokens?: number;
   temperature?: number;
+  json?: boolean; // força a resposta a ser um objeto JSON (response_format)
 }
 
 /** Conversa de texto. Retorna o conteúdo gerado. */
@@ -88,6 +89,7 @@ export async function aiVisao(
       messages: apiMessages,
       max_tokens: opts.maxTokens ?? 1800,
       temperature: opts.temperature ?? 0.1,
+      ...(opts.json ? { response_format: { type: "json_object" } } : {}),
     }),
   });
 

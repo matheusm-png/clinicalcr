@@ -183,7 +183,7 @@ export default function Sidebar() {
                 <circle cx="11" cy="12" r="3" />
                 <path d="M16 16l2 2 4-4" />
               </svg>
-              Importar ficha
+              Adicionar fichas
             </Link>
           </li>
           <li className="nav-subitem">

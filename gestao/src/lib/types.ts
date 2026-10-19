@@ -201,6 +201,8 @@ export interface CapturaLote {
   label: string;   // rótulo opcional (ex.: nome do paciente)
   quando: string;  // ISO de quando foi capturado
   paths: string[]; // caminhos das fotos no bucket
+  temLeitura: boolean; // a IA já leu (existe leitura.json na pasta — sucesso ou erro)
+  todos: string[];     // todos os arquivos da pasta (fotos + leitura.json), p/ remover
 }
 
 export interface Anexo {
