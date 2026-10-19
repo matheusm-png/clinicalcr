@@ -9,6 +9,8 @@
   function initHero() {
     if (heroInited) return true;
     if (prefersReducedMotion || window.innerWidth === 0) return false;
+    // Mobile: o CSS já entrega o estado final do hero; nada de GSAP aqui.
+    if (window.innerWidth < 768) { heroInited = true; return true; }
     if (!window.gsap) return false;
     heroInited = true;
 

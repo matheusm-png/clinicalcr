@@ -54,7 +54,7 @@ def header(base):
     return f'''  <header id="site-header" class="header-solid">
     <div class="container">
       <a href="{base}" class="wordmark" aria-label="Clínica LCR, início">
-        <img src="{base}assets/logo-lcr.png" alt="" aria-hidden="true" width="38" height="38">
+        <img src="{base}assets/logo-lcr-96.png" alt="" aria-hidden="true" width="38" height="38">
         <span class="wordmark-text">
           <span class="wordmark-name">Clínica LCR</span>
           <span class="wordmark-sub">Odontologia pra toda a família</span>
@@ -82,7 +82,7 @@ def footer(base):
       <div class="footer-grid">
         <div class="footer-col">
           <div class="footer-brand">
-            <img src="{base}assets/logo-lcr.png" alt="Logo Clínica LCR" width="44" height="44">
+            <img src="{base}assets/logo-lcr-96.png" alt="Logo Clínica LCR" width="44" height="44">
             <div>
               <div class="footer-brand-name">Clínica LCR</div>
               <div class="footer-brand-sub">Odontologia pra toda a família</div>
@@ -92,14 +92,14 @@ def footer(base):
           <p><a href="{base}guias/" style="color:var(--aqua-400);font-weight:700">Guias gratuitos</a> · <a href="{base}#clinica" style="color:var(--aqua-400);font-weight:700">A clínica</a></p>
         </div>
         <div class="footer-col">
-          <h4>Contato</h4>
+          <h3>Contato</h3>
           <p><strong>WhatsApp:</strong> (74) 99126-6602</p>
           <p><strong>Telefone:</strong> (74) 99930-8146</p>
           <p>clinicalcr@outlook.com</p>
           <p>Rua Réggio Emília, 210 E, Centro<br>Irecê - BA · CEP 44860-111</p>
         </div>
         <div class="footer-col">
-          <h4>Horário</h4>
+          <h3>Horário</h3>
           <p><strong>Seg a Sex:</strong> 8h–12h · 14h–18h</p>
           <p><strong>Sábado:</strong> com agendamento prévio</p>
           <p style="margin-top:18px"><a href="https://wa.me/{WA}" data-wa data-origem="footer" data-servico="geral" style="color:var(--aqua-400);font-weight:700">Agendar no WhatsApp →</a></p>
@@ -150,7 +150,9 @@ def head(base, title, desc, url, extra_ld=None, og_type='website'):
   <meta name="twitter:card" content="summary_large_image">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=swap" rel="stylesheet">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=swap"></noscript>
   <link rel="stylesheet" href="{base}css/site.css">
 {ld}</head>
 '''

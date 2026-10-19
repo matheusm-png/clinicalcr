@@ -89,8 +89,8 @@ section { padding: 96px 0; }
 .btn svg { flex-shrink: 0; }
 .btn-sun { background: var(--sun); color: var(--deep); box-shadow: 0 10px 26px rgba(255,180,59,0.35); }
 .btn-sun:hover { background: var(--sun-dark); transform: translateY(-2px); box-shadow: 0 16px 32px rgba(240,158,20,0.4); }
-.btn-aqua { background: var(--aqua-600); color: #fff; }
-.btn-aqua:hover { background: var(--aqua-700); transform: translateY(-2px); box-shadow: 0 14px 28px rgba(30,109,103,0.28); }
+.btn-aqua { background: var(--aqua-700); color: #fff; }
+.btn-aqua:hover { background: var(--deep-soft); transform: translateY(-2px); box-shadow: 0 14px 28px rgba(30,109,103,0.28); }
 .btn-outline-light { border-color: rgba(253,252,248,0.4); color: #FDFCF8; }
 .btn-outline-light:hover { background: rgba(253,252,248,0.1); border-color: rgba(253,252,248,0.7); }
 .btn-outline-ink { border-color: rgba(18,54,52,0.25); color: var(--ink); }
@@ -153,8 +153,8 @@ header.scrolled .admin-link { color: var(--ink); }
   transform: scale(1.06);
   will-change: opacity, transform;
 }
-#hero-photo-frente { background-image: url('../assets/hero-frente.jpg'); }
-#hero-photo-interior { background-image: url('../assets/hero-interior.jpg'); }
+#hero-photo-frente { background-image: url('../assets/hero-frente.webp'); }
+#hero-photo-interior { background-image: url('../assets/hero-interior.webp'); }
 /* véu verde-noite nas bordas: mantém o foco no centro e o texto legível */
 .hero-photo::after {
   content: ''; position: absolute; inset: 0;
@@ -186,7 +186,7 @@ header.scrolled .admin-link { color: var(--ink); }
    linhas do prédio continuarem através da borda do dente. */
 .logo-photo-inner {
   position: absolute; inset: 0;
-  background: url('../assets/hero-frente.jpg') center / cover no-repeat;
+  background: url('../assets/hero-frente.webp') center / cover no-repeat;
   opacity: 0.35;
   filter: saturate(0.6) blur(2px) brightness(1.25);
   transform: scale(1.35);
@@ -308,7 +308,7 @@ header.scrolled .admin-link { color: var(--ink); }
   display: flex; align-items: center; justify-content: center;
 }
 .trust-icon svg { width: 23px; height: 23px; }
-.trust-item h4 { font-family: var(--font-display); font-size: 17px; font-weight: 700; }
+.trust-item h3, .trust-item h4 { font-family: var(--font-display); font-size: 17px; font-weight: 700; }
 .trust-item p { font-size: 14px; color: var(--ink-soft); line-height: 1.6; }
 .trust-item a { color: var(--aqua-700); font-weight: 700; }
 .trust-item a:hover { text-decoration: underline; }
@@ -596,7 +596,7 @@ header.scrolled .admin-link { color: var(--ink); }
   background: rgba(91,194,186,0.14); color: var(--aqua-400);
   display: flex; align-items: center; justify-content: center;
 }
-.diff-card h4 { font-family: var(--font-display); font-size: 18px; font-weight: 700; margin-bottom: 8px; color: #FDFCF8; }
+.diff-card h3, .diff-card h4 { font-family: var(--font-display); font-size: 18px; font-weight: 700; margin-bottom: 8px; color: #FDFCF8; }
 .diff-card p { font-size: 14.5px; color: var(--white-muted); line-height: 1.65; }
 
 /* ============ 7. FAQ ============ */
@@ -675,7 +675,7 @@ header.scrolled .admin-link { color: var(--ink); }
 /* ============ RODAPÉ ============ */
 footer { background: var(--deep); color: #FDFCF8; padding: 80px 0 36px; margin-top: 96px; }
 .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 50px; margin-bottom: 56px; }
-.footer-col h4 {
+.footer-col h3, .footer-col h4 {
   margin-bottom: 20px; font-family: var(--font-display); font-size: 15px;
   font-weight: 700; color: var(--aqua-400);
 }
@@ -930,7 +930,7 @@ header.nav-open .nav-toggle span:nth-child(3) { transform: translateY(-7px) rota
   font-family: var(--font-display); font-size: 40px; font-weight: 800; line-height: 1;
   color: var(--aqua-600); letter-spacing: -0.03em; margin-bottom: 6px;
 }
-.proof-panel .trust-item h4 { font-size: 16px; }
+.proof-panel .trust-item h3 { font-size: 16px; }
 /* Placeholder visível de material pendente (some quando o dado real entra) */
 .placeholder { position: relative; color: var(--ink-soft); }
 .placeholder::after {
@@ -939,7 +939,7 @@ header.nav-open .nav-toggle span:nth-child(3) { transform: translateY(-7px) rota
   color: #8a4b00; background: #FFE7B8; border: 1px dashed #F09E14; border-radius: 6px; padding: 1px 6px;
 }
 
-.footer-admin { font-size: 12px; opacity: 0.55; letter-spacing: 0.04em; text-transform: uppercase; }
+.footer-admin { font-size: 12px; opacity: 0.85; letter-spacing: 0.04em; text-transform: uppercase; }
 .footer-admin:hover { opacity: 1; }
 
 .mobile-bar {
@@ -1254,4 +1254,20 @@ header.header-solid .nav-toggle span { background: var(--ink); }
   .team-grid-photos .team-card { padding: 10px 10px 16px; }
   .team-photo { border-radius: 12px; }
   .lightbox-close { top: 8px; right: 8px; }
+}
+
+/* ============ ETAPA 7 — QA: contraste, hero mobile ============ */
+.copyright { color: rgba(253,252,248,0.72) !important; }
+.guide-body .guide-urgent strong { color: #FDFCF8; }
+@media (max-width: 768px) {
+  #hero-photo-interior { background-image: url('../assets/hero-interior-800.webp'); }
+}
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+/* Mobile: o hero já nasce no estado final (sem intro), direto no CSS, pra não esperar o GSAP (LCP) */
+@media (max-width: 767px) {
+  #mask-logo, #hero-glow, .hero-orbit, .scroll-indicator, #hero-bg-grad, #hero-photo-frente { display: none !important; }
+  #mask-text { opacity: 1 !important; visibility: visible !important; }
+  #cine-title { transform: none !important; letter-spacing: -0.02em !important; }
+  #hero-rest { opacity: 1 !important; visibility: visible !important; transform: none !important; }
+  #hero-photo-interior { opacity: 0.3 !important; visibility: visible !important; transform: scale(1.06) !important; }
 }
