@@ -105,7 +105,7 @@
   const hasHero = !!document.getElementById('cinematic-hero');
   function updateHeader() {
     if (!siteHeader) return;
-    const limit = hasHero ? (window.innerHeight || 800) * 0.75 : 0;
+    const limit = hasHero ? (window.innerHeight || 800) * 0.75 : -1;
     siteHeader.classList.toggle('scrolled', window.scrollY > limit);
   }
   window.addEventListener('scroll', updateHeader, { passive: true });

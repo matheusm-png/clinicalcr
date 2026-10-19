@@ -1,0 +1,118 @@
+{
+  "categorias": {
+    "infantil":   { "nome": "Infantil",   "cor": "aqua" },
+    "ortodontia": { "nome": "Ortodontia", "cor": "deep" },
+    "adultos":    { "nome": "Adultos",    "cor": "sun" },
+    "emergencia": { "nome": "Emergência", "cor": "alert" }
+  },
+  "fases": {
+    "0-2": "0–2 anos", "3-5": "3–5 anos", "6-9": "6–9 anos", "10-17": "10–17 anos", "18": "18+"
+  },
+  "guias": [
+    {
+      "slug": "primeiro-dentinho",
+      "titulo": "Primeiro dentinho",
+      "subtitulo": "da gravidez aos 2 anos",
+      "seo_titulo": "Primeiro dente do bebê: quando nasce, como limpar e quando ir ao dentista",
+      "resumo": "Quando o primeiro dente nasce, como limpar a gengiva e os dentinhos, chupeta, mamadeira e a hora certa da primeira consulta.",
+      "categoria": "infantil",
+      "fases": ["0-2"],
+      "icone": "bebe",
+      "leitura": 6,
+      "home": true,
+      "wa_msg": "Olá! Li o guia do primeiro dentinho no site da Clínica LCR e quero agendar a primeira consulta do meu bebê.",
+      "wa_cta": "Agendar a primeira consulta do bebê",
+      "relacionados": ["primeira-consulta", "troca-dos-dentes", "trauma-dentario"]
+    },
+    {
+      "slug": "primeira-consulta",
+      "titulo": "Primeira consulta sem medo",
+      "subtitulo": "como preparar a criança em casa",
+      "seo_titulo": "Primeira consulta no dentista: como preparar a criança para não ter medo",
+      "resumo": "O que dizer (e o que não dizer) em casa, o que acontece na consulta, o que levar e o que fazer se a criança chorar.",
+      "categoria": "infantil",
+      "fases": ["0-2", "3-5", "6-9"],
+      "icone": "coracao",
+      "leitura": 5,
+      "home": false,
+      "wa_msg": "Olá! Li o guia da primeira consulta no site da Clínica LCR e quero agendar a primeira consulta do meu filho(a).",
+      "wa_cta": "Agendar a primeira consulta",
+      "relacionados": ["primeiro-dentinho", "troca-dos-dentes", "trauma-dentario"]
+    },
+    {
+      "slug": "troca-dos-dentes",
+      "titulo": "Troca dos dentes",
+      "subtitulo": "o que esperar dos 6 aos 12 anos",
+      "seo_titulo": "Troca dos dentes de leite: ordem, dente mole, molar dos 6 anos e avaliação ortodôntica",
+      "resumo": "A ordem da troca, o molar que nasce sem ninguém perceber, o dente mole que não cai e a hora da primeira avaliação ortodôntica.",
+      "categoria": "infantil",
+      "fases": ["6-9", "10-17"],
+      "icone": "dente",
+      "leitura": 6,
+      "home": false,
+      "wa_msg": "Olá! Li o guia da troca dos dentes no site da Clínica LCR e quero agendar uma avaliação pro meu filho(a).",
+      "wa_cta": "Agendar avaliação",
+      "relacionados": ["aparelho-fixo", "primeira-consulta", "pos-extracao"]
+    },
+    {
+      "slug": "trauma-dentario",
+      "titulo": "Bateu a boca",
+      "subtitulo": "o que fazer nos primeiros minutos",
+      "seo_titulo": "Criança bateu a boca: o que fazer quando o dente cai, quebra ou afunda",
+      "resumo": "Passo a passo dos primeiros minutos: estancar o sangue, o que fazer se o dente caiu ou quebrou e quando correr pro dentista.",
+      "categoria": "emergencia",
+      "fases": ["0-2", "3-5", "6-9", "10-17"],
+      "icone": "alerta",
+      "leitura": 5,
+      "home": true,
+      "wa_msg": "Olá! URGÊNCIA: meu filho(a) bateu a boca/machucou um dente e preciso de orientação da Clínica LCR.",
+      "wa_cta": "Falar agora no WhatsApp",
+      "relacionados": ["pos-extracao", "troca-dos-dentes", "primeira-consulta"]
+    },
+    {
+      "slug": "aparelho-fixo",
+      "titulo": "Aparelho fixo no dia a dia",
+      "subtitulo": "convencional e autoligado",
+      "seo_titulo": "Aparelho fixo: primeiros dias, o que comer, como escovar e o que fazer se o bráquete soltar",
+      "resumo": "Os primeiros dias, o que comer, como escovar de verdade, bráquete solto, manutenções e o que muda entre convencional e autoligado.",
+      "categoria": "ortodontia",
+      "fases": ["10-17", "18"],
+      "icone": "aparelho",
+      "leitura": 7,
+      "home": true,
+      "wa_msg": "Olá! Li o guia do aparelho fixo no site da Clínica LCR e quero agendar uma avaliação ortodôntica.",
+      "wa_cta": "Agendar avaliação ortodôntica",
+      "relacionados": ["troca-dos-dentes", "clareamento", "pos-extracao"]
+    },
+    {
+      "slug": "clareamento",
+      "titulo": "Clareamento dental",
+      "subtitulo": "caseiro ou no consultório",
+      "seo_titulo": "Clareamento dental: caseiro ou consultório, sensibilidade, quem pode e quanto dura",
+      "resumo": "Como funciona, a diferença entre o caseiro e o de consultório, sensibilidade, quem pode fazer e como manter o resultado.",
+      "categoria": "adultos",
+      "fases": ["18"],
+      "icone": "brilho",
+      "leitura": 6,
+      "home": true,
+      "wa_msg": "Olá! Li o guia do clareamento no site da Clínica LCR e quero agendar uma avaliação.",
+      "wa_cta": "Agendar avaliação",
+      "relacionados": ["aparelho-fixo", "pos-extracao", "primeira-consulta"]
+    },
+    {
+      "slug": "pos-extracao",
+      "titulo": "Depois da extração",
+      "subtitulo": "as primeiras 24 horas",
+      "seo_titulo": "Cuidados depois da extração de dente: dente de leite, siso, sangramento, dor e alimentação",
+      "resumo": "O que fazer nas primeiras horas, o que comer, dor e inchaço esperados, o caso do dente de leite e do siso, e os sinais de alerta.",
+      "categoria": "adultos",
+      "fases": ["6-9", "10-17", "18"],
+      "icone": "gaze",
+      "leitura": 5,
+      "home": false,
+      "wa_msg": "Olá! Fiz uma extração e li o guia no site da Clínica LCR. Estou com uma dúvida sobre a recuperação.",
+      "wa_cta": "Tirar dúvida no WhatsApp",
+      "relacionados": ["trauma-dentario", "troca-dos-dentes", "aparelho-fixo"]
+    }
+  ]
+}

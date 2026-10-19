@@ -1045,3 +1045,149 @@ header.nav-open .nav-toggle span:nth-child(3) { transform: translateY(-7px) rota
   .timeline::before { left: 27px; }
 }
 .aud-teen .aud-list li::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23B9E5E1' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E"); }
+
+/* ============ ETAPA 4 — guias (cards, hub, página, emergência, impressão) ============ */
+header.header-solid { background: rgba(253,252,248,0.9); backdrop-filter: blur(20px) saturate(1.8); -webkit-backdrop-filter: blur(20px) saturate(1.8); border-bottom-color: var(--line); padding: 10px 0; }
+header.header-solid .wordmark, header.header-solid .site-nav a { color: var(--ink); }
+header.header-solid .site-nav a { color: var(--ink-soft); }
+header.header-solid .nav-toggle { border-color: var(--line); }
+header.header-solid .nav-toggle span { background: var(--ink); }
+.site-nav a[aria-current="page"] { border-bottom-color: var(--sun); }
+.page-guide main, .page-hub main { padding-top: 70px; }
+.crumbs { font-size: 13px; color: var(--ink-soft); margin-bottom: 18px; }
+.crumbs a { color: var(--aqua-700); font-weight: 600; }
+
+/* Cards de guia (home, hub, relacionados) */
+.guide-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.guide-grid-home { grid-template-columns: repeat(4, 1fr); }
+.guide-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-card); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.35s var(--ease-smooth), box-shadow 0.35s; }
+.guide-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-pop); }
+.guide-card[hidden] { display: none; }
+.guide-cover { position: relative; display: flex; align-items: center; justify-content: center; aspect-ratio: 16 / 9; color: #FDFCF8; }
+.guide-cover svg { width: 56px; height: 56px; opacity: 0.95; }
+.guide-cover.cat-infantil   { background: linear-gradient(135deg, var(--aqua-500), var(--aqua-700)); }
+.guide-cover.cat-ortodontia { background: linear-gradient(135deg, var(--deep-soft), var(--deep)); }
+.guide-cover.cat-adultos    { background: linear-gradient(135deg, var(--sun), #E07F2E); color: var(--deep); }
+.guide-cover.cat-emergencia { background: linear-gradient(135deg, #E8533A, #B13A26); }
+.guide-badge { position: absolute; top: 12px; left: 12px; font: 700 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; background: #FDFCF8; color: #B13A26; padding: 6px 10px; border-radius: 999px; }
+.guide-card-body { padding: 20px 20px 18px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.guide-cat { font-size: 11.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--aqua-700); }
+.guide-card h3 { font-size: 19px; line-height: 1.2; }
+.guide-card h3 a { color: var(--ink); }
+.guide-card h3 a:hover { color: var(--aqua-700); }
+.guide-card p { font-size: 14px; line-height: 1.55; color: var(--ink-soft); flex: 1; }
+.guide-card-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+.guide-read { font-weight: 700; font-size: 14.5px; color: var(--aqua-700); }
+.guide-read::after { content: ' →'; }
+.guide-pdf { font-size: 11.5px; font-weight: 700; letter-spacing: 0.08em; color: var(--ink-soft); border: 1px solid var(--line); border-radius: 999px; padding: 5px 10px; }
+.guide-pdf:hover { color: var(--aqua-700); border-color: var(--aqua-400); }
+
+/* Banner de emergência */
+.emergency-wrap { padding: 0 0 96px; }
+.emergency-banner { display: grid; grid-template-columns: auto 1fr auto; gap: 24px; align-items: center; background: #B13A26; color: #FDFCF8; border-radius: var(--r-card); padding: 28px 32px; box-shadow: 0 18px 40px rgba(177,58,38,0.25); }
+.emergency-mark { width: 54px; height: 54px; border-radius: 50%; background: #FDFCF8; color: #B13A26; display: flex; align-items: center; justify-content: center; font: 800 30px var(--font-display); }
+.emergency-text h2 { font-size: 24px; margin-bottom: 6px; color: #FDFCF8; }
+.emergency-text p { font-size: 15px; line-height: 1.55; color: rgba(253,252,248,0.85); }
+.emergency-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.emergency-actions .btn { padding: 14px 22px; font-size: 14.5px; }
+.emergency-actions .btn-outline-light { border-color: rgba(253,252,248,0.5); }
+
+/* Hub */
+.hub-hero { padding: 64px 0 40px; }
+.hub-hero h1 { font-size: clamp(2.2rem, 4.6vw, 3.4rem); margin: 8px 0 16px; max-width: 760px; }
+.hub-hero p { font-size: 17.5px; line-height: 1.65; color: var(--ink-soft); max-width: 640px; }
+.hub-facts { display: flex; gap: 14px; margin-top: 28px; flex-wrap: wrap; }
+.hub-facts div { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 14px 20px; display: flex; flex-direction: column; min-width: 140px; }
+.hub-facts strong { font-family: var(--font-display); font-size: 26px; color: var(--aqua-700); line-height: 1.1; }
+.hub-facts span { font-size: 13px; color: var(--ink-soft); }
+.hub-list { padding-top: 24px; }
+.filters { margin-bottom: 28px; display: flex; flex-direction: column; gap: 10px; }
+.filters-label { font-weight: 700; font-size: 15px; }
+.filter-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.filter-btn, .filter-chip { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 9px 16px; font: 600 14px var(--font-sans); cursor: pointer; transition: 0.2s; }
+.filter-btn span { color: var(--ink-soft); font-weight: 500; margin-left: 4px; }
+.filter-btn.active { background: var(--deep); color: #FDFCF8; border-color: var(--deep); }
+.filter-btn.active span { color: var(--aqua-200); }
+.filter-chip { font-size: 13px; padding: 7px 13px; background: var(--aqua-050); }
+.filter-chip.active { background: var(--sun); border-color: var(--sun); color: var(--deep); }
+.filters-empty { background: var(--aqua-050); border-radius: 16px; padding: 18px 22px; color: var(--ink-soft); margin-bottom: 20px; }
+.howto-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.howto { background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 26px 24px; }
+.howto .step-num { display: inline-flex; width: 40px; height: 40px; border-radius: 12px; background: var(--sun); color: var(--deep); align-items: center; justify-content: center; font: 800 18px var(--font-display); margin-bottom: 14px; }
+.howto h3 { font-size: 18px; margin-bottom: 6px; }
+.howto p { font-size: 14.5px; line-height: 1.6; color: var(--ink-soft); }
+
+/* Página do guia */
+.guide-hero { padding: 56px 0 40px; border-bottom: 1px solid var(--line); background: var(--aqua-050); }
+.guide-hero.cat-emergencia { background: #FBEAE6; }
+.guide-hero.cat-adultos { background: #FFF5E3; }
+.guide-hero.cat-ortodontia { background: var(--aqua-050); }
+.guide-hero h1 { font-size: clamp(2.2rem, 4.8vw, 3.6rem); margin: 10px 0 14px; max-width: 820px; }
+.guide-sub { display: block; font-size: 0.5em; font-weight: 600; color: var(--aqua-700); margin-top: 8px; letter-spacing: 0; }
+.guide-summary { font-size: 18px; line-height: 1.6; color: var(--ink-soft); max-width: 680px; }
+.guide-meta { font-size: 13.5px; color: var(--ink-soft); margin: 16px 0 22px; }
+.guide-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.guide-layout { display: grid; grid-template-columns: 240px 1fr; gap: 56px; padding-top: 48px; padding-bottom: 64px; align-items: start; }
+.guide-toc { position: sticky; top: 90px; font-size: 14px; }
+.guide-toc strong { display: block; margin-bottom: 12px; font-size: 12.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--aqua-700); }
+.guide-toc ol { list-style: none; display: flex; flex-direction: column; gap: 2px; counter-reset: toc; }
+.guide-toc li { counter-increment: toc; }
+.guide-toc a { display: block; padding: 7px 10px; border-radius: 10px; color: var(--ink-soft); line-height: 1.35; }
+.guide-toc a::before { content: counter(toc) '. '; color: var(--aqua-500); font-weight: 700; }
+.guide-toc a:hover { background: var(--aqua-050); color: var(--ink); }
+.guide-body { max-width: 720px; font-size: 17px; line-height: 1.72; }
+.guide-body h2 { font-size: 26px; margin: 44px 0 14px; scroll-margin-top: 90px; }
+.guide-body h2:first-child { margin-top: 0; }
+.guide-body p { margin-bottom: 16px; }
+.guide-body ul, .guide-body ol { margin: 0 0 18px 22px; }
+.guide-body li { margin-bottom: 8px; }
+.guide-body li::marker { color: var(--aqua-600); font-weight: 700; }
+.guide-body ul.check { list-style: none; margin-left: 0; }
+.guide-body ul.check li { position: relative; padding-left: 34px; }
+.guide-body ul.check li::before { content: ''; position: absolute; left: 0; top: 3px; width: 22px; height: 22px; border-radius: 7px; border: 2px solid var(--aqua-400); background: var(--aqua-050) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231E6D67' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E") center / 13px no-repeat; }
+.guide-body strong { color: var(--ink); }
+.guide-urgent { background: #B13A26; color: #FDFCF8; border-radius: 18px; padding: 20px 24px; margin-bottom: 28px; font-size: 16px; line-height: 1.6; }
+.guide-body .faq-item { font-size: 16px; }
+.guide-body .faq-item summary { font-size: 16px; }
+.guide-cta { background: var(--deep); color: #FDFCF8; border-radius: 22px; padding: 28px 30px; margin: 36px 0; }
+.guide-cta strong { font-family: var(--font-display); font-size: 20px; display: block; margin-bottom: 6px; color: #FDFCF8; }
+.guide-cta h2 { color: #FDFCF8; margin: 0 0 10px; font-size: 26px; }
+.guide-cta p { color: var(--white-muted); font-size: 15.5px; margin-bottom: 18px; }
+.guide-cta-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
+.guide-cta .btn-outline-ink { border-color: rgba(253,252,248,0.4); color: #FDFCF8; }
+.guide-cta .btn-outline-ink:hover { background: rgba(253,252,248,0.1); border-color: rgba(253,252,248,0.7); color: #FDFCF8; }
+.guide-disclaimer { font-size: 13.5px; color: var(--ink-soft); border-top: 1px solid var(--line); padding-top: 18px; }
+.guide-related { padding: 80px 0; }
+.print-only { display: none; }
+
+@media (max-width: 1024px) {
+  .guide-grid, .guide-grid-home { grid-template-columns: 1fr 1fr; }
+  .guide-layout { grid-template-columns: 1fr; gap: 28px; }
+  .guide-toc { position: static; background: var(--aqua-050); border-radius: 18px; padding: 18px 20px; }
+  .emergency-banner { grid-template-columns: auto 1fr; }
+  .emergency-actions { grid-column: 1 / -1; }
+  .howto-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .guide-grid, .guide-grid-home { grid-template-columns: 1fr; }
+  .emergency-wrap { padding-bottom: 72px; }
+  .emergency-banner { padding: 24px 22px; gap: 16px; border-radius: 24px; }
+  .guide-body { font-size: 16.5px; }
+  .guide-body h2 { font-size: 23px; }
+  .guide-cta { padding: 24px 22px; }
+  .hub-facts div { min-width: 0; flex: 1; padding: 12px 14px; }
+}
+@media print {
+  header, footer, .mobile-bar, .whatsapp-btn, .wa-chat, .guide-actions, .guide-toc, .guide-related, .guide-cta, .crumbs, .guide-pdf { display: none !important; }
+  .page-guide main { padding-top: 0; }
+  .guide-hero { background: none !important; border: none; padding: 0 0 12px; }
+  .guide-layout { display: block; padding: 0; }
+  .guide-body { max-width: none; font-size: 12pt; line-height: 1.55; }
+  .guide-body h2 { font-size: 17pt; margin: 22pt 0 8pt; page-break-after: avoid; }
+  .guide-body details { display: block; }
+  .guide-body details > * { display: block; }
+  .faq-plus { display: none; }
+  .placeholder::after { display: none; }
+  .print-only { display: block; font-size: 10pt; color: #4E6B68; margin-top: 24pt; }
+  a { color: inherit; text-decoration: none; }
+}
