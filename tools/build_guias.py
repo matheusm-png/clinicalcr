@@ -19,7 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / 'tools' / 'guias'
 OUT = ROOT / 'guias'
-SITE = 'https://www.clinicalcr.com'
+SITE = 'https://clinicalcr.com.br'
 WA = '5574991266602'
 TODAY = date.today().isoformat()
 
@@ -50,8 +50,11 @@ def wa_url(msg):
     return 'https://wa.me/%s?text=%s' % (WA, quote(msg))
 
 
+MASCOTE = (ROOT / 'tools' / 'mascote.svg').read_text(encoding='utf-8').replace('<?xml version="1.0" encoding="UTF-8"?>\n', '')
+
+
 def header(base):
-    return f'''  <header id="site-header" class="header-solid">
+    return MASCOTE + f'''  <header id="site-header" class="header-solid">
     <div class="container">
       <a href="{base}" class="wordmark" aria-label="Clínica LCR, início">
         <img src="{base}assets/logo-lcr-96.png" alt="" aria-hidden="true" width="38" height="38">
@@ -162,8 +165,9 @@ def guide_card(g, cats, base):
     cat = cats[g['categoria']]
     pdf = f'{base}guias/downloads/{g["slug"]}-clinica-lcr.pdf'
     urg = '<span class="guide-badge">Emergência</span>' if g['categoria'] == 'emergencia' else ''
+    masc = {'infantil': 'm-bebe', 'ortodontia': 'm-teen', 'adultos': 'm-adulto', 'emergencia': 'm-alerta'}[g['categoria']]
     return f'''        <article class="guide-card" data-cat="{g['categoria']}" data-fases="{' '.join(g['fases'])}">
-          <a href="{base}guias/{g['slug']}/" class="guide-cover cat-{g['categoria']}" data-track="guide_view" data-guia="{g['slug']}" aria-hidden="true" tabindex="-1">{icon(g['icone'])}{urg}</a>
+          <a href="{base}guias/{g['slug']}/" class="guide-cover cat-{g['categoria']}" data-track="guide_view" data-guia="{g['slug']}" aria-hidden="true" tabindex="-1"><svg class="mascot mascot-cover"><use href="#{masc}"/></svg>{urg}</a>
           <div class="guide-card-body">
             <span class="guide-cat">{esc(cat['nome'])}</span>
             <h3><a href="{base}guias/{g['slug']}/" data-track="guide_view" data-guia="{g['slug']}">{esc(g['titulo'])}</a></h3>

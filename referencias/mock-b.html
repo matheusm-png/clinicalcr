@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup B · família com um toque infantil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=DM+Sans:ital,opsz,wght@0,9..40,300..800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#123634;--soft:#4E6B68;--aqua:#5BC2BA;--aqua-l:#DFF3F1;--aqua-d:#1E6D67;--deep:#0A302E;--sun:#FFB43B;--peach:#FFE3D4;--cream:#FDFCF8;--sand:#F4EFE6}
+*{box-sizing:border-box;margin:0;padding:0} body{font:17px/1.6 "DM Sans",sans-serif;color:var(--ink);background:var(--cream)}
+h1,h2,h3{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;letter-spacing:-.025em;line-height:1.02}
+.wrap{max-width:1180px;margin:0 auto;padding:0 5%}
+header{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+.brand{display:flex;align-items:center;gap:12px;font-family:"Bricolage Grotesque";font-weight:800;font-size:20px} .brand img{width:40px;height:40px;border-radius:11px}
+nav{display:flex;gap:28px;font-weight:600;font-size:15px;color:var(--soft)}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:16px 28px;border-radius:999px;font-weight:700;font-size:15.5px;text-decoration:none;color:var(--deep)}
+.btn.sun{background:var(--sun);box-shadow:0 10px 26px rgba(255,180,59,.35)} .btn.out{border:2px solid rgba(18,54,52,.25);color:var(--ink)} .btn.sm{padding:11px 20px;font-size:14px}
+.hero{display:grid;grid-template-columns:1.05fr 1fr;gap:56px;align-items:center;padding:36px 0 72px}
+.eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--aqua-d);margin-bottom:18px}
+.hero h1{font-size:76px;margin-bottom:22px} .hero h1 em{font-style:normal;color:var(--aqua-d)}
+.hero p{font-size:19px;color:var(--soft);max-width:520px;margin-bottom:30px}
+.ctas{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px}
+.proof{display:flex;gap:22px;align-items:center;font-size:14px;color:var(--soft);flex-wrap:wrap} .proof b{color:var(--ink);font-family:"Bricolage Grotesque";font-size:20px;margin-right:6px}
+.proof .ex{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8a4b00;background:#FFE7B8;border:1px dashed #F09E14;border-radius:6px;padding:1px 6px;margin-left:6px}
+.photo{position:relative} .photo .blob{position:absolute;inset:-6% -8% -4% -6%;background:var(--aqua-l);border-radius:46% 54% 40% 60%/55% 45% 55% 45%;z-index:0}
+.photo img.main{position:relative;z-index:1;width:100%;aspect-ratio:4/4.6;object-fit:cover;border-radius:260px 260px 36px 36px;display:block}
+.photo .card{position:absolute;z-index:2;right:-18px;bottom:36px;background:#fff;border-radius:18px;padding:14px 18px;box-shadow:0 18px 40px rgba(30,109,103,.18);font-size:14px} .photo .card b{display:block;font-family:"Bricolage Grotesque";font-size:17px}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border:1px solid rgba(18,54,52,.1);border-radius:26px;padding:8px;margin-bottom:0}
+.facts div{padding:22px 24px;border-left:1px solid rgba(18,54,52,.1)} .facts div:first-child{border:0} .facts b{display:block;font-family:"Bricolage Grotesque";font-size:30px;color:var(--aqua-d);line-height:1} .facts span{font-size:14px;color:var(--soft)}
+.wave{display:block;width:100%;height:60px;fill:var(--aqua-l);margin-top:40px}
+.aud{padding:88px 0} .aud.aqua{background:var(--aqua-l)} .aud.peach{background:var(--peach)} .aud.sand{background:var(--sand)}
+.aud .wrap{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center} .aud.flip .wrap>.txt{order:-1}
+.aud .pic{position:relative} .aud .pic img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:36px;display:block}
+.aud .pic .tooth{position:absolute;right:-26px;bottom:-30px;transform:rotate(8deg);filter:drop-shadow(0 10px 20px rgba(10,48,46,.18))}
+.aud h2{font-size:52px;margin:10px 0 14px} .aud .lab{font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--aqua-d)}
+.aud p{font-size:18px;color:var(--soft);margin-bottom:18px}
+.aud ul{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin-bottom:26px} .aud li{background:rgba(255,255,255,.75);border:1px solid rgba(18,54,52,.1);border-radius:999px;padding:8px 14px;font-size:14px;font-weight:600}
+.aud.teen{background:var(--deep);color:#FDFCF8} .aud.teen .lab{color:#B9E5E1} .aud.teen p{color:rgba(253,252,248,.75)} .aud.teen li{background:rgba(253,252,248,.1);border-color:rgba(253,252,248,.2);color:#FDFCF8} .aud.teen .btn.out{border-color:rgba(253,252,248,.5);color:#FDFCF8}
+.tooth{display:block} .ln{}
+.tag{position:fixed;bottom:12px;left:12px;z-index:9;background:var(--deep);color:#fff;font:700 12px/1 "DM Sans";letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;border-radius:999px}
+</style></head><body>
+<div class="tag">Mockup B · família com um toque infantil</div>
+<div class="wrap">
+<header><div class="brand"><img src="../../assets/logo-lcr-96.png" alt="">Clínica LCR</div><nav><span>Crianças</span><span>Adolescentes</span><span>Adultos</span><span>Guias</span><span>Clínica</span></nav><a class="btn sun sm" href="#">Agendar</a></header>
+<section class="hero">
+  <div>
+    <div class="eyebrow">Atendimento infantil · Ortodontia · Clínica geral · Irecê-BA</div>
+    <h1>Um sorriso saudável <em>pra vida inteira.</em></h1>
+    <p>Cuidado da família inteira desde o primeiro dentinho: crianças, adolescentes e adultos atendidos pela mesma equipe, no centro de Irecê.</p>
+    <div class="ctas"><a class="btn sun" href="#">Agendar no WhatsApp</a><a class="btn out" href="#">Conhecer a clínica</a></div>
+    <div class="proof"><span><b>★ 4,9</b>120 avaliações no Google<span class="ex">exemplo</span></span><span><b>4</b>dentistas, 1 endereço</span></div>
+  </div>
+  <div class="photo"><div class="blob"></div><img class="main" src="../../assets/foto-lara-camila.webp" alt="Dra. Lara Camila"><div class="card"><b>Primeira consulta sem medo</b>no ritmo da criança, com os pais do lado</div><svg class="tooth base" width="170" viewBox="0 0 200 222" aria-hidden="true" style="position:absolute; left:-52px; bottom:-22px; z-index:3; transform:rotate(-8deg); filter:drop-shadow(0 10px 20px rgba(10,48,46,.18))">
+  <path d="M100 12 C152 12 186 42 186 86 C186 122 170 142 160 166 C152 186 150 210 134 210 C118 210 118 176 100 176 C82 176 82 210 66 210 C50 210 48 186 40 166 C30 142 14 122 14 86 C14 42 48 12 100 12 Z" fill="#FDFCF8" stroke="#1E6D67" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M46 52 C56 36 72 28 92 26" stroke="#B9E5E1" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <circle cx="74" cy="96" r="8" fill="#123634"/><circle cx="126" cy="96" r="8" fill="#123634"/>
+  <circle cx="77" cy="93" r="2.5" fill="#fff"/><circle cx="129" cy="93" r="2.5" fill="#fff"/>
+  <ellipse cx="56" cy="118" rx="11" ry="6" fill="#FFB4A8" opacity=".85"/><ellipse cx="144" cy="118" rx="11" ry="6" fill="#FFB4A8" opacity=".85"/>
+  <g class="face" fill="none" stroke="#123634" stroke-width="5" stroke-linecap="round"><path d="M78 128 Q100 150 122 128" class="ln"/></g>
+</svg></div>
+</section>
+<div class="facts"><div><b>4</b><span>dentistas com CRO-BA</span></div><div><b>+30</b><span>procedimentos em um lugar só</span></div><div><b>Seg–Sáb</b><span>no centro de Irecê</span></div><div><b>0 a 99</b><span>a mesma equipe pra família toda</span></div></div>
+</div>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 30 C240 60 480 0 720 30 C960 60 1200 0 1440 30 L1440 60 L0 60 Z"/></svg>
+<section class="aud aqua"><div class="wrap">
+  <div class="pic"><img src="../../assets/clinica/escovas.webp" alt=""><svg class="tooth bebe" width="120" viewBox="0 0 200 222" aria-hidden="true" style="">
+  <path d="M100 12 C152 12 186 42 186 86 C186 122 170 142 160 166 C152 186 150 210 134 210 C118 210 118 176 100 176 C82 176 82 210 66 210 C50 210 48 186 40 166 C30 142 14 122 14 86 C14 42 48 12 100 12 Z" fill="#FDFCF8" stroke="#1E6D67" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M46 52 C56 36 72 28 92 26" stroke="#B9E5E1" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <circle cx="74" cy="96" r="8" fill="#123634"/><circle cx="126" cy="96" r="8" fill="#123634"/>
+  <circle cx="77" cy="93" r="2.5" fill="#fff"/><circle cx="129" cy="93" r="2.5" fill="#fff"/>
+  <ellipse cx="56" cy="118" rx="11" ry="6" fill="#FFB4A8" opacity=".85"/><ellipse cx="144" cy="118" rx="11" ry="6" fill="#FFB4A8" opacity=".85"/>
+  <g class="face" fill="none" stroke="#123634" stroke-width="5" stroke-linecap="round"><path d="M84 128 Q100 140 116 128" class="ln"/><circle cx="100" cy="140" r="13" fill="#FFB43B" stroke="#123634" stroke-width="4"/><circle cx="100" cy="140" r="5" fill="#FDFCF8"/></g>
+</svg></div>
+  <div class="txt"><div class="lab">Para bebês e crianças</div><h2>Atendimento infantil</h2><p>Consulta no ritmo da criança, pra ela sair querendo voltar.</p>
+  <ul><li>Primeira consulta do bebê</li><li>Limpeza, flúor e selante</li><li>Dente de leite</li><li>Troca dos dentes</li></ul><a class="btn sun" href="#">Agendar para meu filho</a></div>
+</div></section>
+<section class="aud teen flip"><div class="wrap">
+  <div class="pic"><img src="../../assets/clinica/consultorio.webp" alt=""><svg class="tooth teen" width="120" viewBox="0 0 200 222" aria-hidden="true" style="">
+  <path d="M100 12 C152 12 186 42 186 86 C186 122 170 142 160 166 C152 186 150 210 134 210 C118 210 118 176 100 176 C82 176 82 210 66 210 C50 210 48 186 40 166 C30 142 14 122 14 86 C14 42 48 12 100 12 Z" fill="#FDFCF8" stroke="#1E6D67" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M46 52 C56 36 72 28 92 26" stroke="#B9E5E1" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <circle cx="74" cy="96" r="8" fill="#123634"/><circle cx="126" cy="96" r="8" fill="#123634"/>
+  <circle cx="77" cy="93" r="2.5" fill="#fff"/><circle cx="129" cy="93" r="2.5" fill="#fff"/>
+  <ellipse cx="56" cy="118" rx="11" ry="6" fill="#FFB4A8" opacity=".85"/><ellipse cx="144" cy="118" rx="11" ry="6" fill="#FFB4A8" opacity=".85"/>
+  <g class="face" fill="none" stroke="#123634" stroke-width="5" stroke-linecap="round"><path d="M76 128 Q100 150 124 128" class="ln"/><path d="M80 134 Q100 146 120 134" stroke="#5BC2BA" stroke-width="4" fill="none" stroke-linecap="round"/><rect x="88" y="135" width="6" height="6" rx="1.5" fill="#123634"/><rect x="100" y="138" width="6" height="6" rx="1.5" fill="#123634"/><rect x="112" y="135" width="6" height="6" rx="1.5" fill="#123634"/></g>
+</svg></div>
+  <div class="txt"><div class="lab">Para pré-adolescentes e teens</div><h2>Ortodontia</h2><p>Aparelho no momento certo, com o sorriso que ele quer mostrar.</p>
+  <ul><li>Avaliação na troca dos dentes</li><li>Convencional ou autoligado</li><li>Manutenções rápidas</li></ul><a class="btn out" href="#">Agendar avaliação</a></div>
+</div></section>
+<section class="aud peach"><div class="wrap">
+  <div class="pic"><img src="../../assets/clinica/mesa.webp" alt=""><svg class="tooth adulto" width="120" viewBox="0 0 200 222" aria-hidden="true" style="">
+  <path d="M100 12 C152 12 186 42 186 86 C186 122 170 142 160 166 C152 186 150 210 134 210 C118 210 118 176 100 176 C82 176 82 210 66 210 C50 210 48 186 40 166 C30 142 14 122 14 86 C14 42 48 12 100 12 Z" fill="#FDFCF8" stroke="#1E6D67" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M46 52 C56 36 72 28 92 26" stroke="#B9E5E1" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <circle cx="74" cy="96" r="8" fill="#123634"/><circle cx="126" cy="96" r="8" fill="#123634"/>
+  <circle cx="77" cy="93" r="2.5" fill="#fff"/><circle cx="129" cy="93" r="2.5" fill="#fff"/>
+  <ellipse cx="56" cy="118" rx="11" ry="6" fill="#FFB4A8" opacity=".85"/><ellipse cx="144" cy="118" rx="11" ry="6" fill="#FFB4A8" opacity=".85"/>
+  <g class="face" fill="none" stroke="#123634" stroke-width="5" stroke-linecap="round"><path d="M78 128 Q100 150 122 128" class="ln"/><circle cx="74" cy="96" r="15" fill="none" stroke="#123634" stroke-width="4"/><circle cx="126" cy="96" r="15" fill="none" stroke="#123634" stroke-width="4"/><path d="M89 96 L111 96" stroke="#123634" stroke-width="4"/></g>
+</svg></div>
+  <div class="txt"><div class="lab">Para os pais e adultos</div><h2>Clínica geral e especialidades</h2><p>Os pais também são cuidados aqui, sem julgamento, mesmo depois de anos longe do dentista.</p>
+  <ul><li>Limpeza e prevenção</li><li>Estética e clareamento</li><li>Canal, siso, prótese</li></ul><a class="btn sun" href="#">Agendar para mim</a></div>
+</div></section>
+</body></html>

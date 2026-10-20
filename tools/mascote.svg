@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <!-- Mascote da LCR: dente derivado do logo, 4 versões. Uso: <svg class="mascot"><use href="#m-bebe"/></svg> -->
+  <symbol id="m-corpo" viewBox="0 0 200 222">
+    <path d="M100 12 C152 12 186 42 186 86 C186 122 170 142 160 166 C152 186 150 210 134 210 C118 210 118 176 100 176 C82 176 82 210 66 210 C50 210 48 186 40 166 C30 142 14 122 14 86 C14 42 48 12 100 12 Z" fill="#FDFCF8" stroke="#1E6D67" stroke-width="7" stroke-linejoin="round"/>
+    <path d="M46 52 C56 36 72 28 92 26" stroke="#B9E5E1" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <circle cx="74" cy="96" r="8" fill="#123634"/><circle cx="126" cy="96" r="8" fill="#123634"/>
+    <circle cx="77" cy="93" r="2.5" fill="#fff"/><circle cx="129" cy="93" r="2.5" fill="#fff"/>
+    <ellipse cx="56" cy="118" rx="11" ry="6" fill="#FFB4A8" opacity=".85"/><ellipse cx="144" cy="118" rx="11" ry="6" fill="#FFB4A8" opacity=".85"/>
+  </symbol>
+  <symbol id="m-base" viewBox="0 0 200 222">
+    <use href="#m-corpo"/>
+    <path d="M78 128 Q100 150 122 128" fill="none" stroke="#123634" stroke-width="5" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="m-bebe" viewBox="0 0 200 222">
+    <use href="#m-corpo"/>
+    <path d="M84 128 Q100 140 116 128" fill="none" stroke="#123634" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="100" cy="140" r="13" fill="#FFB43B" stroke="#123634" stroke-width="4"/><circle cx="100" cy="140" r="5" fill="#FDFCF8"/>
+  </symbol>
+  <symbol id="m-teen" viewBox="0 0 200 222">
+    <use href="#m-corpo"/>
+    <path d="M76 128 Q100 150 124 128" fill="none" stroke="#123634" stroke-width="5" stroke-linecap="round"/>
+    <path d="M80 134 Q100 146 120 134" stroke="#5BC2BA" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <rect x="88" y="135" width="6" height="6" rx="1.5" fill="#123634"/><rect x="100" y="138" width="6" height="6" rx="1.5" fill="#123634"/><rect x="112" y="135" width="6" height="6" rx="1.5" fill="#123634"/>
+  </symbol>
+  <symbol id="m-adulto" viewBox="0 0 200 222">
+    <use href="#m-corpo"/>
+    <path d="M78 128 Q100 150 122 128" fill="none" stroke="#123634" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="74" cy="96" r="15" fill="none" stroke="#123634" stroke-width="4"/><circle cx="126" cy="96" r="15" fill="none" stroke="#123634" stroke-width="4"/><path d="M89 96 L111 96" stroke="#123634" stroke-width="4"/>
+  </symbol>
+  <symbol id="m-alerta" viewBox="0 0 200 222">
+    <use href="#m-corpo"/>
+    <path d="M80 136 Q100 126 120 136" fill="none" stroke="#123634" stroke-width="5" stroke-linecap="round"/>
+    <rect x="118" y="38" width="46" height="18" rx="9" transform="rotate(-30 141 47)" fill="#FFB4A8" stroke="#B13A26" stroke-width="3"/>
+  </symbol>
+</svg>

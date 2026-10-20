@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /pages/
+Disallow: /referencias/
 
-Sitemap: https://www.clinicalcr.com/sitemap.xml
+Sitemap: https://clinicalcr.com.br/sitemap.xml

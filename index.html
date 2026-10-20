@@ -8,7 +8,7 @@
   <meta name="keywords" content="dentista Irecê, dentista infantil Irecê, clínica odontológica Irecê, ortodontia Irecê, dentista família Irecê, Dra. Lara Camila">
   <meta name="author" content="Clínica LCR Odontologia">
   <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://www.clinicalcr.com/">
+  <link rel="canonical" href="https://clinicalcr.com.br/">
 
   <!-- Geo (SEO local) -->
   <meta name="geo.region" content="BR-BA">
@@ -25,18 +25,17 @@
   <meta property="og:site_name" content="Clínica LCR">
   <meta property="og:title" content="Clínica LCR | Dentista em Irecê-BA | Odontologia para toda a família">
   <meta property="og:description" content="Atendimento infantil, prevenção e especialidades na mesma clínica. Agende online ou pelo WhatsApp.">
-  <meta property="og:url" content="https://www.clinicalcr.com/">
-  <meta property="og:image" content="https://www.clinicalcr.com/assets/foto-lara-camila.jpg">
+  <meta property="og:url" content="https://clinicalcr.com.br/">
+  <meta property="og:image" content="https://clinicalcr.com.br/assets/foto-lara-camila.webp">
   <meta property="og:image:alt" content="Dra. Lara Camila, da Clínica LCR">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Clínica LCR | Dentista em Irecê-BA">
   <meta name="twitter:description" content="Odontologia para toda a família: infantil, prevenção e especialidades na mesma clínica.">
-  <meta name="twitter:image" content="https://www.clinicalcr.com/assets/foto-lara-camila.jpg">
+  <meta name="twitter:image" content="https://clinicalcr.com.br/assets/foto-lara-camila.webp">
 
-  <link rel="preload" as="image" href="assets/hero-frente.webp" type="image/webp" media="(min-width: 769px)">
-  <link rel="preload" as="image" href="assets/hero-interior-800.webp" type="image/webp" media="(max-width: 768px)">
+  <link rel="preload" as="image" href="assets/foto-lara-camila.webp" type="image/webp">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=swap">
@@ -50,11 +49,11 @@
     "@type": "Dentist",
     "name": "Clínica LCR Odontologia",
     "image": [
-      "https://www.clinicalcr.com/assets/clinica/recepcao.webp",
-      "https://www.clinicalcr.com/assets/clinica/consultorio.webp",
-      "https://www.clinicalcr.com/assets/foto-lara-camila.jpg"
+      "https://clinicalcr.com.br/assets/clinica/recepcao.webp",
+      "https://clinicalcr.com.br/assets/clinica/consultorio.webp",
+      "https://clinicalcr.com.br/assets/foto-lara-camila.webp"
     ],
-    "url": "https://www.clinicalcr.com/",
+    "url": "https://clinicalcr.com.br/",
     "hasMap": "https://maps.app.goo.gl/RV3zCA5skEBB8r4Y6",
     "telephone": "+5574991266602",
     "email": "clinicalcr@outlook.com",
@@ -189,12 +188,47 @@
   </script>
   <link rel="stylesheet" href="css/site.css">
   <!-- GSAP -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
 </head>
 <body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <!-- Mascote da LCR: dente derivado do logo, 4 versões. Uso: <svg class="mascot"><use href="#m-bebe"/></svg> -->
+  <symbol id="m-corpo" viewBox="0 0 200 222">
+    <path d="M100 12 C152 12 186 42 186 86 C186 122 170 142 160 166 C152 186 150 210 134 210 C118 210 118 176 100 176 C82 176 82 210 66 210 C50 210 48 186 40 166 C30 142 14 122 14 86 C14 42 48 12 100 12 Z" fill="#FDFCF8" stroke="#1E6D67" stroke-width="7" stroke-linejoin="round"/>
+    <path d="M46 52 C56 36 72 28 92 26" stroke="#B9E5E1" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <circle cx="74" cy="96" r="8" fill="#123634"/><circle cx="126" cy="96" r="8" fill="#123634"/>
+    <circle cx="77" cy="93" r="2.5" fill="#fff"/><circle cx="129" cy="93" r="2.5" fill="#fff"/>
+    <ellipse cx="56" cy="118" rx="11" ry="6" fill="#FFB4A8" opacity=".85"/><ellipse cx="144" cy="118" rx="11" ry="6" fill="#FFB4A8" opacity=".85"/>
+  </symbol>
+  <symbol id="m-base" viewBox="0 0 200 222">
+    <use href="#m-corpo"/>
+    <path d="M78 128 Q100 150 122 128" fill="none" stroke="#123634" stroke-width="5" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="m-bebe" viewBox="0 0 200 222">
+    <use href="#m-corpo"/>
+    <path d="M84 128 Q100 140 116 128" fill="none" stroke="#123634" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="100" cy="140" r="13" fill="#FFB43B" stroke="#123634" stroke-width="4"/><circle cx="100" cy="140" r="5" fill="#FDFCF8"/>
+  </symbol>
+  <symbol id="m-teen" viewBox="0 0 200 222">
+    <use href="#m-corpo"/>
+    <path d="M76 128 Q100 150 124 128" fill="none" stroke="#123634" stroke-width="5" stroke-linecap="round"/>
+    <path d="M80 134 Q100 146 120 134" stroke="#5BC2BA" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <rect x="88" y="135" width="6" height="6" rx="1.5" fill="#123634"/><rect x="100" y="138" width="6" height="6" rx="1.5" fill="#123634"/><rect x="112" y="135" width="6" height="6" rx="1.5" fill="#123634"/>
+  </symbol>
+  <symbol id="m-adulto" viewBox="0 0 200 222">
+    <use href="#m-corpo"/>
+    <path d="M78 128 Q100 150 122 128" fill="none" stroke="#123634" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="74" cy="96" r="15" fill="none" stroke="#123634" stroke-width="4"/><circle cx="126" cy="96" r="15" fill="none" stroke="#123634" stroke-width="4"/><path d="M89 96 L111 96" stroke="#123634" stroke-width="4"/>
+  </symbol>
+  <symbol id="m-alerta" viewBox="0 0 200 222">
+    <use href="#m-corpo"/>
+    <path d="M80 136 Q100 126 120 136" fill="none" stroke="#123634" stroke-width="5" stroke-linecap="round"/>
+    <rect x="118" y="38" width="46" height="18" rx="9" transform="rotate(-30 141 47)" fill="#FFB4A8" stroke="#B13A26" stroke-width="3"/>
+  </symbol>
+</svg>
+
 
   <!-- Header -->
-  <header id="site-header">
+  <header id="site-header" class="header-solid">
     <div class="container">
       <a href="#" class="wordmark" aria-label="Clínica LCR, início">
         <img src="assets/logo-lcr-96.png" alt="" aria-hidden="true" width="38" height="38">
@@ -217,75 +251,27 @@
     </div>
   </header>
 
-  <!-- 1. Hero Cinemático — Portal (zoom através da logo) -->
-  <section id="cinematic-hero">
-    <div class="cinema-sticky">
-      <!-- Fotos reais da clínica (fundo sutil): frente → logo · interior → headline -->
-      <div class="hero-photo" id="hero-photo-frente" aria-hidden="true"></div>
-      <div class="hero-photo" id="hero-photo-interior" aria-hidden="true"></div>
-
-      <!-- Tinta clara em tela cheia que ativa no meio do scroll (handoff invisível) -->
-      <div id="hero-bg-grad"></div>
-
-      <!-- Luz aqua difusa atrás da logo -->
-      <div id="hero-glow"></div>
-
-      <!-- Elementos flutuantes de órbita que somem ao dar scroll -->
-      <div class="hero-orbit" aria-hidden="true">
-        <div class="orbit-item item-1">
-          <div class="orbit-card">
-            <span class="orbit-number">4 dentistas</span>
-            <span class="orbit-label">na mesma clínica, no centro de Irecê</span>
-          </div>
+  <!-- 1. Hero: foto real, promessa, 2 CTAs, prova ao lado do botão -->
+  <section class="hero-b" id="inicio">
+    <div class="container hero-b-grid">
+      <div class="hero-b-text">
+        <p class="eyebrow">Atendimento infantil · Ortodontia · Clínica geral · Irecê-BA</p>
+        <h1>Um sorriso saudável <em>pra vida inteira.</em></h1>
+        <p class="hero-b-sub">Cuidado da família inteira desde o <strong>primeiro dentinho</strong>: crianças, adolescentes e adultos atendidos pela mesma equipe, no centro de Irecê.</p>
+        <div class="hero-buttons">
+          <a href="https://wa.me/5574991266602" data-wa data-origem="hero" data-servico="geral" class="btn btn-sun"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.945C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 018.413 3.488 11.824 11.824 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24z"/></svg>Agendar no WhatsApp</a>
+          <a href="#clinica" class="btn btn-outline-ink">Conhecer a clínica</a>
         </div>
-        <div class="orbit-item item-2">
-          <div class="orbit-card">
-            <span class="orbit-number">1ª consulta</span>
-            <span class="orbit-label">sem medo, no ritmo da criança</span>
-          </div>
-        </div>
-        <div class="orbit-item item-3">
-          <div class="orbit-card">
-            <span class="orbit-number">Crianças, adolescentes e adultos</span>
-            <span class="orbit-label">a mesma equipe pra família toda</span>
-          </div>
-        </div>
-        <div class="orbit-item item-4">
-          <div class="orbit-note">Crescer sorrindo</div>
-        </div>
-        <div class="orbit-item item-5">
-          <div class="orbit-note">Prevenir é cuidar</div>
+        <div class="hero-proof">
+          <span><b class="placeholder" data-placeholder="[GOOGLE: nota · nº]">★ —</b> avaliações no Google</span>
+          <span><b>4</b> dentistas, 1 endereço</span>
         </div>
       </div>
-
-      <!-- FASE 1: a tinta recortada DENTRO da logo (zoom in).
-           A foto da fachada aparece POR CIMA da tinta clara (não no lugar dela):
-           o dente segue luminoso e a fachada vira marca d'água dentro dele. -->
-      <div id="mask-logo">
-        <div class="fixed-gradient-bg">
-          <div class="logo-photo-inner" aria-hidden="true"></div>
-        </div>
-      </div>
-
-      <!-- FASE 2: a MESMA tinta recortada pela headline (zoom out) -->
-      <div id="mask-text">
-        <h1 id="cine-title">Um sorriso saudável<br>pra vida inteira.</h1>
-        <div id="hero-rest">
-          <p class="hero-eyebrow">Atendimento infantil · Ortodontia · Clínica geral</p>
-          <p>Cuidado da família inteira desde o <strong>primeiro dentinho</strong>: crianças, adolescentes e adultos atendidos pela mesma equipe, em Irecê.</p>
-          <div class="hero-buttons">
-            <a href="https://wa.me/5574991266602" data-wa data-origem="hero" data-servico="geral" class="btn btn-sun"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.945C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 018.413 3.488 11.824 11.824 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24z"/></svg>Agendar no WhatsApp</a>
-            <a href="#clinica" class="btn btn-outline-light">Conhecer a clínica</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Indicador de scroll -->
-      <div class="scroll-indicator" aria-hidden="true">
-        <span class="scroll-text">Role para explorar</span>
-        <div class="scroll-mouse">
-          <div class="scroll-wheel"></div>
-        </div>
+      <div class="hero-b-photo">
+        <div class="hero-blob" aria-hidden="true"></div>
+        <img src="assets/foto-lara-camila.webp" width="960" height="960" alt="Dra. Lara Camila, fundadora da Clínica LCR, no consultório" fetchpriority="high">
+        <div class="hero-card"><b>Primeira consulta sem medo</b>no ritmo da criança, com os pais do lado</div>
+        <svg class="mascot mascot-hero" aria-hidden="true"><use href="#m-base"/></svg>
       </div>
     </div>
   </section>
@@ -319,157 +305,123 @@
     </div>
   </section>
 
-  <!-- 3. Para quem é: segmentação por público (cada card com CTA próprio no WhatsApp) -->
-  <section id="para-quem">
+  <!-- 3. Para quem é: um bloco por público, alternando lados, cada um com cor, foto e mascote -->
+  <section id="para-quem" class="pub-intro">
     <div class="container">
       <div class="section-header">
         <span class="chip">Para toda a família</span>
         <h2>Um cuidado pra <span class="squiggle">vida toda</span>, do bebê ao adulto</h2>
         <p>A LCR acompanha cada fase do sorriso: o cuidado da infância, o aparelho quando chega a hora e a rotina do adulto. Na mesma clínica, com a mesma equipe.</p>
       </div>
-      <div class="aud-grid">
-        <article class="aud-card" id="criancas">
-          <span class="aud-label">Para bebês e crianças</span>
-          <h3>Atendimento infantil</h3>
-          <p class="aud-pitch">Consulta no ritmo da criança, pra ela sair querendo voltar.</p>
-          <ul class="aud-list">
-            <li>Primeira consulta do bebê e orientação pros pais</li>
-            <li>Limpeza infantil, flúor e selante</li>
-            <li>Restauração e cuidado com o dente de leite</li>
-            <li>Acompanhamento da troca dos dentes</li>
-          </ul>
-          <a href="https://wa.me/5574991266602" data-wa data-origem="para-quem" data-servico="criancas" class="btn btn-sun aud-cta">Agendar para meu filho</a>
-        </article>
-        <article class="aud-card aud-teen" id="adolescentes">
-          <span class="aud-label">Para pré-adolescentes e teens</span>
-          <h3>Ortodontia</h3>
-          <p class="aud-pitch">Aparelho no momento certo, com o sorriso que ele quer mostrar.</p>
-          <ul class="aud-list">
-            <li>Avaliação ortodôntica na troca dos dentes</li>
-            <li>Aparelho convencional ou autoligado</li>
-            <li>Manutenções rápidas, que cabem na rotina da escola</li>
-            <li>Higiene pensada pra quem usa aparelho</li>
-          </ul>
-          <a href="https://wa.me/5574991266602" data-wa data-origem="para-quem" data-servico="adolescentes" class="btn btn-aqua aud-cta">Agendar avaliação</a>
-        </article>
-        <article class="aud-card" id="adultos">
-          <span class="aud-label">Para os pais e adultos</span>
-          <h3>Clínica geral e especialidades</h3>
-          <p class="aud-pitch">Os pais também são cuidados aqui, sem julgamento, mesmo depois de anos longe do dentista.</p>
-          <ul class="aud-list">
-            <li>Consulta, limpeza e prevenção</li>
-            <li>Restaurações estéticas e clareamento</li>
-            <li>Canal, extrações e siso</li>
-            <li>Próteses e gengivoplastia</li>
-          </ul>
-          <a href="https://wa.me/5574991266602" data-wa data-origem="para-quem" data-servico="adultos" class="btn btn-aqua aud-cta">Agendar para mim</a>
-        </article>
+    </div>
+  </section>
+  <section class="pub pub-aqua" id="criancas">
+    <div class="container pub-grid">
+      <div class="pub-pic"><img src="assets/clinica/escovas-800.webp" srcset="assets/clinica/escovas-800.webp 800w, assets/clinica/escovas.webp 1600w" sizes="(max-width: 968px) 100vw, 50vw" width="800" height="450" loading="lazy" alt="Escovas coloridas e livros infantis no consultório da LCR"><svg class="mascot mascot-pub" aria-hidden="true"><use href="#m-bebe"/></svg></div>
+      <div class="pub-txt">
+        <p class="eyebrow">Para bebês e crianças</p>
+        <h2>Atendimento infantil</h2>
+        <p class="pub-pitch">Consulta no ritmo da criança, pra ela sair querendo voltar.</p>
+        <ul class="pills"><li>Primeira consulta do bebê</li><li>Limpeza, flúor e selante</li><li>Cuidado com o dente de leite</li><li>Troca dos dentes</li></ul>
+        <a href="https://wa.me/5574991266602" data-wa data-origem="para-quem" data-servico="criancas" class="btn btn-sun">Agendar para meu filho</a>
+      </div>
+    </div>
+  </section>
+  <section class="pub pub-deep pub-flip" id="adolescentes">
+    <div class="container pub-grid">
+      <div class="pub-pic"><img src="assets/clinica/consultorio-800.webp" srcset="assets/clinica/consultorio-800.webp 800w, assets/clinica/consultorio.webp 1600w" sizes="(max-width: 968px) 100vw, 50vw" width="800" height="450" loading="lazy" alt="Consultório da Clínica LCR"><svg class="mascot mascot-pub" aria-hidden="true"><use href="#m-teen"/></svg></div>
+      <div class="pub-txt">
+        <p class="eyebrow">Para pré-adolescentes e teens</p>
+        <h2>Ortodontia</h2>
+        <p class="pub-pitch">Aparelho no momento certo, com o sorriso que ele quer mostrar.</p>
+        <ul class="pills"><li>Avaliação na troca dos dentes</li><li>Convencional ou autoligado</li><li>Manutenções rápidas</li><li>Higiene pra quem usa aparelho</li></ul>
+        <a href="https://wa.me/5574991266602" data-wa data-origem="para-quem" data-servico="adolescentes" class="btn btn-outline-light">Agendar avaliação</a>
+      </div>
+    </div>
+  </section>
+  <section class="pub pub-peach" id="adultos">
+    <div class="container pub-grid">
+      <div class="pub-pic"><img src="assets/clinica/mesa-800.webp" srcset="assets/clinica/mesa-800.webp 800w, assets/clinica/mesa.webp 1600w" sizes="(max-width: 968px) 100vw, 50vw" width="800" height="450" loading="lazy" alt="Mesa de atendimento da Clínica LCR"><svg class="mascot mascot-pub" aria-hidden="true"><use href="#m-adulto"/></svg></div>
+      <div class="pub-txt">
+        <p class="eyebrow">Para os pais e adultos</p>
+        <h2>Clínica geral e especialidades</h2>
+        <p class="pub-pitch">Os pais também são cuidados aqui, sem julgamento, mesmo depois de anos longe do dentista.</p>
+        <ul class="pills"><li>Limpeza e prevenção</li><li>Estética e clareamento</li><li>Canal, siso e extrações</li><li>Próteses e gengivoplastia</li></ul>
+        <a href="https://wa.me/5574991266602" data-wa data-origem="para-quem" data-servico="adultos" class="btn btn-sun">Agendar para mim</a>
       </div>
     </div>
   </section>
 
-  <!-- 4. Especialidades: camada de escaneabilidade, uma linha por área -->
-  <section class="bg-soft" id="especialidades">
-    <div class="container">
-      <div class="section-header">
-        <span class="chip">Tratamentos</span>
+  <!-- 4. Especialidades: lista numerada, sem ícone genérico -->
+  <section id="especialidades" class="spec-b">
+    <div class="container spec-b-grid">
+      <div class="spec-b-intro">
+        <p class="eyebrow">Tratamentos</p>
         <h2>O que a gente <span class="squiggle">faz</span></h2>
-        <p>Tudo na mesma clínica, com equipe própria. Se não souber por onde começar, começa pela avaliação.</p>
-      </div>
-      <ul class="spec-grid">
-        <li class="spec-item">
-          <span class="spec-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.35C6 17 2.5 13.03 2.5 9.16 2.5 6.42 4.7 4.5 7.13 4.5c1.63 0 3.22.79 4.87 2.6 1.65-1.81 3.24-2.6 4.87-2.6 2.43 0 4.63 1.92 4.63 4.66 0 3.87-3.5 7.84-9.5 12.19z"/></svg></span>
-          <div><h3>Atendimento infantil</h3><p>Do primeiro dentinho à troca dos dentes, no ritmo da criança.</p></div>
-        </li>
-        <li class="spec-item">
-          <span class="spec-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
-          <div><h3>Prevenção</h3><p>Limpeza, flúor e selante pra evitar que o problema apareça.</p></div>
-        </li>
-        <li class="spec-item">
-          <span class="spec-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/><path d="M5 12V8a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v4"/><path d="M15 12V8a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v4"/><path d="M10 12v4a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2v-4"/></svg></span>
-          <div><h3>Ortodontia</h3><p>Aparelho convencional e autoligado, pra adolescentes e adultos.</p></div>
-        </li>
-        <li class="spec-item">
-          <span class="spec-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 3 2 5 2 8a3 3 0 0 0 6 0V9"/><path d="M12 2a7 7 0 0 1 7 7c0 3-2 5-2 8a3 3 0 0 1-6 0"/></svg></span>
-          <div><h3>Endodontia</h3><p>Tratamento de canal pra salvar o dente que dói.</p></div>
-        </li>
-        <li class="spec-item">
-          <span class="spec-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4z"/><path d="M19 16l.8 2 2.2.7-2.2.7L19 21l-.8-1.6-2.2-.7 2.2-.7z"/></svg></span>
-          <div><h3>Dentística e estética</h3><p>Restaurações em resina e clareamento, caseiro ou no consultório.</p></div>
-        </li>
-        <li class="spec-item">
-          <span class="spec-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.35C6 17 2.5 13.03 2.5 9.16 2.5 6.42 4.7 4.5 7.13 4.5c1.63 0 3.22.79 4.87 2.6"/><path d="M14 8l6 6"/><path d="M20 8l-6 6"/></svg></span>
-          <div><h3>Cirurgia</h3><p>Extrações de dente de leite, permanentes e siso.</p></div>
-        </li>
-        <li class="spec-item">
-          <span class="spec-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20c2-6 4-9 8-9s6 3 8 9"/><path d="M8 11c0-4 2-7 4-7s4 3 4 7"/></svg></span>
-          <div><h3>Periodontia</h3><p>Limpeza profunda e gengivoplastia pra gengiva saudável.</p></div>
-        </li>
-        <li class="spec-item">
-          <span class="spec-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14c0-5 3-9 8-9s8 4 8 9c0 3-2 5-4 5-2 0-2-3-4-3s-2 3-4 3c-2 0-4-2-4-5z"/></svg></span>
-          <div><h3>Prótese</h3><p>Próteses totais e parciais pra voltar a mastigar e sorrir com conforto.</p></div>
-        </li>
-      </ul>
-      <div class="services-cta">
-        <p>Não sabe por onde começar? Começa pela avaliação: a gente monta o plano com você.</p>
+        <p>Tudo na mesma clínica, com equipe própria. Se não souber por onde começar, começa pela avaliação: a gente monta o plano com você.</p>
         <a href="https://wa.me/5574991266602" data-wa data-origem="especialidades" data-servico="geral" class="btn btn-aqua">Agendar avaliação</a>
       </div>
+      <ol class="spec-list">
+        <li><b>Atendimento infantil</b><span>Do primeiro dentinho à troca dos dentes, no ritmo da criança.</span></li>
+        <li><b>Prevenção</b><span>Limpeza, flúor e selante pra evitar que o problema apareça.</span></li>
+        <li><b>Ortodontia</b><span>Aparelho convencional e autoligado, pra adolescentes e adultos.</span></li>
+        <li><b>Endodontia</b><span>Tratamento de canal pra salvar o dente que dói.</span></li>
+        <li><b>Dentística e estética</b><span>Restaurações em resina e clareamento, caseiro ou no consultório.</span></li>
+        <li><b>Cirurgia</b><span>Extrações de dente de leite, permanentes e siso.</span></li>
+        <li><b>Periodontia</b><span>Limpeza profunda e gengivoplastia pra gengiva saudável.</span></li>
+        <li><b>Prótese</b><span>Próteses totais e parciais pra voltar a mastigar e sorrir com conforto.</span></li>
+      </ol>
     </div>
   </section>
 
-  <!-- 5. Linha do tempo por fase: o pai se localiza e entende o que acompanhar -->
-  <section id="fases">
+  <!-- 5. Linha do tempo por fase: faixas de cor com o mascote crescendo -->
+  <section id="fases" class="fases-b">
     <div class="container">
       <div class="section-header">
         <span class="chip">Cada idade, um cuidado</span>
         <h2>O que acompanhar em <span class="squiggle">cada fase</span> do sorriso</h2>
         <p>Encontre a fase do seu filho (ou a sua) e veja o que importa agora.</p>
       </div>
-      <ol class="timeline">
-        <li class="phase">
-          <span class="phase-age">0–2</span>
-          <div class="phase-body">
-            <span class="phase-name">Bebês</span>
-            <h3>Primeiros dentinhos</h3>
-            <p>A primeira consulta é recomendada quando nasce o primeiro dente, ou até o primeiro aniversário. Limpeza da gengiva, amamentação e chupeta entram na conversa.</p>
-            <a href="guias/primeiro-dentinho/" class="phase-link" data-track="guide_view" data-guia="primeiro-dentinho">Ler o guia do primeiro dentinho</a>
-          </div>
+      <ol class="fases-grid">
+        <li class="fase f1">
+          <svg class="mascot mascot-fase" aria-hidden="true"><use href="#m-bebe"/></svg>
+          <span class="fase-age">0–2</span>
+          <span class="fase-name">Bebês</span>
+          <h3>Primeiros dentinhos</h3>
+          <p>A primeira consulta é recomendada quando nasce o primeiro dente, ou até o primeiro aniversário.</p>
+          <a href="guias/primeiro-dentinho/" class="phase-link" data-track="guide_view" data-guia="primeiro-dentinho">Ler o guia do primeiro dentinho</a>
         </li>
-        <li class="phase">
-          <span class="phase-age">3–5</span>
-          <div class="phase-body">
-            <span class="phase-name">Primeira infância</span>
-            <h3>Hábitos que ficam</h3>
-            <p>Escovação com ajuda do adulto, alimentação, a hora de deixar chupeta e mamadeira, e a primeira visita sem medo.</p>
-            <a href="guias/primeira-consulta/" class="phase-link" data-track="guide_view" data-guia="primeira-consulta">Como preparar a primeira consulta</a>
-          </div>
+        <li class="fase f2">
+          <svg class="mascot mascot-fase" aria-hidden="true"><use href="#m-base"/></svg>
+          <span class="fase-age">3–5</span>
+          <span class="fase-name">Primeira infância</span>
+          <h3>Hábitos que ficam</h3>
+          <p>Escovação com ajuda, alimentação, a hora de deixar chupeta e mamadeira, e a primeira visita sem medo.</p>
+          <a href="guias/primeira-consulta/" class="phase-link" data-track="guide_view" data-guia="primeira-consulta">Como preparar a primeira consulta</a>
         </li>
-        <li class="phase phase-highlight">
-          <span class="phase-age">6–9</span>
-          <div class="phase-body">
-            <span class="phase-name">Troca dos dentes</span>
-            <h3>Chegam os permanentes</h3>
-            <p>O dente de leite cai e o primeiro molar nasce lá atrás, sem avisar. É a melhor fase pra primeira avaliação ortodôntica.</p>
-            <a href="guias/troca-dos-dentes/" class="phase-link" data-track="guide_view" data-guia="troca-dos-dentes">Ler o guia da troca dos dentes</a>
-          </div>
+        <li class="fase f3">
+          <svg class="mascot mascot-fase" aria-hidden="true"><use href="#m-base"/></svg>
+          <span class="fase-age">6–9</span>
+          <span class="fase-name">Troca dos dentes</span>
+          <h3>Chegam os permanentes</h3>
+          <p>O dente de leite cai e o molar nasce lá atrás, sem avisar. A melhor fase pra primeira avaliação ortodôntica.</p>
+          <a href="guias/troca-dos-dentes/" class="phase-link" data-track="guide_view" data-guia="troca-dos-dentes">Ler o guia da troca dos dentes</a>
         </li>
-        <li class="phase">
-          <span class="phase-age">10–17</span>
-          <div class="phase-body">
-            <span class="phase-name">Pré-adolescentes e teens</span>
-            <h3>Sorriso e autoestima</h3>
-            <p>Aparelho no momento certo, higiene reforçada e acompanhamento do crescimento. Sem infantilizar: é o sorriso que ele quer mostrar.</p>
-            <a href="guias/aparelho-fixo/" class="phase-link" data-track="guide_view" data-guia="aparelho-fixo">Ler o guia do aparelho fixo</a>
-          </div>
+        <li class="fase f4">
+          <svg class="mascot mascot-fase" aria-hidden="true"><use href="#m-teen"/></svg>
+          <span class="fase-age">10–17</span>
+          <span class="fase-name">Pré-adolescentes e teens</span>
+          <h3>Sorriso e autoestima</h3>
+          <p>Aparelho no momento certo, higiene reforçada e acompanhamento do crescimento. Sem infantilizar.</p>
+          <a href="guias/aparelho-fixo/" class="phase-link" data-track="guide_view" data-guia="aparelho-fixo">Ler o guia do aparelho fixo</a>
         </li>
-        <li class="phase">
-          <span class="phase-age">18+</span>
-          <div class="phase-body">
-            <span class="phase-name">Adultos</span>
-            <h3>Cuidado contínuo</h3>
-            <p>Prevenção, clareamento, canal ou prótese: os pais seguem na mesma clínica, com a mesma equipe.</p>
-            <a href="guias/clareamento/" class="phase-link" data-track="guide_view" data-guia="clareamento">Ler o guia do clareamento</a>
-          </div>
+        <li class="fase f5">
+          <svg class="mascot mascot-fase" aria-hidden="true"><use href="#m-adulto"/></svg>
+          <span class="fase-age">18+</span>
+          <span class="fase-name">Adultos</span>
+          <h3>Cuidado contínuo</h3>
+          <p>Prevenção, clareamento, canal ou prótese: os pais seguem na mesma clínica, com a mesma equipe.</p>
+          <a href="guias/clareamento/" class="phase-link" data-track="guide_view" data-guia="clareamento">Ler o guia do clareamento</a>
         </li>
       </ol>
       <div class="services-cta">
@@ -490,7 +442,7 @@
       </div>
       <div class="guide-grid guide-grid-home">
         <article class="guide-card" data-cat="infantil" data-fases="0-2">
-          <a href="guias/primeiro-dentinho/" class="guide-cover cat-infantil" data-track="guide_view" data-guia="primeiro-dentinho" aria-hidden="true" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a4 4 0 0 1 4 4v1a4 4 0 0 1-8 0V7a4 4 0 0 1 4-4z"/><path d="M4 21a8 8 0 0 1 16 0"/><path d="M9 7h.01M15 7h.01"/><path d="M10 10c.6.6 1.3.9 2 .9s1.4-.3 2-.9"/></svg></a>
+          <a href="guias/primeiro-dentinho/" class="guide-cover cat-infantil" data-track="guide_view" data-guia="primeiro-dentinho" aria-hidden="true" tabindex="-1"><svg class="mascot mascot-cover"><use href="#m-bebe"/></svg></a>
           <div class="guide-card-body">
             <span class="guide-cat">Infantil</span>
             <h3><a href="guias/primeiro-dentinho/" data-track="guide_view" data-guia="primeiro-dentinho">Primeiro dentinho</a></h3>
@@ -502,7 +454,7 @@
           </div>
         </article>
         <article class="guide-card" data-cat="emergencia" data-fases="0-2 3-5 6-9 10-17">
-          <a href="guias/trauma-dentario/" class="guide-cover cat-emergencia" data-track="guide_view" data-guia="trauma-dentario" aria-hidden="true" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l10 18H2z"/><path d="M12 10v5"/><path d="M12 18h.01"/></svg><span class="guide-badge">Emergência</span></a>
+          <a href="guias/trauma-dentario/" class="guide-cover cat-emergencia" data-track="guide_view" data-guia="trauma-dentario" aria-hidden="true" tabindex="-1"><svg class="mascot mascot-cover"><use href="#m-alerta"/></svg><span class="guide-badge">Emergência</span></a>
           <div class="guide-card-body">
             <span class="guide-cat">Emergência</span>
             <h3><a href="guias/trauma-dentario/" data-track="guide_view" data-guia="trauma-dentario">Bateu a boca</a></h3>
@@ -514,7 +466,7 @@
           </div>
         </article>
         <article class="guide-card" data-cat="ortodontia" data-fases="10-17 18">
-          <a href="guias/aparelho-fixo/" class="guide-cover cat-ortodontia" data-track="guide_view" data-guia="aparelho-fixo" aria-hidden="true" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h18"/><path d="M5 12V8a2 2 0 0 1 4 0v4"/><path d="M15 12V8a2 2 0 0 1 4 0v4"/><path d="M10 12v4a2 2 0 0 0 4 0v-4"/></svg></a>
+          <a href="guias/aparelho-fixo/" class="guide-cover cat-ortodontia" data-track="guide_view" data-guia="aparelho-fixo" aria-hidden="true" tabindex="-1"><svg class="mascot mascot-cover"><use href="#m-teen"/></svg></a>
           <div class="guide-card-body">
             <span class="guide-cat">Ortodontia</span>
             <h3><a href="guias/aparelho-fixo/" data-track="guide_view" data-guia="aparelho-fixo">Aparelho fixo no dia a dia</a></h3>
@@ -526,7 +478,7 @@
           </div>
         </article>
         <article class="guide-card" data-cat="adultos" data-fases="18">
-          <a href="guias/clareamento/" class="guide-cover cat-adultos" data-track="guide_view" data-guia="clareamento" aria-hidden="true" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4z"/><path d="M19 16l.8 2 2.2.7-2.2.7L19 21l-.8-1.6-2.2-.7 2.2-.7z"/></svg></a>
+          <a href="guias/clareamento/" class="guide-cover cat-adultos" data-track="guide_view" data-guia="clareamento" aria-hidden="true" tabindex="-1"><svg class="mascot mascot-cover"><use href="#m-adulto"/></svg></a>
           <div class="guide-card-body">
             <span class="guide-cat">Adultos</span>
             <h3><a href="guias/clareamento/" data-track="guide_view" data-guia="clareamento">Clareamento dental</a></h3>
@@ -560,49 +512,27 @@
   </section>
   <!-- guias:home:end -->
 
-  <!-- 8. Primeira consulta em 5 passos: tira a ansiedade do desconhecido -->
-  <section id="primeira-visita">
-    <div class="container">
-      <div class="visit-panel">
-        <div class="section-header">
-          <span class="chip">Primeira consulta</span>
-          <h2>Como é a primeira vez, <span class="squiggle">sem medo</span></h2>
-          <p>A gente sabe que a primeira vez no dentista dá um frio na barriga, na criança e nos pais. Por isso ela acontece assim, passo a passo:</p>
-        </div>
-        <div class="visit-steps visit-steps-5">
-          <div class="step-card">
-            <span class="step-num">1</span>
-            <h3>Agendar no WhatsApp</h3>
-            <p>Você conta a idade e o motivo. A recepção separa o melhor horário, de preferência de manhã pros pequenos.</p>
-          </div>
-          <div class="step-card">
-            <span class="step-num">2</span>
-            <h3>Boas-vindas sem pressa</h3>
-            <p>A criança conhece a recepção, a sala, a cadeira e os "instrumentos de astronauta". Colo liberado. Nada acontece sem ela entender antes.</p>
-          </div>
-          <div class="step-card">
-            <span class="step-num">3</span>
-            <h3>Exame brincando</h3>
-            <p>Contamos os dentinhos, olhamos como estão crescendo e conversamos com você sobre escovação, alimentação e hábitos.</p>
-          </div>
-          <div class="step-card">
-            <span class="step-num">4</span>
-            <h3>Cuidado já no primeiro dia</h3>
-            <p>Se a criança topar, a limpeza suave e o flúor já acontecem na mesma consulta. Se não topar, fica pra próxima. Ninguém força.</p>
-          </div>
-          <div class="step-card">
-            <span class="step-num">5</span>
-            <h3>Saída com lembrança</h3>
-            <p>A criança sai com o plano combinado, o retorno marcado e <span class="placeholder" data-placeholder="Definir com a Dra. Lara">uma lembrança da LCR</span> pra levar pra casa.</p>
-          </div>
-          <div class="steps-line" aria-hidden="true"></div>
-        </div>
-        <p class="visit-note">Vale pros adultos também: avaliação completa, sem julgamento, mesmo se você não vai ao dentista há anos.</p>
+  <!-- 8. Primeira consulta em 5 passos -->
+  <section id="primeira-visita" class="visit-b">
+    <div class="container visit-b-grid">
+      <div class="visit-b-side">
+        <svg class="mascot mascot-visit" aria-hidden="true"><use href="#m-base"/></svg>
+        <p class="eyebrow">Primeira consulta</p>
+        <h2>Como é a primeira vez, <span class="squiggle">sem medo</span></h2>
+        <p>A gente sabe que a primeira vez no dentista dá um frio na barriga, na criança e nos pais. Por isso ela acontece assim, passo a passo.</p>
         <div class="visit-cta">
           <a href="https://wa.me/5574991266602" data-wa data-origem="primeira-consulta" data-servico="primeira-consulta" class="btn btn-sun">Agendar a primeira consulta</a>
-          <a href="guias/primeira-consulta/" class="btn btn-outline-ink" data-track="guide_view" data-guia="primeira-consulta">Como preparar a criança em casa</a>
+          <a href="guias/primeira-consulta/" class="btn btn-outline-ink" data-track="guide_view" data-guia="primeira-consulta">Como preparar a criança</a>
         </div>
       </div>
+      <ol class="visit-b-steps">
+        <li><span class="n">1</span><div><h3>Agendar no WhatsApp</h3><p>Você conta a idade e o motivo. A recepção separa o melhor horário, de preferência de manhã pros pequenos.</p></div></li>
+        <li><span class="n">2</span><div><h3>Boas-vindas sem pressa</h3><p>A criança conhece a recepção, a sala, a cadeira e os "instrumentos de astronauta". Colo liberado. Nada acontece sem ela entender antes.</p></div></li>
+        <li><span class="n">3</span><div><h3>Exame brincando</h3><p>Contamos os dentinhos, olhamos como estão crescendo e conversamos com você sobre escovação, alimentação e hábitos.</p></div></li>
+        <li><span class="n">4</span><div><h3>Cuidado já no primeiro dia</h3><p>Se a criança topar, a limpeza suave e o flúor já acontecem na mesma consulta. Se não topar, fica pra próxima. Ninguém força.</p></div></li>
+        <li><span class="n">5</span><div><h3>Saída com lembrança</h3><p>A criança sai com o plano combinado, o retorno marcado e <span class="placeholder" data-placeholder="Definir com a Dra. Lara">uma lembrança da LCR</span> pra levar pra casa.</p></div></li>
+        <li class="visit-b-note">Vale pros adultos também: avaliação completa, sem julgamento, mesmo se você não vai ao dentista há anos.</li>
+      </ol>
     </div>
   </section>
 
@@ -644,7 +574,7 @@
   </section>
 
   <!-- 10. A clínica: o pai quer ver onde o filho vai entrar -->
-  <section id="clinica">
+  <section id="clinica" class="bg-sand">
     <div class="container">
       <div class="section-header">
         <span class="chip">A clínica</span>
@@ -728,101 +658,61 @@
     </div>
   </section>
 
-  <!-- 11. Equipe: quem está por trás (foto real, nome, CRO, área, frase) -->
-  <section id="equipe" class="bg-soft">
+  <!-- 11. Equipe: quem está por trás -->
+  <section id="equipe" class="team-b">
     <div class="container">
       <div class="section-header">
         <span class="chip">Quem cuida</span>
         <h2>Quatro dentistas, <span class="squiggle">uma equipe</span></h2>
         <p>Cada profissional com o próprio CRO-BA e a própria área, na mesma clínica. Seu filho e você conhecem a equipe pelo nome.</p>
       </div>
-      <div class="team-grid team-grid-photos">
-        <article class="team-card team-featured">
-          <div class="team-photo"><img src="assets/foto-lara-camila.webp" alt="Dra. Lara Camila, fundadora da Clínica LCR" width="960" height="960" loading="lazy"></div>
-          <h3>Dra. Lara Camila</h3>
-          <span class="team-role">Fundadora e responsável técnica · clínica geral e atendimento infantil</span>
-          <span class="team-cro">CRO-BA 15.247</span>
-          <p class="team-quote placeholder" data-placeholder="Frase pessoal: pedir à Dra. Lara">"Consultório pode ser um lugar leve, onde a criança entra curiosa e sai sorrindo."</p>
+      <div class="team-b-featured">
+        <div class="team-b-photo"><img src="assets/foto-lara-camila.webp" width="960" height="960" loading="lazy" alt="Dra. Lara Camila, fundadora da Clínica LCR"></div>
+        <div class="team-b-bubble">
+          <p class="eyebrow">Fundadora e responsável técnica</p>
+          <h3>Oi, eu sou a Dra. Lara</h3>
+          <p class="team-quote placeholder" data-placeholder="Frase pessoal: pedir à Dra. Lara">"Consultório pode ser um lugar leve, onde a criança entra curiosa e sai sorrindo, e o adulto é atendido com calma, sem julgamento."</p>
+          <span class="team-cro">CRO-BA 15.247 · clínica geral e atendimento infantil</span>
+        </div>
+      </div>
+      <div class="team-b-grid">
+        <article class="team-b-card">
+          <div class="team-b-avatar photo-placeholder" data-placeholder="[FOTO: Dr. Welington]"></div>
+          <h3>Dr. Welington dos Santos Jr.</h3><span class="team-role">Implantodontia e cirurgia</span><span class="team-cro">CRO-BA 16.633</span>
         </article>
-        <article class="team-card">
-          <div class="team-photo photo-placeholder" data-placeholder="[FOTO: Dr. Welington]"></div>
-          <h3>Dr. Welington dos Santos Jr.</h3>
-          <span class="team-role">Implantodontia e cirurgia</span>
-          <span class="team-cro">CRO-BA 16.633</span>
-          <p class="team-quote placeholder" data-placeholder="Frase pessoal: pedir">—</p>
+        <article class="team-b-card">
+          <div class="team-b-avatar photo-placeholder" data-placeholder="[FOTO: Dra. Talita]"></div>
+          <h3>Dra. Talita Fernandes</h3><span class="team-role">Ortodontia</span><span class="team-cro">CRO-BA 15.705</span>
         </article>
-        <article class="team-card">
-          <div class="team-photo photo-placeholder" data-placeholder="[FOTO: Dra. Talita]"></div>
-          <h3>Dra. Talita Fernandes</h3>
-          <span class="team-role">Ortodontia</span>
-          <span class="team-cro">CRO-BA 15.705</span>
-          <p class="team-quote placeholder" data-placeholder="Frase pessoal: pedir">—</p>
-        </article>
-        <article class="team-card">
-          <div class="team-photo photo-placeholder" data-placeholder="[FOTO: Dra. Paloma]"></div>
-          <h3>Dra. Paloma Vieira</h3>
-          <span class="team-role">Endodontia</span>
-          <span class="team-cro">CRO-BA 15.377</span>
-          <p class="team-quote placeholder" data-placeholder="Frase pessoal: pedir">—</p>
+        <article class="team-b-card">
+          <div class="team-b-avatar photo-placeholder" data-placeholder="[FOTO: Dra. Paloma]"></div>
+          <h3>Dra. Paloma Vieira</h3><span class="team-role">Endodontia</span><span class="team-cro">CRO-BA 15.377</span>
         </article>
       </div>
       <p class="team-note"><span class="placeholder" data-placeholder="Confirmar especialidades registradas no CRO-BA">As áreas acima são as de atuação de cada profissional.</span></p>
     </div>
   </section>
 
-  <!-- 12. Sobre: a fundadora, a clínica e os 4 pilares (fecha o ciclo família/gerações do hero) -->
-  <section id="sobre">
-    <div class="container">
-      <div class="doctor-grid">
-        <div class="doctor-photo-wrapper">
-          <div class="doctor-blob-bg" aria-hidden="true"></div>
-          <div class="doctor-photo">
-            <img src="assets/foto-lara-camila.webp" alt="Dra. Lara Camila, cirurgiã-dentista da Clínica LCR" width="960" height="960" loading="lazy">
-          </div>
-          <div class="doctor-badge">
-            <div class="badge-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            </div>
-            <div>
-              <strong>Dra. Lara Camila</strong>
-              <span>CRO-BA 15.247</span>
-            </div>
-          </div>
-        </div>
-        <div class="doctor-info">
-          <span class="chip">Quem cuida</span>
-          <h2>Uma clínica de família, <span class="squiggle">de verdade</span></h2>
-          <span class="doctor-cro">Dra. Lara Camila Moitinho Moura, cirurgiã-dentista e fundadora da LCR</span>
-          <p>A Dra. Lara acredita que consultório de dentista pode ser um lugar <strong>leve</strong>, onde a criança entra curiosa e sai sorrindo, e o adulto é atendido com calma, sem pressa e sem julgamento.</p>
-          <p>Por isso a LCR trabalha com <strong>prevenção e acompanhamento de longo prazo</strong>: mais do que tratar, a gente caminha junto com a sua família pra evitar que o problema apareça.</p>
-        </div>
+  <!-- 12. Sobre: a fundadora, a clínica e os 4 pilares -->
+  <section id="sobre" class="about-b">
+    <div class="container about-b-grid">
+      <div class="about-b-text">
+        <p class="eyebrow">Sobre a LCR</p>
+        <h2>Uma clínica de família, <span class="squiggle">de verdade</span></h2>
+        <p>A Dra. Lara acredita que consultório de dentista pode ser um lugar <strong>leve</strong>, onde a criança entra curiosa e sai sorrindo, e o adulto é atendido com calma, sem pressa e sem julgamento.</p>
+        <p>Por isso a LCR trabalha com <strong>prevenção e acompanhamento de longo prazo</strong>: mais do que tratar, a gente caminha junto com a sua família pra evitar que o problema apareça. Muitos pais chegam trazendo o filho e acabam cuidando do próprio sorriso aqui. É assim que uma clínica vira a clínica da família.</p>
       </div>
-
-      <div class="diff-panel on-dark">
-        <div class="section-header">
-          <span class="chip">Do nosso jeito</span>
-          <h2>Por que as famílias ficam</h2>
-          <p>Muitos pais chegam trazendo o filho e acabam cuidando do próprio sorriso aqui. É assim que uma clínica vira a clínica da família.</p>
-        </div>
-        <div class="diff-grid">
-          <div class="diff-card">
-            <div class="diff-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
-            <div><h3>A gente lembra por você</h3><p>Retornos e revisões combinados e lembrados. Prevenção só funciona com constância, e a constância é nossa responsabilidade também.</p></div>
-          </div>
-          <div class="diff-card">
-            <div class="diff-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-            <div><h3>Tudo em um lugar só</h3><p>Clínica geral, orto, canal, próteses e cirurgia com equipe própria. Sua família não precisa peregrinar por consultórios.</p></div>
-          </div>
-          <div class="diff-card">
-            <div class="diff-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-            <div><h3>Horário que cabe na rotina</h3><p>Atendimento de segunda a sexta e sábado com horário combinado. Chamou no WhatsApp, a gente encaixa.</p></div>
-          </div>
-          <div class="diff-card">
-            <div class="diff-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-            <div><h3>Conversa de gente</h3><p>Explicamos cada passo do tratamento com transparência, sem "dentistês": você decide sabendo o que está decidindo.</p></div>
-          </div>
-        </div>
-      </div>
+      <ul class="pillars">
+        <li><b>A gente lembra por você</b><span>Retornos e revisões combinados e lembrados. Prevenção só funciona com constância, e a constância é nossa responsabilidade também.</span></li>
+        <li><b>Tudo em um lugar só</b><span>Clínica geral, orto, canal, próteses e cirurgia com equipe própria. Sua família não precisa peregrinar por consultórios.</span></li>
+        <li><b>Horário que cabe na rotina</b><span>Atendimento de segunda a sexta e sábado com horário combinado. Chamou no WhatsApp, a gente encaixa.</span></li>
+        <li><b>Conversa de gente</b><span>Explicamos cada passo do tratamento com transparência, sem "dentistês": você decide sabendo o que está decidindo.</span></li>
+      </ul>
+    </div>
+    <div class="container photo-strip">
+      <img src="assets/clinica/recepcao-800.webp" width="800" height="450" loading="lazy" alt="Recepção da Clínica LCR">
+      <img src="assets/clinica/sala-porta-800.webp" width="800" height="450" loading="lazy" alt="Consultório visto da porta">
+      <img src="assets/clinica/cafe-800.webp" width="800" height="450" loading="lazy" alt="Café na recepção da LCR">
     </div>
   </section>
 
@@ -886,6 +776,7 @@
   <section aria-label="Agendar consulta">
     <div class="container">
       <div class="cta-panel on-dark">
+        <svg class="mascot mascot-cta" aria-hidden="true"><use href="#m-base"/></svg>
         <span class="cta-kicker">O melhor momento de cuidar é antes de doer ✦</span>
         <h2>Bora agendar o sorriso<br>da sua família?</h2>
         <p class="cta-sub">Chama no WhatsApp que a gente encontra o melhor encaixe pra sua família. Se preferir, escolha o horário online.</p>

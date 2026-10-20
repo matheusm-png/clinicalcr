@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Referências visuais — site LCR (out/2026)</title>
+<style>
+  :root { --ink:#123634; --soft:#4E6B68; --aqua:#2A8B84; --deep:#0A302E; --sun:#FFB43B; --bg:#FBF9F4; --card:#fff; --line:rgba(18,54,52,.12); --bad:#B13A26; --good:#1E6D67; }
+  * { box-sizing:border-box; margin:0; padding:0 }
+  body { font:16px/1.6 -apple-system, "Inter", "Segoe UI", sans-serif; color:var(--ink); background:var(--bg); padding:40px 5% 120px }
+  h1 { font-size:40px; line-height:1.1; letter-spacing:-.02em; margin-bottom:10px }
+  h2 { font-size:28px; margin:64px 0 8px; letter-spacing:-.01em }
+  h3 { font-size:19px; margin:0 0 6px }
+  p.lead { font-size:18px; color:var(--soft); max-width:900px }
+  .sub { color:var(--soft); margin-bottom:22px; max-width:900px }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(460px,1fr)); gap:22px }
+  .ref { background:var(--card); border:1px solid var(--line); border-radius:18px; overflow:hidden }
+  .ref img { width:100%; display:block; border-bottom:1px solid var(--line); background:#eee }
+  .ref .body { padding:16px 18px 18px }
+  .tag { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:4px 9px; border-radius:999px; background:#E2F2F0; color:var(--good); margin-bottom:8px }
+  .tag.no { background:#FBE4DF; color:var(--bad) }
+  .tag.lcr { background:#FFF0CF; color:#7A4B00 }
+  .ref ul { margin:8px 0 0 18px; font-size:14.5px }
+  .ref li { margin-bottom:4px }
+  .ref a { color:var(--aqua); font-size:13px }
+  .diag { display:grid; grid-template-columns:1fr 1fr; gap:22px }
+  .box { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:22px 24px }
+  .box.bad { border-color:#E8B5AA } .box.good { border-color:#A9D9D3 }
+  .box ul { margin-left:18px } .box li { margin-bottom:8px }
+  table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:14px; overflow:hidden; font-size:14.5px }
+  th, td { text-align:left; padding:12px 14px; border-bottom:1px solid var(--line); vertical-align:top }
+  th { background:#EFF7F6; font-size:12.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--soft) }
+  .pill { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:700 }
+  .pill.a { background:#FBE4DF; color:var(--bad) } .pill.b { background:#FFF0CF; color:#7A4B00 } .pill.c { background:#E2F2F0; color:var(--good) }
+  .swatches { display:flex; gap:10px; flex-wrap:wrap; margin:10px 0 }
+  .sw { width:92px; height:64px; border-radius:12px; display:flex; align-items:flex-end; padding:6px; font-size:11px; font-weight:700; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.4) }
+  @media (max-width:900px){ .diag{grid-template-columns:1fr} .grid{grid-template-columns:1fr} h1{font-size:30px} }
+</style>
+</head>
+<body>
+
+<h1>Infantil sem parecer amador</h1>
+<p class="lead">Painel de referências pra revisão visual do site da LCR. Capturas reais de 19 sites (out/2026), o que cada um ensina, o diagnóstico do nosso site hoje e a direção proposta. Nada aqui é pra copiar; é pra decidir a régua.</p>
+
+<h2 style="margin-top:36px">0. Comparação: direção A ou direção B?</h2>
+<p class="sub">Mesma estrutura, mesmos textos, mesmas fotos reais da clínica. A única diferença é o tom visual. Os dois são páginas de verdade, abra e role: <a href="mock-a.html" target="_blank">abrir mockup A</a> · <a href="mock-b.html" target="_blank">abrir mockup B</a>. A nota do Google é exemplo, ainda não temos o número.</p>
+<div class="diag">
+  <div class="ref"><img src="img/mock-a.webp" alt="Mockup A"><div class="body"><span class="tag">A · Família premium</span>
+    <h3>Foto real, blocos de cor, tipografia grande. Zero personagem.</h3>
+    <ul>
+      <li>Lúdico só pela forma e pela cor: arco na foto, blob aqua, faixas creme / aqua / verde-noite / pêssego.</li>
+      <li>Fala com o pai e com o adulto que paga prótese e clareamento. Não parece "clínica de criança".</li>
+      <li>Régua: Coconut Smiles, Happy Tooth, Zen Dental.</li>
+      <li><strong>Risco:</strong> ficar parecido com qualquer clínica bonita. A diferença da LCR tem que vir das fotos e dos textos.</li>
+    </ul></div></div>
+  <div class="ref"><img src="img/mock-b.webp" alt="Mockup B"><div class="body"><span class="tag lcr">B · Família com um toque infantil</span>
+    <h3>Tudo da A, mais um personagem-dente em 4 pontos da página.</h3>
+    <ul>
+      <li>Um único personagem, derivado do dente do logo, em 3 versões: bebê com chupeta, teen com aparelho, adulto de óculos. Nunca em todo card.</li>
+      <li>Diz "aqui criança é bem-vinda" sem virar livro infantil. O adulto continua se reconhecendo no bloco dele.</li>
+      <li>Régua: Rock Pediatric, só que com um personagem em vez de vinte.</li>
+      <li><strong>Risco:</strong> se a Dra. Lara não gostar do personagem, a página inteira cai com ele. Por isso é um só, e sai em 10 minutos se precisar.</li>
+    </ul></div></div>
+</div>
+<div class="box" style="margin-top:22px">
+  <h3>Como apresentar</h3>
+  <ul>
+    <li>Mostrar a A primeiro, inteira. É a que ela tende a aceitar e já resolve o "parece amador".</li>
+    <li>Depois a B como "a mesma página com um detalhe a mais". A decisão vira sobre um detalhe, não sobre a identidade da clínica.</li>
+    <li>Perguntar o motivo da resistência: medo de parecer "só infantil", gosto pessoal, ou receio de prometer odontopediatria sem a especialidade. A arquitetura já responde aos três: três públicos, equipe com as quatro áreas, "atendimento infantil" em vez de "odontopediatria".</li>
+    <li>O que não está em discussão: fotos reais, blocos de cor, tipografia grande e fim dos ícones genéricos. Isso é o que tira o site do nível template nas duas direções.</li>
+  </ul>
+</div>
+
+<h2>1. A régua: o que separa "infantil premium" de "infantil amador"</h2>
+<div class="diag">
+  <div class="box good">
+    <h3>Premium (todas as boas referências fazem)</h3>
+    <ul>
+      <li><strong>Um só sistema de ilustração</strong>, feito pra marca, com traço e paleta únicos. A graça vem de 1 ou 2 personagens bem desenhados, não de 20 clip-arts.</li>
+      <li><strong>Paleta curta</strong>: 1 cor de marca, 1 acento quente, 2 neutros. Pastel só em superfície; texto sempre escuro e crisp.</li>
+      <li><strong>Tipografia grande e editorial</strong>: títulos em 56–80px, muito respiro, poucas palavras por tela.</li>
+      <li><strong>Foto real como prova</strong>: dentista, equipe, espaço, mãe com criança. A ilustração decora; a foto convence.</li>
+      <li><strong>Blocos de cor por seção</strong> (creme, aqua, verde-noite, areia) em vez de tudo branco com cards iguais.</li>
+      <li><strong>Formas orgânicas com moderação</strong>: um blob atrás da foto, uma onda entre seções. Não em todo card.</li>
+      <li><strong>Conversão explícita</strong>: nota do Google ao lado do CTA, como funciona a 1ª consulta com passos, preço/condições explicados, CTA em todo bloco.</li>
+    </ul>
+  </div>
+  <div class="box bad">
+    <h3>Amador (o que faz o site parecer template)</h3>
+    <ul>
+      <li>Ícones de linha genéricos dentro de quadradinhos coloridos, repetidos em todas as seções.</li>
+      <li>Cards iguais em grade, seção após seção, com a mesma "pílula" de título em cima.</li>
+      <li>Arco-íris, castelo, fada do dente, mascote fofinho demais: fala só com a criança e assusta o pai (ver Fábula abaixo).</li>
+      <li>Muitas cores vivas competindo (Kidz &amp; Teen abaixo: 6 cores saturadas na mesma dobra).</li>
+      <li>Foto de banco, foto distorcida de grande-angular, foto escura com véu verde.</li>
+      <li>Texto demais por bloco; o site vira folheto.</li>
+      <li>Efeitos "wow" (intro animada, parallax) que atrasam o conteúdo em vez de servir a ele.</li>
+    </ul>
+  </div>
+</div>
+
+<h2>2. Referências que mais servem pra LCR</h2>
+<p class="sub">Ordem de relevância. Cada card diz o que aproveitar (lógica e estrutura) e o que evitar.</p>
+<div class="grid">
+
+  <div class="ref"><img src="img/rock-hero.webp" alt=""><div class="body"><span class="tag">Ilustração própria · Rock Pediatric (Boulder)</span>
+    <h3>Personagens com a cara da marca, não clip-art</h3>
+    <ul><li>Dentes-personagem com traço fino, 3 cores pastel e muito branco: infantil e sofisticado ao mesmo tempo.</li><li>Hero quase vazio: título pequeno, 1 CTA, personagens na borda inferior. Nada compete com o botão.</li><li><strong>Pra LCR:</strong> criar uma família de 3 personagens a partir do dente do logo (bebê, teen, adulto). O logo já é um dente: vira sistema.</li></ul>
+    <a href="https://rockpediatricdentistry.com/" target="_blank">rockpediatricdentistry.com</a></div></div>
+
+  <div class="ref"><img src="img/rock-primeira-visita.webp" alt=""><div class="body"><span class="tag">Seção · Rock Pediatric</span>
+    <h3>Blob + personagem + texto curto + 1 botão</h3>
+    <ul><li>Uma seção = uma forma orgânica, um personagem, 3 linhas, um CTA. É o padrão que substitui "grade de 4 cards".</li><li><strong>Pra LCR:</strong> usar nesse formato a Primeira consulta e os 3 públicos (um bloco por público, alternando lados).</li></ul></div></div>
+
+  <div class="ref"><img src="img/rock-servicos.webp" alt=""><div class="body"><span class="tag">Serviços · Rock Pediatric</span>
+    <h3>Serviços como personagens, sem caixinha</h3>
+    <ul><li>Cada serviço é o mesmo personagem com um objeto (escova, selante, balão). Sem ícone de linha, sem card.</li><li><strong>Pra LCR:</strong> as 8 especialidades viram 8 variações do dente-personagem. Resolve o "ícone genérico em quadrado".</li></ul></div></div>
+
+  <div class="ref"><img src="img/happy-hero.webp" alt=""><div class="body"><span class="tag">Direção de arte · Happy Tooth (Utah)</span>
+    <h3>Retrô, blocos de cor, adesivo de logo, foto real</h3>
+    <ul><li>Paleta de 4 cores quentes, cada seção com fundo próprio, tipografia display pesada. Lúdico pelo adulto, não pela criança.</li><li>Hero com foto de objeto (vasos) em vez de cadeira de dentista: sensação de loja bonita, não de clínica.</li><li><strong>Pra LCR:</strong> blocos de cor por seção com a nossa paleta (creme, aqua claro, verde-noite, sol). Hoje tudo é branco.</li></ul>
+    <a href="https://www.happytoothslc.com/" target="_blank">happytoothslc.com</a></div></div>
+
+  <div class="ref"><img src="img/happy-espaco.webp" alt=""><div class="body"><span class="tag">Espaço · Happy Tooth</span>
+    <h3>"Our Space": galeria em mosaico com texto curto</h3>
+    <ul><li>Uma foto grande + 4 menores, legenda de 3 linhas dizendo por que o espaço foi pensado assim.</li><li><strong>Pra LCR:</strong> nossa galeria já existe; falta o mosaico assimétrico e a frase da Dra. Lara sobre o espaço.</li></ul></div></div>
+
+  <div class="ref"><img src="img/happy-doutor.webp" alt=""><div class="body"><span class="tag">Equipe · Happy Tooth</span>
+    <h3>"Oi, eu sou o Dr. Hanks" com balão de fala</h3>
+    <ul><li>Foto real com fundo colorido, frase em primeira pessoa, 1 botão. Humaniza em 3 segundos.</li><li><strong>Pra LCR:</strong> a Dra. Lara em destaque assim, no topo da seção de equipe, com a frase dela.</li></ul></div></div>
+
+  <div class="ref"><img src="img/persona-idades.webp" alt=""><div class="body"><span class="tag">Segmentação por idade · Persona Kids (Awwwards)</span>
+    <h3>Idades como arcos gigantes de cor</h3>
+    <ul><li>0–1, 1–3, 3–18 viram três arcos coloridos com personagem 3D. Zero texto e o pai já sabe onde clicar.</li><li><strong>Pra LCR:</strong> a Linha do tempo (0–2, 3–5, 6–9, 10–17, 18+) pode ganhar esse peso visual: faixas de cor com o personagem crescendo.</li></ul>
+    <a href="https://persona-detstvo.ru/" target="_blank">persona-detstvo.ru</a></div></div>
+
+  <div class="ref"><img src="img/falmouth-hero.webp" alt=""><div class="body"><span class="tag">Hero com foto real · Falmouth Pediatric</span>
+    <h3>Mãe + bebê rindo, título claro, 2 CTAs</h3>
+    <ul><li>Foto real de família ocupa a tela; headline de posicionamento ("um porto seguro"); CTA primário e telefone.</li><li><strong>Pra LCR:</strong> é o hero que converte. Depende de foto com criança autorizada pelos pais. Enquanto não houver, usar a Dra. Lara no consultório (ver El Segundo).</li></ul>
+    <a href="https://www.falmouthpediatricdentistry.com/" target="_blank">falmouthpediatricdentistry.com</a></div></div>
+
+  <div class="ref"><img src="img/elsegundo-hero.webp" alt=""><div class="body"><span class="tag">Hero com a doutora · El Segundo Pediatric</span>
+    <h3>Dentista real no corredor colorido + título manuscrito</h3>
+    <ul><li>Não precisa de criança na foto: a dentista sorrindo no espaço real, com uma linha manuscrita, já é infantil e confiável.</li><li><strong>Pra LCR:</strong> plano B do hero, factível já com a Dra. Lara. A fonte manuscrita só no título, nunca no corpo.</li></ul>
+    <a href="https://www.elsegundopediatricdentistry.com/" target="_blank">elsegundopediatricdentistry.com</a></div></div>
+
+  <div class="ref"><img src="img/coconut-hero.webp" alt=""><div class="body"><span class="tag">Paleta neutra + 1 cor · Coconut Smiles</span>
+    <h3>Areia, azul-marinho, foto da equipe em círculo</h3>
+    <ul><li>Dois neutros e uma cor forte. A foto da equipe em máscara circular com fundo bege é o elemento lúdico. Nada mais.</li><li><strong>Pra LCR:</strong> prova de que "infantil" pode ser só forma + cor, sem desenho. Máscara arredondada nas fotos de equipe.</li></ul>
+    <a href="https://www.coconutsmilespediatricdentistry.com/" target="_blank">coconutsmilespediatricdentistry.com</a></div></div>
+
+  <div class="ref"><img src="img/dentalkids-hero.webp" alt=""><div class="body"><span class="tag">Arquitetura de conversão · Dentalkids (a referência do briefing)</span>
+    <h3>Prova logo abaixo do hero, 3 públicos, idades, guias</h3>
+    <ul><li>Estrutura que já seguimos. Visualmente: azul chapado, blobs laranja/verde, ilustrações de IA nos guias (ponto fraco: parecem genéricas).</li><li><strong>Pra LCR:</strong> manter a arquitetura, superar o visual: fotos reais no lugar das ilustrações de IA e personagem próprio.</li></ul>
+    <a href="https://www.dentalkids.com.br/" target="_blank">dentalkids.com.br</a></div></div>
+
+  <div class="ref"><img src="img/gleamery-diferenciais.webp" alt=""><div class="body"><span class="tag">Conversão adulto · The Gleamery (LA)</span>
+    <h3>Diferenciais em 6 linhas + faixa de fotos do espaço</h3>
+    <ul><li>Título gigante à esquerda, 6 diferenciais com ícone único e 2 linhas cada, e logo abaixo 3 fotos do espaço. Simples e caro.</li><li><strong>Pra LCR:</strong> molde pra seção "Por que as famílias ficam" (hoje 4 cards escuros iguais).</li></ul>
+    <a href="https://thegleamery.com/" target="_blank">thegleamery.com</a></div></div>
+
+  <div class="ref"><img src="img/gleamery-resultados.webp" alt=""><div class="body"><span class="tag">Prova social · The Gleamery</span>
+    <h3>Número grande + depoimentos verificados</h3>
+    <ul><li>"97% dos clientes…" + 3 cards com estrelas, trecho e "verified review". A prova é visual, não um bloco de texto.</li><li><strong>Pra LCR:</strong> formato da seção de depoimentos quando as avaliações do Google chegarem. Sem antes e depois (CFO).</li></ul></div></div>
+
+  <div class="ref"><img src="img/gleamery-hero.webp" alt=""><div class="body"><span class="tag">Hero adulto · The Gleamery</span>
+    <h3>Nota do Google ao lado do CTA</h3>
+    <ul><li>"★★★★★ 300+ 5-star reviews" dentro do hero, no canto do botão. É a prova no lugar onde a decisão acontece.</li><li><strong>Pra LCR:</strong> a faixa de prova pode subir pra dentro do hero quando tivermos a nota.</li></ul></div></div>
+
+  <div class="ref"><img src="img/kidz-medo.webp" alt=""><div class="body"><span class="tag">Conteúdo certo, visual errado · Kidz &amp; Teen (Texas)</span>
+    <h3>"Criança ou adolescente com medo? Deixa com a gente"</h3>
+    <ul><li>O bloco de ansiedade (sedação, orientação aos pais, filmes e prêmios, equipe calma) é exatamente a pergunta nº 1 do pai.</li><li><span class="tag no">Evitar</span> 6 cores saturadas, cartoons de banco, fundo azul-royal: é o que faz parecer amador.</li></ul>
+    <a href="https://kidzandteendental.com/" target="_blank">kidzandteendental.com</a></div></div>
+
+  <div class="ref"><img src="img/zen-hero.webp" alt=""><div class="body"><span class="tag">Calma premium · Zen Dental Studio (SF)</span>
+    <h3>Madeira, serifa, 2 botões: "cuidado moderno, entregue com calma"</h3>
+    <ul><li>Referência pro bloco de adultos: os pais também são pacientes e esse tom fala com eles.</li><li><strong>Pra LCR:</strong> o card de Adultos pode ter esse registro mais sóbrio, diferente do infantil.</li></ul>
+    <a href="https://www.zen.dentist/" target="_blank">zen.dentist</a></div></div>
+
+  <div class="ref"><img src="img/dntlbar-hero.webp" alt=""><div class="body"><span class="tag">Tipografia gigante · dntl bar (NYC)</span>
+    <h3>"dental for the people." em 120px + vídeo da porta</h3>
+    <ul><li>Três palavras enormes, minúsculas, e um vídeo real da entrada. Confiança por escala.</li><li><strong>Pra LCR:</strong> os títulos de seção podem crescer 30–40% e perder a pílula colorida em cima.</li></ul>
+    <a href="https://www.dntlbar.com/" target="_blank">dntlbar.com</a></div></div>
+
+  <div class="ref"><img src="img/westla-hero.webp" alt=""><div class="body"><span class="tag">Adolescente · West LA Orthodontics (NYX 2025)</span>
+    <h3>Vídeo do consultório + "Perfecting smiles, crafting confidence"</h3>
+    <ul><li>Feito pra teen: vídeo, geometria, azul-claro e verde-limão, consulta virtual. Nada de infantil.</li><li><strong>Pra LCR:</strong> o bloco de Adolescentes segue esse tom: autoestima, discrição, vídeo do consultório.</li></ul>
+    <a href="https://www.westlaortho.com/" target="_blank">westlaortho.com</a></div></div>
+
+  <div class="ref"><img src="img/fabula-hero.webp" alt=""><div class="body"><span class="tag no">Contraexemplo · Fábula (BR)</span>
+    <h3>Arco-íris, castelo, fadas-dente: fala só com a criança</h3>
+    <ul><li>Bonito como livro infantil, mas o pai não encontra CTA, preço, equipe ou endereço na primeira tela. É o "infantil demais".</li><li><strong>Pra LCR:</strong> a régua do que não fazer. A criança é a estrela da clínica, mas quem lê o site é o pai.</li></ul>
+    <a href="https://fabulaodonto.com.br/" target="_blank">fabulaodonto.com.br</a></div></div>
+
+  <div class="ref"><img src="img/sfpd-hero.webp" alt=""><div class="body"><span class="tag no">Contraexemplo · SF Pediatric Dentistry</span>
+    <h3>Minimalista demais vira "site de template"</h3>
+    <ul><li>Azul-bebê, logo de linha, botão cinza, texto corrido. Confiável, mas sem personalidade e sem prova.</li><li><strong>Pra LCR:</strong> o risco do lado oposto: tirar a graça toda e ficar genérico.</li></ul>
+    <a href="https://www.sfpediatricdentistry.com/" target="_blank">sfpediatricdentistry.com</a></div></div>
+
+</div>
+
+<h2>3. O site da LCR hoje, seção a seção</h2>
+<p class="sub">Capturas do branch <code>site-reestruturacao</code>. A estrutura está certa; o problema é visual: tudo é card branco com ícone de linha e pílula verde, e o hero é escuro com foto de fachada distorcida.</p>
+<div class="grid">
+  <div class="ref"><img src="img/lcr-hero.webp" alt=""><div class="body"><span class="tag lcr">Hero</span><h3>Verde-noite, foto de fachada com véu, logo gigante</h3><ul><li>Intro cinemática esconde o conteúdo e o fundo escuro fala "tecnologia", não "família".</li><li>Proposta: hero claro (creme) com foto real grande e o dente-personagem; manter a mecânica da máscara só se virar clara e curta (decisão sua).</li></ul></div></div>
+  <div class="ref"><img src="img/lcr-para-quem.webp" alt=""><div class="body"><span class="tag lcr">Para quem é</span><h3>3 cards iguais, lista com check genérico</h3><ul><li>Proposta: 3 blocos alternados (foto/personagem de um lado, texto do outro), cada um com a cor do público.</li></ul></div></div>
+  <div class="ref"><img src="img/lcr-especialidades.webp" alt=""><div class="body"><span class="tag lcr">Especialidades</span><h3>8 caixinhas com ícone de linha</h3><ul><li>É o bloco mais "template" do site. Proposta: 8 variações do dente-personagem, sem caixa, em linha única (como Rock).</li></ul></div></div>
+  <div class="ref"><img src="img/lcr-fases.webp" alt=""><div class="body"><span class="tag lcr">Linha do tempo</span><h3>Pílulas de idade + cards brancos</h3><ul><li>Proposta: faixas de cor por idade com o personagem crescendo (Persona), texto de 2 linhas, link pro guia.</li></ul></div></div>
+  <div class="ref"><img src="img/lcr-guias.webp" alt=""><div class="body"><span class="tag lcr">Guias</span><h3>Capas em gradiente com ícone</h3><ul><li>Proposta: capas com o personagem em situação (bebê mamando, teen com aparelho) ou foto real de detalhe da clínica.</li></ul></div></div>
+  <div class="ref"><img src="img/lcr-primeira-visita.webp" alt=""><div class="body"><span class="tag lcr">Primeira consulta</span><h3>5 cards em painel aqua</h3><ul><li>Proposta: lista numerada vertical com foto real de cada momento (recepção, cadeira, espelhinho) ou personagem; CTA ao lado.</li></ul></div></div>
+  <div class="ref"><img src="img/lcr-clinica.webp" alt=""><div class="body"><span class="tag lcr">Clínica</span><h3>Já é o bloco mais forte: fotos reais e tour</h3><ul><li>Proposta: mosaico assimétrico (Happy Tooth) e uma frase da Dra. Lara sobre o espaço. Manter.</li></ul></div></div>
+  <div class="ref"><img src="img/lcr-equipe.webp" alt=""><div class="body"><span class="tag lcr">Equipe</span><h3>Cards com retângulo de foto</h3><ul><li>Proposta: Dra. Lara em destaque com balão de fala (Happy Tooth), os outros 3 em máscara arredondada com fundo de cor.</li></ul></div></div>
+  <div class="ref"><img src="img/lcr-sobre.webp" alt=""><div class="body"><span class="tag lcr">Sobre + pilares</span><h3>Painel escuro com 4 cards</h3><ul><li>Proposta: formato Gleamery: título grande à esquerda, 4 pilares em 2 linhas cada, faixa de fotos abaixo. Sem painel escuro.</li></ul></div></div>
+</div>
+
+<h2>4. Direção proposta</h2>
+<div class="diag">
+  <div class="box">
+    <h3>Sistema visual "Água &amp; Sol, versão família"</h3>
+    <p class="sub">A paleta atual fica. O que muda é como ela é usada: blocos de cor, personagem próprio, fotos grandes e menos componentes.</p>
+    <div class="swatches">
+      <div class="sw" style="background:#FDFCF8;color:#123634;text-shadow:none;border:1px solid #ddd">creme (base)</div>
+      <div class="sw" style="background:#DFF3F1;color:#123634;text-shadow:none">aqua claro</div>
+      <div class="sw" style="background:#5BC2BA">aqua logo</div>
+      <div class="sw" style="background:#0A302E">verde-noite</div>
+      <div class="sw" style="background:#FFB43B;color:#123634;text-shadow:none">sol (CTA)</div>
+      <div class="sw" style="background:#FFD9C7;color:#123634;text-shadow:none">pêssego (novo, pele/afeto)</div>
+    </div>
+    <ul>
+      <li><strong>Personagem:</strong> família de dentes derivada do logo (bebê, criança, teen com aparelho, adulto). Traço único, 2 cores + branco. Eu desenho em SVG; se preferir ilustrador, o briefing sai daqui.</li>
+      <li><strong>Blocos de cor:</strong> seções alternam creme, aqua claro, pêssego e verde-noite (só o CTA final). Fim dos cards brancos repetidos.</li>
+      <li><strong>Tipografia:</strong> Bricolage Grotesque fica, 30–40% maior nos títulos; pílulas de seção saem; eyebrow em caixa alta pequena.</li>
+      <li><strong>Componentes:</strong> máximo 4 tipos (bloco foto+texto, lista numerada, faixa de fotos, card de guia). Ícones de linha saem.</li>
+      <li><strong>Foto:</strong> hero com foto real grande; equipe com máscara arredondada; galeria em mosaico. Vídeo vertical do tour mantido.</li>
+      <li><strong>Movimento:</strong> só reveal suave e o personagem com micro-animação (piscar, balançar). A intro de máscara: manter só se clara e de 1,5 s, ou aposentar.</li>
+    </ul>
+  </div>
+  <div class="box">
+    <h3>O que precisa de você</h3>
+    <ul>
+      <li><span class="pill a">decisão</span> Hero: aposentar a intro cinemática ou mantê-la clara e curta?</li>
+      <li><span class="pill a">decisão</span> Personagem em SVG feito por mim (rápido, no padrão Rock) ou ilustrador contratado (mais autoral)?</li>
+      <li><span class="pill b">material</span> Foto da Dra. Lara no consultório, sorrindo, em pé (hero plano B). Ideal: mãe/pai com criança, com autorização assinada (hero plano A).</li>
+      <li><span class="pill b">material</span> Fotos dos outros 3 dentistas no mesmo fundo e luz.</li>
+      <li><span class="pill b">material</span> Nota e nº de avaliações do Google (vai pro hero).</li>
+      <li><span class="pill c">já tenho</span> Fotos e tour do espaço, textos, estrutura, eventos, guias.</li>
+    </ul>
+    <h3 style="margin-top:18px">Ordem de implementação sugerida</h3>
+    <ol style="margin-left:18px">
+      <li>Sistema: tokens de cor por seção, tipografia maior, remoção de pílulas e ícones de linha.</li>
+      <li>Personagens SVG (4 base + 8 variações de serviço).</li>
+      <li>Hero novo + Para quem é + Especialidades.</li>
+      <li>Linha do tempo em faixas + Primeira consulta em lista com foto.</li>
+      <li>Equipe, Sobre e Depoimentos no formato novo.</li>
+      <li>Guias: capas com personagem.</li>
+    </ol>
+  </div>
+</div>
+
+<h2>6. O site completo na direção B</h2>
+<p class="sub">A direção B aplicada na home inteira, com o mascote em 4 versões (bebê, criança, teen com aparelho, adulto de óculos), blocos de cor por seção, fotos reais da clínica e os 7 guias. Ao vivo em <a href="https://novo.clinicalcr.com.br/" target="_blank">novo.clinicalcr.com.br</a>. As etiquetas amarelas são o material que ainda falta (nota do Google, fotos dos dentistas, frases, estacionamento).</p>
+<div class="diag" style="grid-template-columns: 2.2fr 1fr; align-items:start">
+  <div class="ref"><img src="img/site-b-completo.webp" alt="Home completa na direção B, desktop"><div class="body"><span class="tag lcr">Desktop · home inteira</span>
+    <ul>
+      <li><strong>Hero:</strong> foto real da Dra. Lara em arco, título grande, WhatsApp primário, nota do Google ao lado do botão, mascote espiando.</li>
+      <li><strong>Públicos:</strong> três blocos alternados, aqua / verde-noite / pêssego, cada um com foto, pílulas e CTA próprio. O adolescente ganha o bloco escuro, sem infantilizar.</li>
+      <li><strong>Especialidades:</strong> lista numerada em duas colunas, sem ícone genérico.</li>
+      <li><strong>Fases:</strong> cinco faixas de cor com o mascote crescendo, do bebê de chupeta ao adulto de óculos.</li>
+      <li><strong>Guias e emergência:</strong> capas com o mascote por categoria, banner vermelho de trauma.</li>
+      <li><strong>Primeira consulta:</strong> mascote e CTA fixos à esquerda, cinco passos numerados à direita.</li>
+      <li><strong>Clínica, equipe, sobre:</strong> galeria e tour reais, Dra. Lara com balão de fala, pilares em lista e faixa de fotos.</li>
+    </ul></div></div>
+  <div class="ref"><img src="img/site-b-mobile.jpg" alt="Home completa na direção B, celular"><div class="body"><span class="tag lcr">Celular · home inteira</span>
+    <ul><li>Barra fixa com Agendar e Como chegar.</li><li>Lighthouse mobile 99 em performance e 100 em acessibilidade antes da direção B; refaço a medição depois do deploy.</li></ul></div></div>
+</div>
+
+<h2>5. Fontes da pesquisa</h2>
+<ul style="margin-left:18px;font-size:14px;color:var(--soft)">
+  <li><a href="https://delmain.co/blog/best-pediatric-dental-websites/">Delmain, Best Pediatric Dental Websites 2026</a> · <a href="https://s8e8.com/articles/best-dental-websites">Studio EightyEight, 20 Best Dental Websites</a> · <a href="https://delmain.co/blog/best-dental-websites/">Delmain, 20 Best Dental Websites 2026</a></li>
+  <li><a href="https://delmain.co/blog/dental-website-ideas-that-convert">Delmain, 26 Dental Website Ideas that Convert</a> · <a href="https://patientnews.com/article/websites-for-dentists-how-to-build-a-high-converting-dental-website-in-2026">Patient News, High-Converting Dental Website 2026</a> · <a href="https://whitehat-seo.co.uk/blog/dental-website-design-seo">Whitehat SEO, dental website design</a></li>
+  <li><a href="https://www.awwwards.com/sites/persona-kids-clinic">Awwwards, Persona Kids Clinic</a> · <a href="https://nyxawards.com/winner-info.php?id=7518">NYX Awards 2025, West LA Orthodontics</a> · <a href="https://line25.com/articles/web-design-trends-2026/">Line25, Web Design Trends 2026</a> · <a href="https://tinyfrog.com/web-design-trends-2026/">TinyFrog, Trends 2026</a></li>
+  <li>Benchmarks citados pelas agências (conversão típica de site odontológico entre 2% e 5%; acima de 10% com página dedicada) são afirmações de fornecedores, não estudo independente.</li>
+</ul>
+
+</body>
+</html>
