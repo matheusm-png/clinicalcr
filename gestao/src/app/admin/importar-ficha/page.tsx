@@ -7,6 +7,7 @@ import { CapturaLote, Paciente, Procedimento } from "@/lib/types";
 import Topbar from "@/components/Topbar";
 import Odontograma from "@/components/Odontograma";
 import { useToast } from "@/components/Toast";
+import SignaturePad, { SignaturePadHandle } from "@/components/SignaturePad";
 import { comprimirImagem } from "@/lib/imagem";
 import { pdfParaImagens } from "@/lib/pdfParaImagens";
 import {
@@ -227,6 +228,7 @@ export default function AdicionarFichasPage() {
   const [anexos, setAnexos] = useState<AnexoPendente[]>([]);
   const [catAnexo, setCatAnexo] = useState<CatAnexo>("raio-x");
   const anexoInputRef = useRef<HTMLInputElement | null>(null);
+  const assinaturaRef = useRef<SignaturePadHandle>(null); // opcional: o papel já tem a assinatura
   const [salvando, setSalvando] = useState(false);
   const [abrindo, setAbrindo] = useState<string | null>(null);
 
@@ -520,6 +522,7 @@ export default function AdicionarFichasPage() {
         const resto = Object.fromEntries(
           Object.entries(c).filter(([k]) => !["nome", "nascimento", "sexo", "tel", "endereco", "cpf"].includes(k)),
         );
+        const assinatura = assinaturaRef.current?.toDataURL();
         await DB.anamneses.save({
           pacienteId,
           respostas: {
@@ -531,6 +534,7 @@ export default function AdicionarFichasPage() {
           },
           pacienteNome: nome,
           data: ficha.dataFicha || hojeISO(),
+          ...(assinatura ? { assinatura } : {}),
           status: "Assinado",
         });
         prog.anamnese = true;
@@ -956,6 +960,17 @@ export default function AdicionarFichasPage() {
                         Confira: a IA não leu com certeza (se não leu, sugerimos a data do 1º procedimento).
                       </span>
                     )}
+                  </div>
+                  <div style={{ marginTop: 14 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                      <label style={{ ...labelStyle, marginBottom: 0 }}>Assinatura do paciente</label>
+                      <button type="button" className="btn btn-outline btn-sm" onClick={() => assinaturaRef.current?.clear()}>Limpar</button>
+                    </div>
+                    {/* key: cada ficha da fila começa com o campo em branco */}
+                    <SignaturePad key={atual?.pasta} ref={assinaturaRef} height={130} />
+                    <span style={{ fontSize: 11, color: "var(--text-muted)", display: "block", marginTop: 3 }}>
+                      Opcional se a ficha de papel já está assinada. Se o paciente estiver aqui, ele pode assinar agora.
+                    </span>
                   </div>
                 </section>
 
