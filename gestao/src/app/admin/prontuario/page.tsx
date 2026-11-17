@@ -13,6 +13,7 @@ import { useToast } from "@/components/Toast";
 import { exportarPaciente, baixarJson } from "@/lib/lgpd/exportar";
 import AnaliseRiscoIA from "@/components/AnaliseRiscoIA";
 import AnamneseViewModal from "@/components/AnamneseViewModal";
+import EnviarLinkPacienteModal from "@/components/EnviarLinkPacienteModal";
 import EvolucoesTab from "@/components/EvolucoesTab";
 import AnexosTab from "@/components/AnexosTab";
 import DocumentosTab from "@/components/DocumentosTab";
@@ -92,6 +93,8 @@ function ProntuarioContent() {
   const [editProcId, setEditProcId] = useState<number | null>(null);
   const [procItens, setProcItens] = useState<ItemProc[]>([itemVazio()]);
   const [procEstado, setProcEstado] = useState<"a-realizar" | "realizado" | "pre-existente">("a-realizar");
+  // Link pro paciente assinar no celular (orçamento e/ou anamnese + uso de imagem)
+  const [linkPaciente, setLinkPaciente] = useState<{ orcamentoId?: number } | null>(null);
   const [procProfId, setProcProfId] = useState<string>("");
   const [procObs, setProcObs] = useState("");
   // Data em que o procedimento foi EXECUTADO (não a data da digitação).
@@ -723,7 +726,7 @@ function ProntuarioContent() {
             <div className="tab-panel active">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <span style={{ fontSize: 14, fontWeight: 600 }}>Orçamentos do paciente</span>
-                <Link href="/admin/orcamentos" className="btn btn-primary btn-sm">+ Novo orçamento</Link>
+                <Link href={`/admin/orcamentos?paciente=${paciente.id}`} className="btn btn-primary btn-sm">+ Novo orçamento</Link>
               </div>
               {orcamentosPac.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--text-muted)" }}>
@@ -742,7 +745,16 @@ function ProntuarioContent() {
                           <td>{o.itens?.length ?? "—"}</td>
                           <td><strong>{brl(o.total)}</strong></td>
                           <td><span className={`badge ${STATUS_ORC[o.status]}`}>{o.status}</span></td>
-                          <td><Link href="/admin/orcamentos" className="btn btn-outline btn-sm">Abrir</Link></td>
+                          <td>
+                            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                              <Link href={`/admin/orcamentos?abrir=${o.id}`} className="btn btn-outline btn-sm">Abrir</Link>
+                              {(o.status === "rascunho" || o.status === "enviado") && (
+                                <button className="btn btn-outline btn-sm" onClick={() => setLinkPaciente({ orcamentoId: o.id })}>
+                                  Enviar ao paciente
+                                </button>
+                              )}
+                            </div>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -1003,10 +1015,26 @@ function ProntuarioContent() {
                       {modelosAnamnese.map((m) => <option key={m.id} value={m.id}>{m.nome}</option>)}
                     </select>
                   )}
+                  {anamneses.length > 0 && (
+                    <button className="btn btn-outline btn-sm" onClick={() => setLinkPaciente({})} title="Link para o paciente assinar no celular">
+                      Enviar para assinar
+                    </button>
+                  )}
                   <Link href={`/admin/anamnese?id=${paciente.id}`} className="btn btn-primary btn-sm">
                     + Nova Anamnese
                   </Link>
                 </div>
+              </div>
+              <div style={{ fontSize: 12.5, color: "var(--text-muted)", margin: "-10px 0 16px" }}>
+                Fotos e divulgação nas redes sociais:{" "}
+                {paciente.autorizaImagem === true ? (
+                  <strong style={{ color: "var(--success, #16A34A)" }}>autoriza</strong>
+                ) : paciente.autorizaImagem === false ? (
+                  <strong style={{ color: "var(--danger)" }}>não autoriza</strong>
+                ) : (
+                  <span>não respondido no link</span>
+                )}
+                {paciente.autorizaImagemEm && ` (em ${new Date(paciente.autorizaImagemEm).toLocaleDateString("pt-BR")})`}
               </div>
 
               {anamneses.length === 0 ? (
@@ -1052,6 +1080,16 @@ function ProntuarioContent() {
             </div>
           )}
         </div>
+
+        {linkPaciente && paciente.id != null && (
+          <EnviarLinkPacienteModal
+            pacienteId={paciente.id}
+            pacienteNome={paciente.nome}
+            pacienteTel={paciente.tel}
+            orcamentoId={linkPaciente.orcamentoId}
+            onClose={() => { setLinkPaciente(null); loadPaciente(); }}
+          />
+        )}
 
         {/* Modal Visualizar Anamnese */}
         {anamneseView && (

@@ -2,10 +2,28 @@
 
 import { useEffect, useState } from "react";
 import { DB } from "@/lib/db";
-import { Orcamento, OrcamentoItem, Paciente, ProcedimentoCatalogo, Profissional } from "@/lib/types";
+import { Orcamento, OrcamentoItem, Paciente, Procedimento, ProcedimentoCatalogo, Profissional } from "@/lib/types";
+import Odontograma from "@/components/Odontograma";
+import { dentesDoTexto } from "@/lib/faces";
 import Topbar from "@/components/Topbar";
 import { useToast } from "@/components/Toast";
 import EmptyState from "@/components/EmptyState";
+import EnviarLinkPacienteModal from "@/components/EnviarLinkPacienteModal";
+
+// Idade em anos completos — só pra sugerir a dentição do odontograma.
+const idadeEmAnos = (nascimento?: string): number | undefined => {
+  if (!nascimento) return undefined;
+  const n = new Date(nascimento + "T00:00:00");
+  if (isNaN(n.getTime())) return undefined;
+  const hoje = new Date();
+  let anos = hoje.getFullYear() - n.getFullYear();
+  const m = hoje.getMonth() - n.getMonth();
+  if (m < 0 || (m === 0 && hoje.getDate() < n.getDate())) anos--;
+  return anos >= 0 ? anos : undefined;
+};
+
+// Ordena numericamente pra ficar "14, 15, 16".
+const ordenarDentes = (ds: Iterable<string>) => [...ds].sort((a, b) => Number(a) - Number(b));
 
 const brl = (v: number) => (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -41,6 +59,13 @@ export default function OrcamentosPage() {
   const [desconto, setDesconto] = useState("0");
   const [observacoes, setObservacoes] = useState("");
   const [salvando, setSalvando] = useState(false);
+  // Odontograma do orçamento: dentes marcados agora + o que o paciente já tem na ficha.
+  const [dentesSel, setDentesSel] = useState<Set<string>>(new Set());
+  // Guarda de qual paciente é a lista, pra não mostrar a do anterior enquanto carrega.
+  const [procsPaciente, setProcsPaciente] = useState<{ pid: string; procs: Procedimento[] }>({ pid: "", procs: [] });
+
+  // Link pro paciente aceitar/assinar no celular
+  const [enviandoLink, setEnviandoLink] = useState<Orcamento | null>(null);
 
   // Explicador IA
   const [iaTexto, setIaTexto] = useState("");
@@ -69,6 +94,37 @@ export default function OrcamentosPage() {
     setProfissionais(profs);
   };
 
+  // Carrega o odontograma atual do paciente escolhido (contexto: o que já existe).
+  useEffect(() => {
+    if (!isOpen || !pacienteId) return;
+    let vivo = true;
+    DB.procedimentos.list(pacienteId).then((procs) => { if (vivo) setProcsPaciente({ pid: pacienteId, procs }); });
+    return () => { vivo = false; };
+  }, [isOpen, pacienteId]);
+
+  // Itens do orçamento desenhados como "a realizar" por cima do que já existe.
+  const procsOdonto: Procedimento[] = [
+    ...(procsPaciente.pid === pacienteId ? procsPaciente.procs : []),
+    ...itens
+      .filter((it) => (it.dente ?? "").trim())
+      .map((it) => ({
+        pacienteId: Number(pacienteId) || 0,
+        dente: dentesDoTexto(it.dente).join(","),
+        procedimento: it.descricao,
+        custo: 0,
+        status: "Pendente" as const,
+      })),
+  ];
+
+  const toggleDente = (num: string) => {
+    setDentesSel((prev) => {
+      const next = new Set(prev);
+      if (next.has(num)) next.delete(num);
+      else next.add(num);
+      return next;
+    });
+  };
+
   const nomePaciente = (id: number) => pacientes.find((p) => p.id === id)?.nome ?? "—";
 
   const subtotal = itens.reduce((s, it) => s + it.quantidade * it.valorUnitario, 0);
@@ -76,9 +132,10 @@ export default function OrcamentosPage() {
   const descontoValor = subtotal * (descPct / 100);
   const total = Math.max(0, subtotal - descontoValor);
 
-  const abrirNovo = () => {
+  const abrirNovo = (pacientePre = "") => {
     setEditId(null);
-    setPacienteId("");
+    setPacienteId(pacientePre);
+    setDentesSel(new Set());
     setItens([]);
     setDesconto("0");
     setObservacoes("");
@@ -91,20 +148,42 @@ export default function OrcamentosPage() {
     if (!orc) return;
     setEditId(orc.id ?? null);
     setPacienteId(String(orc.pacienteId));
+    setDentesSel(new Set());
     setItens(orc.itens ?? []);
     setDesconto(String(orc.desconto));
     setObservacoes(orc.observacoes ?? "");
     setIsOpen(true);
   };
 
+  // Vindo da ficha do paciente: ?paciente=ID abre o novo orçamento já com ele;
+  // ?abrir=ID abre direto o orçamento clicado.
+  useEffect(() => {
+    const qs = new URLSearchParams(window.location.search);
+    const pac = qs.get("paciente");
+    const abrir = qs.get("abrir");
+    if (!pac && !abrir) return;
+    window.history.replaceState(null, "", "/admin/orcamentos");
+    if (abrir) abrirEdit(Number(abrir));
+    else if (pac) setTimeout(() => abrirNovo(pac), 0);
+  }, []);
+
   const addItemCatalogo = (catId: string) => {
     if (!catId) return;
     const c = catalogo.find((x) => String(x.id) === catId);
     if (!c) return;
+    // Com dentes marcados no odontograma, o item já vai pra eles (1 por dente).
+    const dentes = ordenarDentes(dentesSel);
     setItens((arr) => [
       ...arr,
-      { catalogoId: c.id, descricao: c.nome, dente: "", quantidade: 1, valorUnitario: c.preco },
+      {
+        catalogoId: c.id,
+        descricao: c.nome,
+        dente: dentes.join(", "),
+        quantidade: Math.max(1, dentes.length),
+        valorUnitario: c.preco,
+      },
     ]);
+    setDentesSel(new Set());
   };
 
   const updateItem = (i: number, patch: Partial<OrcamentoItem>) => {
@@ -156,16 +235,6 @@ export default function OrcamentosPage() {
     }
   };
 
-  const mudarStatus = async (orc: Orcamento, status: Orcamento["status"]) => {
-    if (orc.id == null) return;
-    try {
-      await DB.orcamentos.setStatus(orc.id, status);
-      await load();
-      showToast("Status atualizado.", "success");
-    } catch {
-      showToast("Não foi possível atualizar.", "error");
-    }
-  };
 
   const remover = async (orc: Orcamento) => {
     if (orc.id == null) return;
@@ -223,7 +292,7 @@ export default function OrcamentosPage() {
   return (
     <>
       <Topbar title="Orçamentos">
-        <button className="btn btn-primary" onClick={abrirNovo}>
+        <button className="btn btn-primary" onClick={() => abrirNovo()}>
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: 15, height: 15 }}>
             <path d="M12 5v14M5 12h14" />
           </svg>
@@ -242,7 +311,7 @@ export default function OrcamentosPage() {
             <EmptyState
               title="Nenhum orçamento ainda"
               hint="Monte o plano de tratamento do paciente e gere o orçamento."
-              action={<button className="btn btn-primary btn-sm" onClick={abrirNovo}>+ Novo orçamento</button>}
+              action={<button className="btn btn-primary btn-sm" onClick={() => abrirNovo()}>+ Novo orçamento</button>}
             />
           ) : (
             <div className="table-wrapper">
@@ -264,7 +333,14 @@ export default function OrcamentosPage() {
                         {o.criadoEm ? new Date(o.criadoEm).toLocaleDateString("pt-BR") : "—"}
                       </td>
                       <td><strong>{brl(o.total)}</strong></td>
-                      <td><span className={`badge ${STATUS_BADGE[o.status]}`}>{STATUS_LABEL[o.status]}</span></td>
+                      <td>
+                        <span className={`badge ${STATUS_BADGE[o.status]}`}>{STATUS_LABEL[o.status]}</span>
+                        {o.aceiteEm && (
+                          <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 3 }} title={new Date(o.aceiteEm).toLocaleString("pt-BR")}>
+                            ✍️ aceito pelo paciente em {new Date(o.aceiteEm).toLocaleDateString("pt-BR")}
+                          </div>
+                        )}
+                      </td>
                       <td>
                         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                           <button className="btn btn-outline btn-sm" onClick={() => explicarIA(o)}>Explicar (IA)</button>
@@ -277,8 +353,10 @@ export default function OrcamentosPage() {
                               Gerar cobrança
                             </button>
                           )}
-                          {o.status === "rascunho" && (
-                            <button className="btn btn-outline btn-sm" onClick={() => mudarStatus(o, "enviado")}>Enviar</button>
+                          {(o.status === "rascunho" || o.status === "enviado") && (
+                            <button className="btn btn-outline btn-sm" onClick={() => setEnviandoLink(o)} title="Link para o paciente aceitar e assinar no celular">
+                              Enviar ao paciente
+                            </button>
                           )}
                           <button className="icon-btn danger" title="Excluir" onClick={() => remover(o)}>
                             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -296,6 +374,16 @@ export default function OrcamentosPage() {
           )}
         </div>
 
+        {enviandoLink && (
+          <EnviarLinkPacienteModal
+            pacienteId={enviandoLink.pacienteId}
+            pacienteNome={nomePaciente(enviandoLink.pacienteId)}
+            pacienteTel={pacientes.find((p) => p.id === enviandoLink.pacienteId)?.tel}
+            orcamentoId={enviandoLink.id}
+            onClose={() => { setEnviandoLink(null); load(); }}
+          />
+        )}
+
         {/* Builder */}
         {isOpen && (
           <div className="modal-overlay open" onClick={(e) => e.target === e.currentTarget && setIsOpen(false)}>
@@ -307,7 +395,7 @@ export default function OrcamentosPage() {
               <div className="modal-body">
                 <div className="form-group">
                   <label className="form-label">Paciente *</label>
-                  <select className="form-control" value={pacienteId} onChange={(e) => setPacienteId(e.target.value)}>
+                  <select className="form-control" value={pacienteId} onChange={(e) => { setPacienteId(e.target.value); setDentesSel(new Set()); }}>
                     <option value="">Selecione…</option>
                     {pacientes.map((p) => (
                       <option key={p.id} value={p.id}>{p.nome}</option>
@@ -315,8 +403,40 @@ export default function OrcamentosPage() {
                   </select>
                 </div>
 
+                {pacienteId && (
+                  <div className="form-group">
+                    <label className="form-label">Odontograma</label>
+                    <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 8 }}>
+                      Clique (ou arraste) nos dentes e escolha o procedimento abaixo. Em azul, o que fica
+                      &ldquo;a realizar&rdquo; — ao aprovar, vai assim para o odontograma da ficha.
+                    </div>
+                    <Odontograma
+                      procedimentos={procsOdonto}
+                      selectedTeeth={dentesSel}
+                      onSelectTeeth={setDentesSel}
+                      onDenteClick={(num) => toggleDente(num)}
+                      idadePaciente={idadeEmAnos(pacientes.find((p) => String(p.id) === pacienteId)?.nascimento)}
+                    />
+                    <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 8, fontSize: 11, color: "var(--text-muted)" }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                        <span style={{ width: 10, height: 10, borderRadius: 2, background: "#3B82F6" }} /> A realizar
+                      </span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                        <span style={{ width: 10, height: 10, borderRadius: 2, background: "#22C55E" }} /> Realizado
+                      </span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                        <span style={{ width: 10, height: 10, borderRadius: 2, background: "#F59E0B" }} /> Pré-existente
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="form-group">
-                  <label className="form-label">Adicionar procedimento</label>
+                  <label className="form-label">
+                    {dentesSel.size > 0
+                      ? `Adicionar procedimento — dente${dentesSel.size > 1 ? "s" : ""} ${ordenarDentes(dentesSel).join(", ")}`
+                      : "Adicionar procedimento"}
+                  </label>
                   <select className="form-control" value="" onChange={(e) => { addItemCatalogo(e.target.value); e.target.value = ""; }}>
                     <option value="">+ Escolher do catálogo…</option>
                     {catalogo.map((c) => (
@@ -332,7 +452,7 @@ export default function OrcamentosPage() {
                       <thead>
                         <tr>
                           <th>Procedimento</th>
-                          <th style={{ width: 70 }}>Dente</th>
+                          <th style={{ width: 110 }}>Dente(s)</th>
                           <th style={{ width: 60 }}>Qtd</th>
                           <th style={{ width: 110 }}>Valor un.</th>
                           <th style={{ width: 100 }}>Subtotal</th>

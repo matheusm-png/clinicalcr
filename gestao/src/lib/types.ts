@@ -29,6 +29,10 @@ export interface Paciente {
   consentimentoLgpdEm?: string;      // timestamp ISO em que consentiu
   consentimentoLgpdVersao?: string;  // versão do termo aceita (TERMO_LGPD_VERSAO)
   consentimentoWhatsapp?: boolean;   // autoriza contato por WhatsApp (gancho do S7)
+  // Fotos + divulgação nas redes (rodapé da ficha). Respondida pelo paciente no
+  // link /p/[token]; só leitura no app. undefined = nunca respondeu.
+  autorizaImagem?: boolean;
+  autorizaImagemEm?: string;
   criadoEm?: string;
 }
 
@@ -63,6 +67,7 @@ export interface Anamnese {
   // Campos extras persistidos junto da anamnese
   pacienteNome?: string;
   assinatura?: string; // data-URL PNG da assinatura
+  assinadaEm?: string; // quando o paciente assinou pelo link (migration 0034)
   data?: string;
   status?: string;
   criadoEm?: string;
@@ -182,6 +187,9 @@ export interface Orcamento {
   total: number;
   observacoes?: string;
   aprovadoEm?: string;
+  // Aceite do paciente pelo link (/p/[token], migration 0034)
+  aceiteEm?: string;
+  aceiteAssinatura?: string; // data-URL PNG
   criadoEm?: string;
   itens?: OrcamentoItem[];
 }
