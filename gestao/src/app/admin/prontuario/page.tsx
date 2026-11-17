@@ -259,11 +259,29 @@ function ProntuarioContent() {
       custo: it.custo ? Number(it.custo) : 0,
     }));
 
+    // Procedimento pago lançado aqui vira cobrança quitada (como na importação de
+    // ficha), senão o "Total Recebido", A Receber e Relatórios não o enxergam.
+    // Só na passagem para pago: novo, ou edição de um que estava em aberto.
+    // Edição de um que veio de orçamento (paciente tem cobrança de orçamento) não
+    // gera — ele já é cobrado pelas parcelas do orçamento.
+    const anterior = editProcId ? procedimentos.find((p) => p.id === editProcId) : undefined;
+    const temCobrancaDeOrcamento = contasPac.some((c) => c.orcamentoId != null);
+    const geraCobranca = (r: Procedimento) =>
+      !!r.pago && r.custo > 0 && r.status !== "Cancelado" &&
+      (!r.id || (!anterior?.pago && !temCobrancaDeOrcamento));
+
     let salvos = 0;
     try {
       // Em sequência (não Promise.all) para a lista sair na ordem digitada.
       for (const r of registros) {
         await DB.procedimentos.save(r);
+        if (geraCobranca(r)) {
+          const desc = r.dente ? `${r.procedimento} - uni. ${r.dente}` : r.procedimento;
+          await DB.contas.criar(
+            { pacienteId: r.pacienteId, descricao: desc, valorTotal: r.custo, status: "quitada", nfEmitida: !!r.nfEmitida },
+            [{ numero: 1, valor: r.custo, pago: true, pagoEm: r.data || hojeLocalISO(), formaPagamento: r.formaPagto }],
+          );
+        }
         salvos++;
       }
 

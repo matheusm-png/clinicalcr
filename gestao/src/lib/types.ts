@@ -46,7 +46,7 @@ export interface Procedimento {
   // Data em que o procedimento foi EXECUTADO (yyyy-mm-dd). Diferente de criadoEm,
   // que é quando foi digitado — o que importa em cadastro retroativo. Ver 0032.
   data?: string;
-  // Pagamento (registro do prontuário; não gera cobrança sozinho)
+  // Pagamento. Salvo pago no prontuário, gera cobrança quitada (ver handleSaveProcedimento)
   formaPagto?: string;
   pago?: boolean;
   nfEmitida?: boolean;
