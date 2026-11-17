@@ -6,30 +6,7 @@ import { TransacaoFinanceira } from "@/lib/types";
 import Topbar from "@/components/Topbar";
 import { useToast } from "@/components/Toast";
 import EmptyState from "@/components/EmptyState";
-
-// ─── Recorrência ──────────────────────────────────────────
-// Gera as datas mensais a partir da primeira. Vence sempre no mesmo dia do mês;
-// em mês mais curto (ex.: dia 31 em fevereiro) cai no último dia.
-// Tudo em texto 'yyyy-mm-dd' pra não ter surpresa de fuso.
-const MAX_PARCELAS = 60;
-
-function datasMensais(inicio: string, opts: { meses?: number; ate?: string }): string[] {
-  const [y0, m0, d0] = inicio.split("-").map(Number);
-  if (!y0 || !m0 || !d0) return [];
-  const out: string[] = [];
-  for (let i = 0; i < MAX_PARCELAS; i++) {
-    const idx = m0 - 1 + i;
-    const y = y0 + Math.floor(idx / 12);
-    const m = (idx % 12) + 1;
-    const ultimo = new Date(y, m, 0).getDate();
-    const d = Math.min(d0, ultimo);
-    const iso = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-    if (opts.meses != null && i >= opts.meses) break;
-    if (opts.ate && iso.slice(0, 7) > opts.ate) break;
-    out.push(iso);
-  }
-  return out;
-}
+import { MAX_PARCELAS, MESES_A_FRENTE_SEM_FIM, datasMensais } from "@/lib/recorrencia";
 
 const fmtData = (iso: string) => iso.split("-").reverse().join("/");
 
@@ -51,7 +28,7 @@ export default function FinanceiroPage() {
   const [status, setStatus] = useState<"pago" | "pendente">("pago");
   const [formaPagto, setFormaPagto] = useState("PIX");
   const [recorrente, setRecorrente] = useState(false);
-  const [recModo, setRecModo] = useState<"meses" | "ate">("meses");
+  const [recModo, setRecModo] = useState<"meses" | "ate" | "sempre">("meses");
   const [recMeses, setRecMeses] = useState("12");
   const [recAte, setRecAte] = useState(""); // YYYY-MM
 
@@ -65,7 +42,10 @@ export default function FinanceiroPage() {
   }, []);
 
   const loadData = async () => {
-    setTransactions(await DB.financeiro.list());
+    const lista = await DB.financeiro.list();
+    // Série sem fim: completa até 12 meses à frente antes de mostrar.
+    const criadas = await DB.financeiro.renovarSemFim(lista);
+    setTransactions(criadas > 0 ? await DB.financeiro.list() : lista);
   };
 
   const handleOpenModal = () => {
@@ -109,6 +89,7 @@ export default function FinanceiroPage() {
       }
       const serieId = crypto.randomUUID();
       const total = datasSerie.length;
+      const semFim = recModo === "sempre";
       // Só a primeira parcela leva o status escolhido; as futuras nascem pendentes
       // (ninguém pagou o salário de março ainda).
       const lista = datasSerie.map((d, i) => ({
@@ -117,13 +98,19 @@ export default function FinanceiroPage() {
         status: i === 0 ? status : ("pendente" as const),
         serieId,
         serieParcela: i + 1,
-        serieTotal: total,
+        serieTotal: semFim ? undefined : total,
+        serieSemFim: semFim,
       }));
       try {
         await DB.financeiro.addSerie(lista);
         setIsModalOpen(false);
         await loadData();
-        showToast(`${total} lançamentos mensais registrados.`, "success");
+        showToast(
+          semFim
+            ? `Recorrência sem fim criada: ${total} meses gerados, renova sozinha.`
+            : `${total} lançamentos mensais registrados.`,
+          "success",
+        );
       } catch {
         showToast("Não foi possível salvar a recorrência. Tente novamente.", "error");
       }
@@ -142,7 +129,11 @@ export default function FinanceiroPage() {
 
   const handleDelete = async (id?: number) => {
     if (id == null) return;
-    if (await confirm("Tem certeza que deseja excluir este lançamento?", { danger: true, okLabel: "Excluir" })) {
+    const doPaciente = transactions.find((x) => x.id === id)?.parcelaId != null;
+    const msg = doPaciente
+      ? "Este lançamento veio do pagamento de um paciente. Excluir aqui tira só do caixa: na ficha do paciente a parcela continua como paga. Excluir mesmo assim?"
+      : "Tem certeza que deseja excluir este lançamento?";
+    if (await confirm(msg, { danger: true, okLabel: "Excluir" })) {
       try {
         await DB.financeiro.remove(id);
         await loadData();
@@ -181,7 +172,11 @@ export default function FinanceiroPage() {
     recorrente && data
       ? datasMensais(
           data,
-          recModo === "meses" ? { meses: Math.max(0, parseInt(recMeses) || 0) } : { ate: recAte || data.slice(0, 7) },
+          recModo === "sempre"
+            ? { meses: MESES_A_FRENTE_SEM_FIM }
+            : recModo === "meses"
+              ? { meses: Math.max(0, parseInt(recMeses) || 0) }
+              : { ate: recAte || data.slice(0, 7) },
         )
       : [];
 
@@ -351,13 +346,22 @@ export default function FinanceiroPage() {
                       <td>{new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")}</td>
                       <td>
                         <strong>{t.descricao}</strong>
+                        {t.parcelaId && (
+                          <span
+                            className="badge"
+                            title="Lançado automaticamente ao marcar o pagamento do paciente"
+                            style={{ marginLeft: 8, fontSize: 11 }}
+                          >
+                            Paciente
+                          </span>
+                        )}
                         {t.serieId && (
                           <span
                             className="badge"
-                            title="Lançamento recorrente (mensal)"
+                            title={t.serieSemFim ? "Lançamento recorrente mensal, sem data de fim" : "Lançamento recorrente (mensal)"}
                             style={{ marginLeft: 8, fontSize: 11 }}
                           >
-                            Mensal {t.serieParcela}/{t.serieTotal}
+                            {t.serieSemFim ? `Mensal ${t.serieParcela ?? ""} · sem fim` : t.serieTotal ? `Mensal ${t.serieParcela}/${t.serieTotal}` : `Mensal ${t.serieParcela ?? ""}`}
                           </span>
                         )}
                       </td>
@@ -480,6 +484,9 @@ export default function FinanceiroPage() {
                         <option value="Ortodontia">Ortodontia</option>
                         <option value="Implantes">Implantes</option>
                         <option value="Endodontia">Endodontia</option>
+                        <option value="Atendimentos">Atendimentos (geral)</option>
+                        <option value="Sublocação">Sublocação de sala</option>
+                        <option value="Repasse de profissionais">Repasse de profissionais (%)</option>
                       </select>
                     ) : (
                       <select className="form-control" value={categoria} onChange={(e) => setCategoria(e.target.value)}>
@@ -487,6 +494,11 @@ export default function FinanceiroPage() {
                         <option value="Aluguel">Aluguel / Condomínio</option>
                         <option value="Salários">Salários / Comissões</option>
                         <option value="Marketing">Marketing / Divulgação</option>
+                        <option value="Impostos e Taxas">Impostos e Taxas</option>
+                        <option value="Contas (luz, telefone, internet)">Contas (luz, telefone, internet)</option>
+                        <option value="Contabilidade">Contabilidade</option>
+                        <option value="Serviços e Manutenção">Serviços e Manutenção</option>
+                        <option value="Segurança">Segurança</option>
                         <option value="Outros">Outras Despesas</option>
                       </select>
                     )}
@@ -499,6 +511,8 @@ export default function FinanceiroPage() {
                       <option value="Cartão de Débito">Cartão de Débito</option>
                       <option value="Dinheiro">Dinheiro</option>
                       <option value="Boleto">Boleto Bancário</option>
+                      <option value="InfinitePay">InfinitePay</option>
+                      <option value="Descontado">Descontado</option>
                     </select>
                   </div>
                 </div>
@@ -539,14 +553,15 @@ export default function FinanceiroPage() {
                         <select
                           className="form-control"
                           value={recModo}
-                          onChange={(e) => setRecModo(e.target.value as "meses" | "ate")}
+                          onChange={(e) => setRecModo(e.target.value as "meses" | "ate" | "sempre")}
                         >
                           <option value="meses">Por um número de meses</option>
                           <option value="ate">Até um mês específico</option>
+                          <option value="sempre">Sem data de fim</option>
                         </select>
                       </div>
                       <div className="form-group">
-                        {recModo === "meses" ? (
+                        {recModo === "sempre" ? null : recModo === "meses" ? (
                           <>
                             <label className="form-label">Quantos meses</label>
                             <input
@@ -575,6 +590,14 @@ export default function FinanceiroPage() {
                     <div style={{ fontSize: 12.5, color: "var(--text-muted)", lineHeight: 1.5 }}>
                       {!data ? (
                         "Escolha a data do primeiro vencimento acima."
+                      ) : recModo === "sempre" ? (
+                        <>
+                          Vence todo <strong>dia {Number(data.slice(8, 10))}</strong>
+                          {Number(data.slice(8, 10)) > 28 && " (ou no último dia, em mês mais curto)"}. Gera agora os{" "}
+                          <strong>próximos {MESES_A_FRENTE_SEM_FIM} meses</strong> e vai renovando sozinho: sempre que o
+                          Financeiro abre, completa até {MESES_A_FRENTE_SEM_FIM} meses à frente. Para parar, use
+                          &quot;Cancelar série&quot; na lista.
+                        </>
                       ) : datasSerie.length < 2 ? (
                         "A recorrência precisa de pelo menos 2 meses."
                       ) : (

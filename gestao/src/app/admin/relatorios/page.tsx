@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { parcelaForaDoCaixa } from "@/lib/caixa";
 import { DB, dataProcedimento } from "@/lib/db";
 import {
   Paciente,
@@ -270,8 +271,9 @@ export default function RelatoriosPage() {
     const semProf = agValidos.filter((a) => !a.profissionalId).length;
 
     // ── C7: Financeiro avançado ───────────────────────────
-    // Fluxo de caixa por mês: entradas = receitas pagas (financeiro) + parcelas
-    // pagas (pagoEm no mês); saídas = despesas pagas; previsto = parcelas a vencer no mês.
+    // Fluxo de caixa por mês: entradas = receitas pagas (caixa) + parcelas pagas
+    // antes de 2026 (histórico sem caixa — ver lib/caixa.ts); saídas = despesas
+    // pagas; previsto = parcelas a vencer no mês.
     let acumulado = 0;
     const fluxo = meses.map((ym) => {
       const finMes = financeiro.filter((f) => {
@@ -281,7 +283,7 @@ export default function RelatoriosPage() {
       const entradasFin = finMes.filter((f) => f.tipo === "receita").reduce((s, f) => s + f.valor, 0);
       const saidas = finMes.filter((f) => f.tipo === "despesa").reduce((s, f) => s + f.valor, 0);
       const entradasParc = parcelas
-        .filter((p) => p.pago && p.pagoEm && ymKey(paraData(p.pagoEm)!) === ym)
+        .filter((p) => parcelaForaDoCaixa(p) && ymKey(paraData(p.pagoEm)!) === ym)
         .reduce((s, p) => s + p.valor, 0);
       const entradas = entradasFin + entradasParc;
       const previsto = parcelas
@@ -340,7 +342,7 @@ export default function RelatoriosPage() {
       .filter((f) => f.tipo === "receita" && f.status === "pago")
       .forEach((f) => { const k = f.formaPagto || "Não informado"; formaMap[k] = (formaMap[k] || 0) + f.valor; });
     parcelas
-      .filter((p) => p.pago && noPeriodo(p.pagoEm, de, ate))
+      .filter((p) => parcelaForaDoCaixa(p) && noPeriodo(p.pagoEm, de, ate))
       .forEach((p) => { const k = p.formaPagamento || "Não informado"; formaMap[k] = (formaMap[k] || 0) + p.valor; });
     const totalDist = Object.values(formaMap).reduce((s, v) => s + v, 0);
     const distForma = Object.entries(formaMap)

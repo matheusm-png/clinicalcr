@@ -1,5 +1,6 @@
 import { createClient, isSupabaseConfigured } from "./supabase/client";
 import { facesDoJson } from "./faces";
+import { datasMensais, horizonteSemFim } from "./recorrencia";
 import { procedimentosDoOrcamento } from "./orcamentoAprovacao";
 import {
   Paciente,
@@ -210,6 +211,8 @@ const fromFinanceiro = (r: any): TransacaoFinanceira => ({
   serieId: r.serie_id ?? undefined,
   serieParcela: r.serie_parcela ?? undefined,
   serieTotal: r.serie_total ?? undefined,
+  serieSemFim: r.serie_sem_fim ?? false,
+  parcelaId: r.parcela_id ?? undefined,
   criadoEm: r.created_at,
 });
 const toFinanceiro = (t: TransacaoFinanceira) => ({
@@ -223,7 +226,12 @@ const toFinanceiro = (t: TransacaoFinanceira) => ({
   // Só manda as colunas de série quando há série: lançamento avulso continua
   // salvando mesmo se a migration 0035 ainda não tiver sido aplicada.
   ...(t.serieId
-    ? { serie_id: t.serieId, serie_parcela: t.serieParcela ?? null, serie_total: t.serieTotal ?? null }
+    ? {
+        serie_id: t.serieId,
+        serie_parcela: t.serieParcela ?? null,
+        serie_total: t.serieTotal ?? null,
+        ...(t.serieSemFim ? { serie_sem_fim: true } : {}),
+      }
     : {}),
 });
 
@@ -231,6 +239,7 @@ const fromAgendamento = (r: any): Agendamento => ({
   id: r.id,
   paciente: r.paciente,
   pacienteId: r.paciente_id ?? undefined,
+  telefone: r.telefone ?? "",
   proc: r.proc ?? "",
   data: r.data,
   hora: r.hora,
@@ -239,7 +248,6 @@ const fromAgendamento = (r: any): Agendamento => ({
   status: r.status,
   profissionalId: r.profissional_id ?? undefined,
   marcadorId: r.marcador_id ?? undefined,
-  telefone: r.telefone ?? "",
   presenca: r.presenca ?? "agendado",
   recuperacao: r.recuperacao ?? undefined,
   cancelado: r.cancelado ?? false,
@@ -249,6 +257,7 @@ const fromAgendamento = (r: any): Agendamento => ({
 const toAgendamento = (a: Agendamento) => ({
   paciente: a.paciente,
   paciente_id: a.pacienteId ?? null,
+  telefone: orNull(a.telefone),
   proc: a.proc,
   data: a.data,
   hora: a.hora,
@@ -257,7 +266,6 @@ const toAgendamento = (a: Agendamento) => ({
   status: a.status,
   profissional_id: a.profissionalId ?? null,
   marcador_id: a.marcadorId ?? null,
-  telefone: orNull(a.telefone),
   presenca: a.presenca ?? "agendado",
   recuperacao: a.recuperacao ?? null,
   cancelado: a.cancelado ?? false,
@@ -634,8 +642,19 @@ export const DB = {
     },
     // Cancela a série a partir de uma data: apaga as parcelas dessa data em
     // diante que ainda estão pendentes. As já pagas ficam (é histórico de caixa).
+    // Na série sem fim, também desliga a renovação (senão ela recriaria as
+    // parcelas apagadas na próxima vez que o Financeiro abrir).
     async cancelarSerie(serieId: string, aPartirDe: string): Promise<number> {
       if (semBackend()) return 0;
+      const { error: flagErr } = await sb()
+        .from("transacoes_financeiras")
+        .update({ serie_sem_fim: false })
+        .eq("serie_id", serieId)
+        .eq("serie_sem_fim", true);
+      if (flagErr) {
+        console.error("[DB] desligar renovação da série:", flagErr.message);
+        throw flagErr;
+      }
       const { data, error } = await sb()
         .from("transacoes_financeiras")
         .delete()
@@ -646,6 +665,60 @@ export const DB = {
       if (error) {
         console.error("[DB] cancelar série:", error.message);
         throw error;
+      }
+      return (data ?? []).length;
+    },
+    // Série sem fim: completa as parcelas até 12 meses à frente de hoje.
+    // Chamado ao abrir o Financeiro (sem cron). Recebe a lista já carregada
+    // e devolve quantas parcelas criou. Copia valor/descrição/categoria da
+    // última parcela (se alguém corrigiu o valor dela, o reajuste segue).
+    // Vence no dia da 1ª parcela (ou no último dia, em mês mais curto).
+    async renovarSemFim(todas: TransacaoFinanceira[]): Promise<number> {
+      if (semBackend()) return 0;
+      const series = new Map<string, TransacaoFinanceira[]>();
+      for (const t of todas) {
+        if (!t.serieId || !t.serieSemFim) continue;
+        const arr = series.get(t.serieId) ?? [];
+        arr.push(t);
+        series.set(t.serieId, arr);
+      }
+      if (!series.size) return 0;
+      const ate = horizonteSemFim();
+      const novas: TransacaoFinanceira[] = [];
+      for (const [serieId, parcelas] of series) {
+        parcelas.sort((a, b) => (a.serieParcela ?? 0) - (b.serieParcela ?? 0));
+        const ultima = parcelas[parcelas.length - 1];
+        if (!ultima.data || ultima.data.slice(0, 7) >= ate) continue;
+        const primeira = parcelas.find((p) => p.serieParcela === 1);
+        const dia = Number((primeira ?? ultima).data.slice(8, 10)) || 1;
+        // Começa no mês seguinte ao da última parcela, no dia de vencimento da série.
+        const [y, m] = ultima.data.split("-").map(Number);
+        const idx = y * 12 + (m - 1) + 1;
+        const inicio = `${Math.floor(idx / 12)}-${String((idx % 12) + 1).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+        datasMensais(inicio, { ate }).forEach((d, i) =>
+          novas.push({
+            tipo: ultima.tipo,
+            descricao: ultima.descricao,
+            valor: ultima.valor,
+            categoria: ultima.categoria,
+            formaPagto: ultima.formaPagto,
+            data: d,
+            status: "pendente",
+            serieId,
+            serieParcela: (ultima.serieParcela ?? parcelas.length) + i + 1,
+            serieSemFim: true,
+          }),
+        );
+      }
+      if (!novas.length) return 0;
+      // ignoreDuplicates: se outra tela renovou ao mesmo tempo, não duplica.
+      const { data, error } = await sb()
+        .from("transacoes_financeiras")
+        .upsert(novas.map(toFinanceiro), { onConflict: "serie_id,serie_parcela", ignoreDuplicates: true })
+        .select("id");
+      if (error) {
+        console.error("[DB] renovar séries sem fim:", error.message);
+        return 0;
       }
       return (data ?? []).length;
     },
@@ -1053,6 +1126,7 @@ export const DB = {
         .from("agendamentos")
         .insert({
           paciente: sol.nome,
+          telefone: sol.telefone || null,
           proc: ag.proc || sol.procedimento || "Consulta",
           data: ag.data,
           hora: ag.hora,
@@ -1126,7 +1200,6 @@ export const DB = {
       listTable<ModeloAnamnese>(
         "modelos_anamnese",
         (r: any) => ({ id: r.id, nome: r.nome, estrutura: Array.isArray(r.estrutura) ? r.estrutura : [], ativo: r.ativo, criadoEm: r.created_at }),
-          telefone: sol.telefone || null,
       ),
     get: (id: number | string) =>
       getTable<ModeloAnamnese>(

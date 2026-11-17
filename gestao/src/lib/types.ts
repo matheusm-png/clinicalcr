@@ -85,7 +85,9 @@ export interface TransacaoFinanceira {
   // Recorrência (migration 0035): parcelas geradas juntas compartilham serieId.
   serieId?: string;
   serieParcela?: number;
-  serieTotal?: number;
+  serieTotal?: number; // vazio na série sem fim
+  serieSemFim?: boolean; // migration 0037: renova sozinha, sempre 12 meses à frente
+  parcelaId?: number; // migration 0038: gerado pelo pagamento de uma parcela de paciente
   criadoEm?: string;
 }
 
@@ -93,9 +95,9 @@ export interface Agendamento {
   id?: number;
   paciente: string;
   pacienteId?: number;
+  telefone?: string; // contato informado no agendamento (paciente novo não tem cadastro)
   proc: string;
   data: string; // data absoluta 'yyyy-mm-dd'
-  telefone?: string; // contato informado no agendamento (paciente novo não tem cadastro)
   hora: number; // hora (ex: 8, 9, 10...)
   min: number;  // minutos (ex: 0, 30)
   dur: number;  // duração em minutos (ex: 30, 45, 60...)

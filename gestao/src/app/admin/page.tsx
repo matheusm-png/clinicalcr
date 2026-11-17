@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { parcelaForaDoCaixa } from "@/lib/caixa";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { DB } from "@/lib/db";
@@ -135,11 +136,12 @@ export default function DashboardPage() {
     const meses: string[] = [];
     for (let i = 5; i >= 0; i--) meses.push(ymKey(new Date(agora.getFullYear(), agora.getMonth() - i, 1)));
 
-    // ── Entradas (receitas pagas + parcelas pagas) por mês
+    // ── Entradas por mês: caixa + parcelas pagas antes de 2026 (ver lib/caixa.ts;
+    // as de 2026 em diante já estão no caixa e não podem contar duas vezes).
     const parcelas = contas.filter((c) => c.status !== "cancelada").flatMap((c) => c.parcelas ?? []);
     const entradasMes = (ym: string) => {
       const rec = financeiro.filter((f) => f.tipo === "receita" && f.status === "pago" && noMes(f.data, ym)).reduce((s, f) => s + f.valor, 0);
-      const par = parcelas.filter((p) => p.pago && noMes(p.pagoEm, ym)).reduce((s, p) => s + p.valor, 0);
+      const par = parcelas.filter((p) => parcelaForaDoCaixa(p) && noMes(p.pagoEm, ym)).reduce((s, p) => s + p.valor, 0);
       return rec + par;
     };
     const saidasMes = (ym: string) => financeiro.filter((f) => f.tipo === "despesa" && f.status === "pago" && noMes(f.data, ym)).reduce((s, f) => s + f.valor, 0);
