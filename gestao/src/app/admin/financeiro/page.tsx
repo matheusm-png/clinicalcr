@@ -7,6 +7,32 @@ import Topbar from "@/components/Topbar";
 import { useToast } from "@/components/Toast";
 import EmptyState from "@/components/EmptyState";
 
+// ─── Recorrência ──────────────────────────────────────────
+// Gera as datas mensais a partir da primeira. Vence sempre no mesmo dia do mês;
+// em mês mais curto (ex.: dia 31 em fevereiro) cai no último dia.
+// Tudo em texto 'yyyy-mm-dd' pra não ter surpresa de fuso.
+const MAX_PARCELAS = 60;
+
+function datasMensais(inicio: string, opts: { meses?: number; ate?: string }): string[] {
+  const [y0, m0, d0] = inicio.split("-").map(Number);
+  if (!y0 || !m0 || !d0) return [];
+  const out: string[] = [];
+  for (let i = 0; i < MAX_PARCELAS; i++) {
+    const idx = m0 - 1 + i;
+    const y = y0 + Math.floor(idx / 12);
+    const m = (idx % 12) + 1;
+    const ultimo = new Date(y, m, 0).getDate();
+    const d = Math.min(d0, ultimo);
+    const iso = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    if (opts.meses != null && i >= opts.meses) break;
+    if (opts.ate && iso.slice(0, 7) > opts.ate) break;
+    out.push(iso);
+  }
+  return out;
+}
+
+const fmtData = (iso: string) => iso.split("-").reverse().join("/");
+
 export default function FinanceiroPage() {
   const { showToast, confirm } = useToast();
   const [transactions, setTransactions] = useState<TransacaoFinanceira[]>([]);
@@ -24,6 +50,10 @@ export default function FinanceiroPage() {
   const [data, setData] = useState("");
   const [status, setStatus] = useState<"pago" | "pendente">("pago");
   const [formaPagto, setFormaPagto] = useState("PIX");
+  const [recorrente, setRecorrente] = useState(false);
+  const [recModo, setRecModo] = useState<"meses" | "ate">("meses");
+  const [recMeses, setRecMeses] = useState("12");
+  const [recAte, setRecAte] = useState(""); // YYYY-MM
 
   useEffect(() => {
     // Definir mês atual como default do filtro
@@ -46,6 +76,10 @@ export default function FinanceiroPage() {
     setData(new Date().toISOString().split("T")[0]);
     setStatus("pago");
     setFormaPagto("PIX");
+    setRecorrente(false);
+    setRecModo("meses");
+    setRecMeses("12");
+    setRecAte("");
     setIsModalOpen(true);
   };
 
@@ -64,6 +98,37 @@ export default function FinanceiroPage() {
       status,
       formaPagto,
     };
+
+    if (recorrente) {
+      if (datasSerie.length < 2) {
+        showToast(
+          recModo === "meses" ? "Informe 2 meses ou mais para repetir." : "Escolha um mês final depois do primeiro.",
+          "error",
+        );
+        return;
+      }
+      const serieId = crypto.randomUUID();
+      const total = datasSerie.length;
+      // Só a primeira parcela leva o status escolhido; as futuras nascem pendentes
+      // (ninguém pagou o salário de março ainda).
+      const lista = datasSerie.map((d, i) => ({
+        ...novaTransacao,
+        data: d,
+        status: i === 0 ? status : ("pendente" as const),
+        serieId,
+        serieParcela: i + 1,
+        serieTotal: total,
+      }));
+      try {
+        await DB.financeiro.addSerie(lista);
+        setIsModalOpen(false);
+        await loadData();
+        showToast(`${total} lançamentos mensais registrados.`, "success");
+      } catch {
+        showToast("Não foi possível salvar a recorrência. Tente novamente.", "error");
+      }
+      return;
+    }
 
     try {
       await DB.financeiro.add(novaTransacao);
@@ -87,6 +152,38 @@ export default function FinanceiroPage() {
       }
     }
   };
+
+  const handleCancelarSerie = async (t: TransacaoFinanceira) => {
+    if (!t.serieId) return;
+    const restantes = transactions.filter(
+      (x) => x.serieId === t.serieId && x.data >= t.data && x.status === "pendente",
+    ).length;
+    if (restantes === 0) {
+      showToast("Não há parcelas pendentes desta série a partir desta data.", "error");
+      return;
+    }
+    const ok = await confirm(
+      `Cancelar a recorrência "${t.descricao}" a partir de ${fmtData(t.data)}? ` +
+        `${restantes} parcela(s) pendente(s) serão excluídas. As já pagas continuam.`,
+      { danger: true, okLabel: "Cancelar série" },
+    );
+    if (!ok) return;
+    try {
+      const n = await DB.financeiro.cancelarSerie(t.serieId, t.data);
+      await loadData();
+      showToast(`${n} parcela(s) excluída(s).`, "success");
+    } catch {
+      showToast("Não foi possível cancelar a série.", "error");
+    }
+  };
+
+  const datasSerie =
+    recorrente && data
+      ? datasMensais(
+          data,
+          recModo === "meses" ? { meses: Math.max(0, parseInt(recMeses) || 0) } : { ate: recAte || data.slice(0, 7) },
+        )
+      : [];
 
   // Filtragem dos lançamentos
   const filteredTransactions = transactions.filter((t) => {
@@ -254,6 +351,15 @@ export default function FinanceiroPage() {
                       <td>{new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")}</td>
                       <td>
                         <strong>{t.descricao}</strong>
+                        {t.serieId && (
+                          <span
+                            className="badge"
+                            title="Lançamento recorrente (mensal)"
+                            style={{ marginLeft: 8, fontSize: 11 }}
+                          >
+                            Mensal {t.serieParcela}/{t.serieTotal}
+                          </span>
+                        )}
                       </td>
                       <td>{t.categoria}</td>
                       {/* Sem forma registrada era exibido como "PIX" — a tela afirmava
@@ -271,10 +377,20 @@ export default function FinanceiroPage() {
                           {t.status === "pago" ? "Pago" : "Pendente"}
                         </span>
                       </td>
-                      <td>
+                      <td style={{ whiteSpace: "nowrap" }}>
                         <button className="btn btn-outline btn-sm" onClick={() => handleDelete(t.id)}>
                           Remover
                         </button>
+                        {t.serieId && (
+                          <button
+                            className="btn btn-outline btn-sm"
+                            style={{ marginLeft: 6 }}
+                            title="Exclui esta e as próximas parcelas pendentes"
+                            onClick={() => handleCancelarSerie(t)}
+                          >
+                            Cancelar série
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -344,7 +460,7 @@ export default function FinanceiroPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Data *</label>
+                    <label className="form-label">{recorrente ? "1º vencimento *" : "Data *"}</label>
                     <input
                       type="date"
                       className="form-control"
@@ -398,6 +514,83 @@ export default function FinanceiroPage() {
                     <option value="pendente">{tipo === "receita" ? "A receber" : "Pendente"}</option>
                   </select>
                 </div>
+
+                {/* Recorrência */}
+                <div className="form-group">
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 14 }}>
+                    <input type="checkbox" checked={recorrente} onChange={(e) => setRecorrente(e.target.checked)} />
+                    <strong>Repetir todo mês</strong>
+                    <span style={{ color: "var(--text-muted)", fontSize: 12 }}>(salário, aluguel, mensalidades…)</span>
+                  </label>
+                </div>
+                {recorrente && (
+                  <div
+                    style={{
+                      border: "1px solid var(--border)",
+                      borderRadius: 10,
+                      padding: "12px 14px",
+                      marginTop: -6,
+                      marginBottom: 12,
+                    }}
+                  >
+                    <div className="form-row form-row-2">
+                      <div className="form-group">
+                        <label className="form-label">Até quando</label>
+                        <select
+                          className="form-control"
+                          value={recModo}
+                          onChange={(e) => setRecModo(e.target.value as "meses" | "ate")}
+                        >
+                          <option value="meses">Por um número de meses</option>
+                          <option value="ate">Até um mês específico</option>
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        {recModo === "meses" ? (
+                          <>
+                            <label className="form-label">Quantos meses</label>
+                            <input
+                              type="number"
+                              min={2}
+                              max={MAX_PARCELAS}
+                              className="form-control"
+                              value={recMeses}
+                              onChange={(e) => setRecMeses(e.target.value)}
+                            />
+                          </>
+                        ) : (
+                          <>
+                            <label className="form-label">Último mês</label>
+                            <input
+                              type="month"
+                              className="form-control"
+                              value={recAte}
+                              min={data ? data.slice(0, 7) : undefined}
+                              onChange={(e) => setRecAte(e.target.value)}
+                            />
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 12.5, color: "var(--text-muted)", lineHeight: 1.5 }}>
+                      {!data ? (
+                        "Escolha a data do primeiro vencimento acima."
+                      ) : datasSerie.length < 2 ? (
+                        "A recorrência precisa de pelo menos 2 meses."
+                      ) : (
+                        <>
+                          Vence todo <strong>dia {Number(data.slice(8, 10))}</strong>
+                          {Number(data.slice(8, 10)) > 28 && " (ou no último dia, em mês mais curto)"}. Vai gerar{" "}
+                          <strong>{datasSerie.length} lançamentos</strong>, de {fmtData(datasSerie[0])} a{" "}
+                          {fmtData(datasSerie[datasSerie.length - 1])}
+                          {datasSerie.length === MAX_PARCELAS && ` (máximo de ${MAX_PARCELAS})`}. Só o primeiro fica
+                          como &quot;{status === "pago" ? (tipo === "receita" ? "Recebido" : "Pago") : "Pendente"}&quot;;
+                          os próximos entram como pendentes. Dá pra cancelar a série depois, pela lista.
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="modal-footer">
                 <button className="btn btn-outline" onClick={() => setIsModalOpen(false)}>

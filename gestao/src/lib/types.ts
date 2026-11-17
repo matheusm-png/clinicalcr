@@ -82,6 +82,10 @@ export interface TransacaoFinanceira {
   data: string;
   status: 'pago' | 'pendente';
   formaPagto?: string;
+  // Recorrência (migration 0035): parcelas geradas juntas compartilham serieId.
+  serieId?: string;
+  serieParcela?: number;
+  serieTotal?: number;
   criadoEm?: string;
 }
 

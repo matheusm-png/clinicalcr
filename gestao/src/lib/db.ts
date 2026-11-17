@@ -207,6 +207,9 @@ const fromFinanceiro = (r: any): TransacaoFinanceira => ({
   data: r.data,
   status: r.status,
   formaPagto: r.forma_pagamento ?? "",
+  serieId: r.serie_id ?? undefined,
+  serieParcela: r.serie_parcela ?? undefined,
+  serieTotal: r.serie_total ?? undefined,
   criadoEm: r.created_at,
 });
 const toFinanceiro = (t: TransacaoFinanceira) => ({
@@ -217,6 +220,11 @@ const toFinanceiro = (t: TransacaoFinanceira) => ({
   data: orNull(t.data),
   status: t.status,
   forma_pagamento: orNull(t.formaPagto),
+  // Só manda as colunas de série quando há série: lançamento avulso continua
+  // salvando mesmo se a migration 0035 ainda não tiver sido aplicada.
+  ...(t.serieId
+    ? { serie_id: t.serieId, serie_parcela: t.serieParcela ?? null, serie_total: t.serieTotal ?? null }
+    : {}),
 });
 
 const fromAgendamento = (r: any): Agendamento => ({
@@ -607,6 +615,38 @@ export const DB = {
     update: (t: TransacaoFinanceira) =>
       saveTable<TransacaoFinanceira>("transacoes_financeiras", toFinanceiro, fromFinanceiro, t),
     remove: (id: number | string) => removeTable("transacoes_financeiras", id),
+    // Recorrência: grava todas as parcelas de uma vez (um insert só — ou entram
+    // todas ou nenhuma).
+    async addSerie(lista: TransacaoFinanceira[]): Promise<number> {
+      if (semBackend()) throw new Error("Supabase não configurado.");
+      if (!lista.length) return 0;
+      const { data, error } = await sb()
+        .from("transacoes_financeiras")
+        .insert(lista.map(toFinanceiro))
+        .select("id");
+      if (error) {
+        console.error("[DB] salvar série:", error.message);
+        throw error;
+      }
+      return (data ?? []).length;
+    },
+    // Cancela a série a partir de uma data: apaga as parcelas dessa data em
+    // diante que ainda estão pendentes. As já pagas ficam (é histórico de caixa).
+    async cancelarSerie(serieId: string, aPartirDe: string): Promise<number> {
+      if (semBackend()) return 0;
+      const { data, error } = await sb()
+        .from("transacoes_financeiras")
+        .delete()
+        .eq("serie_id", serieId)
+        .gte("data", aPartirDe)
+        .eq("status", "pendente")
+        .select("id");
+      if (error) {
+        console.error("[DB] cancelar série:", error.message);
+        throw error;
+      }
+      return (data ?? []).length;
+    },
     // Import em lote (migração). clinica_id carimbado pelo banco.
     async importar(lista: TransacaoFinanceira[]): Promise<number> {
       if (semBackend()) throw new Error("Supabase não configurado.");
