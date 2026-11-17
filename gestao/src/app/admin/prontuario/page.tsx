@@ -118,7 +118,7 @@ function ProntuarioContent() {
 
   useEffect(() => {
     (async () => {
-      setProfissionais(await DB.profissionais.list(true));
+      setProfissionais((await DB.profissionais.list(true)).filter((p) => p.tipo !== "sublocatario"));
       setCatalogo(await DB.catalogo.list(true));
       setTodosPacientes(await DB.pacientes.list());
       const u = await usuarioAtual();

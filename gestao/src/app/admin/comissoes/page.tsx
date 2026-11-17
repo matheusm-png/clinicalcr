@@ -83,7 +83,7 @@ export default function ComissoesPage() {
         DB.clinica.get(),
       ]);
       setProcedimentos(proc);
-      setProfissionais(prof);
+      setProfissionais(prof.filter((p) => p.tipo !== "sublocatario"));
       setPacientes(pac);
       setClinica(cli);
       setCarregando(false);

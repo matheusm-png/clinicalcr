@@ -91,7 +91,7 @@ export default function OrcamentosPage() {
     setOrcamentos(orcs);
     setPacientes(pacs);
     setCatalogo(cat);
-    setProfissionais(profs);
+    setProfissionais(profs.filter((p) => p.tipo !== "sublocatario"));
   };
 
   // Carrega o odontograma atual do paciente escolhido (contexto: o que já existe).

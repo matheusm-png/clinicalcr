@@ -101,7 +101,10 @@ export interface Agendamento {
   hora: number; // hora (ex: 8, 9, 10...)
   min: number;  // minutos (ex: 0, 30)
   dur: number;  // duração em minutos (ex: 30, 45, 60...)
-  status: 'confirmado' | 'pendente' | 'bloqueado';
+  // 'sublocacao' = sala alugada a dentista de fora (sem paciente da clínica).
+  status: 'confirmado' | 'pendente' | 'bloqueado' | 'sublocacao';
+  sublocacaoModalidade?: 'hora' | 'turno' | 'diaria';
+  serieId?: string; // reservas fixas semanais geradas juntas
   profissionalId?: number;
   marcadorId?: number;
   presenca?: 'agendado' | 'compareceu' | 'faltou';
@@ -163,6 +166,8 @@ export interface Profissional {
   cor: string;
   ativo: boolean;
   comissaoPercentual?: number; // % de comissão padrão (ex.: 40 = 40%)
+  // 'clinica' = equipe; 'sublocatario' = dentista de fora que aluga sala.
+  tipo?: 'clinica' | 'sublocatario';
   criadoEm?: string;
 }
 

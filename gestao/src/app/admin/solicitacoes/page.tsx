@@ -33,7 +33,7 @@ export default function SolicitacoesPage() {
   const load = async () => {
     const [sols, profs] = await Promise.all([DB.solicitacoes.list(), DB.profissionais.list(true)]);
     setSolicitacoes(sols);
-    setProfissionais(profs);
+    setProfissionais(profs.filter((p) => p.tipo !== "sublocatario"));
   };
 
   const pendentes = useMemo(() => solicitacoes.filter((s) => s.status === "pendente").length, [solicitacoes]);

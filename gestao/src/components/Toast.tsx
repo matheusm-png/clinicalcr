@@ -152,7 +152,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 ×
               </button>
             </div>
-            <div className="modal-body" style={{ fontSize: 14, lineHeight: 1.5 }}>
+            <div className="modal-body" style={{ fontSize: 14, lineHeight: 1.5, whiteSpace: "pre-line" }}>
               {confirmState.msg}
             </div>
             <div className="modal-footer">

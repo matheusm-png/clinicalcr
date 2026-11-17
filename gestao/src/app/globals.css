@@ -589,6 +589,16 @@ tbody td { padding: 12px 14px; color: var(--text); vertical-align: middle; }
 .appt-block.confirmado { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); }
 .appt-block.pendente   { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: #fff; }
 .appt-block.bloqueado  { background: #CBD5E1; color: #475569; }
+/* Sala sublocada: listrado na cor do sublocatário (--sub), texto escuro legível. */
+.appt-block.sublocacao {
+  --sub: #0f766e;
+  background: repeating-linear-gradient(135deg,
+    color-mix(in srgb, var(--sub) 22%, var(--bg)) 0 8px,
+    color-mix(in srgb, var(--sub) 14%, var(--bg)) 8px 16px);
+  color: var(--text);
+  border-left: 4px solid var(--sub);
+}
+.appt-block.sublocacao.cont { border-radius: 0 0 6px 6px; padding-top: 2px; }
 .agenda-table td.clickable { cursor: pointer; transition: background .1s; }
 .agenda-table td.clickable:hover { background: var(--primary-light); }
 

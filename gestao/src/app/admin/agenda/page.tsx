@@ -13,6 +13,27 @@ const MINI_DOW = ["S", "T", "Q", "Q", "S", "S", "D"]; // Seg..Dom (mini-calendá
 const ymd = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
+// Sublocação: modalidade escolhida na tela. No banco, manhã/tarde viram 'turno'.
+type ModalidadeUI = "hora" | "manha" | "tarde" | "diaria";
+const MODALIDADE_LABEL: Record<ModalidadeUI, string> = {
+  hora: "Por hora",
+  manha: "Turno manhã",
+  tarde: "Turno tarde",
+  diaria: "Diária",
+};
+const hhmm = (minutos: number) =>
+  `${String(Math.floor(minutos / 60)).padStart(2, "0")}:${String(minutos % 60).padStart(2, "0")}`;
+const dataBR = (d: string) => d.split("-").reverse().slice(0, 2).join("/");
+const somaDias = (d: string, n: number) => {
+  const [y, m, dd] = d.split("-").map(Number);
+  return ymd(new Date(y, m - 1, dd + n));
+};
+// Faixa ocupada do agendamento, em minutos desde 00:00.
+const faixa = (a: Agendamento): [number, number] => {
+  const ini = a.hora * 60 + a.min;
+  return [ini, ini + (a.dur || 30)];
+};
+
 export default function AgendaPage() {
   const { showToast, confirm } = useToast();
   const [appointments, setAppointments] = useState<Agendamento[]>([]);
@@ -38,11 +59,17 @@ export default function AgendaPage() {
   const [modalProfissional, setModalProfissional] = useState<number | "">("");
   const [modalMarcador, setModalMarcador] = useState<number | "">("");
   // "consulta" = agendamento normal; "bloqueio" = horário indisponível (sem paciente).
-  const [modalTipo, setModalTipo] = useState<"consulta" | "bloqueio">("consulta");
+  // "sublocacao" = sala alugada a dentista de fora (hora/turno/diária).
+  const [modalTipo, setModalTipo] = useState<"consulta" | "bloqueio" | "sublocacao">("consulta");
+  const [modalModalidade, setModalModalidade] = useState<ModalidadeUI>("hora");
+  const [modalHoras, setModalHoras] = useState<number>(1);
+  const [modalRepetir, setModalRepetir] = useState(false);
+  const [modalRepetirAte, setModalRepetirAte] = useState<string>("");
+  const [modalSerieId, setModalSerieId] = useState<string | undefined>(undefined);
   const [modalData, setModalData] = useState<string>("");
   const [modalHorario, setModalHorario] = useState<string>("08:00");
   const [modalDuracao, setModalDuracao] = useState<number>(30);
-  const [modalStatus, setModalStatus] = useState<"confirmado" | "pendente" | "bloqueado">("confirmado");
+  const [modalStatus, setModalStatus] = useState<Agendamento["status"]>("confirmado");
   const [modalPresenca, setModalPresenca] = useState<"agendado" | "compareceu" | "faltou">("agendado");
   const [modalObs, setModalObs] = useState<string>("");
 
@@ -85,6 +112,55 @@ export default function AgendaPage() {
   const nomeProf = (id?: number) => profissionais.find((p) => p.id === id)?.nome;
   // Marcador (rótulo colorido) do agendamento.
   const marcadorDe = (id?: number) => marcadores.find((m) => m.id === id);
+  // Equipe da clínica x dentistas de fora que alugam sala.
+  const equipe = profissionais.filter((p) => p.tipo !== "sublocatario");
+  const sublocatarios = profissionais.filter((p) => p.tipo === "sublocatario");
+
+  // Turnos seguem o horário da clínica: manhã até o almoço, tarde depois dele.
+  const meioDia = almocoInicio ?? 12;
+  const voltaAlmoco = almocoFim ?? meioDia;
+  const faixaModalidade = (mod: ModalidadeUI): [number, number] => {
+    if (mod === "manha") return [horaInicio * 60, meioDia * 60];
+    if (mod === "tarde") return [voltaAlmoco * 60, horaFim * 60];
+    if (mod === "diaria") return [horaInicio * 60, horaFim * 60];
+    const [h, m] = modalHorario.split(":").map(Number);
+    const ini = h * 60 + m;
+    return [ini, ini + modalHoras * 60];
+  };
+
+  // Reservas/consultas que batem com [ini, fim) nas datas dadas: mesma sala,
+  // mesmo sublocatário, bloqueio da clínica, ou outra sublocação sem sala definida.
+  const conflitos = (
+    datas: Set<string>,
+    ini: number,
+    fim: number,
+    salaId: number | undefined,
+    profId: number | undefined,
+    ignorar: Set<number>,
+    soSublocacao = false,
+  ) =>
+    appointments.filter((a) => {
+      if (a.cancelado || (a.id != null && ignorar.has(a.id)) || !datas.has(a.data)) return false;
+      const [aIni, aFim] = faixa(a);
+      if (!(aIni < fim && aFim > ini)) return false;
+      if (soSublocacao && a.status !== "sublocacao") return false;
+      if (salaId != null && a.marcadorId === salaId) return true;
+      if (a.status === "sublocacao" && (salaId == null || a.marcadorId == null)) return true;
+      if (profId != null && a.profissionalId === profId) return true;
+      return a.status === "bloqueado";
+    });
+
+  const descreveConflito = (a: Agendamento) => {
+    const [i, f] = faixa(a);
+    const quem =
+      a.status === "sublocacao"
+        ? `Sublocação ${nomeProf(a.profissionalId) ?? ""}`.trim()
+        : a.status === "bloqueado"
+        ? `Bloqueio${a.proc ? ` (${a.proc})` : ""}`
+        : `${a.paciente} — ${a.proc}`;
+    const sala = marcadorDe(a.marcadorId)?.nome;
+    return `${dataBR(a.data)} ${hhmm(i)}–${hhmm(f)} · ${quem}${sala ? ` · ${sala}` : ""}`;
+  };
 
   // Agendamentos visíveis na grade: exclui desmarcados (vão p/ a Recuperação)
   // e aplica o filtro de profissional.
@@ -159,7 +235,7 @@ export default function AgendaPage() {
     });
   };
 
-  const openNewModal = (dia?: number, hora?: number, min?: number, tipo: "consulta" | "bloqueio" = "consulta") => {
+  const openNewModal = (dia?: number, hora?: number, min?: number, tipo: "consulta" | "bloqueio" | "sublocacao" = "consulta") => {
     setModalId("");
     setModalPaciente("");
     setModalTelefone("");
@@ -169,9 +245,20 @@ export default function AgendaPage() {
     setModalStatus(tipo === "bloqueio" ? "bloqueado" : "confirmado");
     setModalPresenca("agendado");
     setModalDuracao(tipo === "bloqueio" ? 60 : 30);
-    setModalMarcador("");
-    // Pré-seleciona o profissional do filtro (ou o primeiro ativo).
-    setModalProfissional(filtroProf !== "todos" ? filtroProf : (profissionais[0]?.id ?? ""));
+    setModalMarcador(tipo === "sublocacao" && marcadores.length === 1 ? (marcadores[0].id ?? "") : "");
+    setModalModalidade("hora");
+    setModalHoras(1);
+    setModalRepetir(false);
+    setModalSerieId(undefined);
+    if (tipo === "sublocacao") {
+      setModalStatus("sublocacao");
+      const filtroEhSub = sublocatarios.some((p) => p.id === filtroProf);
+      setModalProfissional(filtroEhSub ? (filtroProf as number) : (sublocatarios[0]?.id ?? ""));
+    } else {
+      // Pré-seleciona o profissional do filtro (ou o primeiro da equipe).
+      const filtroEhEquipe = equipe.some((p) => p.id === filtroProf);
+      setModalProfissional(filtroEhEquipe ? (filtroProf as number) : (equipe[0]?.id ?? ""));
+    }
 
     const d = new Date(currentMonday);
     if (dia !== undefined && hora !== undefined && min !== undefined) {
@@ -181,6 +268,7 @@ export default function AgendaPage() {
       setModalHorario("08:00");
     }
     setModalData(ymd(d));
+    setModalRepetirAte(somaDias(ymd(d), 7 * 12));
     setIsModalOpen(true);
   };
 
@@ -189,7 +277,14 @@ export default function AgendaPage() {
     setModalPaciente(appt.paciente);
     setModalTelefone(appt.telefone || "");
     setModalProcedimento(appt.proc);
-    setModalTipo(appt.status === "bloqueado" ? "bloqueio" : "consulta");
+    setModalTipo(appt.status === "bloqueado" ? "bloqueio" : appt.status === "sublocacao" ? "sublocacao" : "consulta");
+    setModalRepetir(false);
+    setModalSerieId(appt.serieId);
+    if (appt.status === "sublocacao") {
+      const mod = appt.sublocacaoModalidade ?? "hora";
+      setModalModalidade(mod === "turno" ? (appt.hora < meioDia ? "manha" : "tarde") : mod);
+      setModalHoras(Math.max(1, Math.round((appt.dur || 60) / 60)));
+    }
     setModalStatus(appt.status);
     setModalDuracao(appt.dur || 30);
     setModalProfissional(appt.profissionalId ?? "");
@@ -202,16 +297,32 @@ export default function AgendaPage() {
     setIsModalOpen(true);
   };
 
+  // Cancela a reserva fixa deste dia em diante (os dias anteriores ficam no histórico).
+  const handleCancelarSerie = async () => {
+    if (!modalSerieId) return;
+    const futuras = appointments.filter((a) => a.serieId === modalSerieId && a.data >= modalData).length;
+    if (!(await confirm(`Cancelar a reserva fixa a partir de ${dataBR(modalData)}? ${futuras > 1 ? `Saem ${futuras} reservas` : "Sai 1 reserva"} da agenda. As anteriores ficam.`, { danger: true, okLabel: "Cancelar série" }))) return;
+    try {
+      const n = await DB.agendamentos.removerSerieAPartir(modalSerieId, modalData);
+      setIsModalOpen(false);
+      await loadData();
+      showToast(`Reserva fixa cancelada (${n} ${n === 1 ? "dia" : "dias"}).`, "success");
+    } catch {
+      showToast("Não foi possível cancelar a série.", "error");
+    }
+  };
+
   const handleDelete = async () => {
     if (!modalId) return;
-    if (await confirm("Tem certeza que deseja excluir esta consulta?", { danger: true, okLabel: "Excluir" })) {
+    const oque = modalTipo === "sublocacao" ? "esta reserva de sala" : modalTipo === "bloqueio" ? "este bloqueio" : "esta consulta";
+    if (await confirm(`Tem certeza que deseja excluir ${oque}?`, { danger: true, okLabel: "Excluir" })) {
       try {
         await DB.agendamentos.remove(Number(modalId));
         setIsModalOpen(false);
         await loadData();
-        showToast("Consulta excluída.", "success");
+        showToast(modalTipo === "sublocacao" ? "Reserva excluída." : modalTipo === "bloqueio" ? "Bloqueio excluído." : "Consulta excluída.", "success");
       } catch {
-        showToast("Não foi possível excluir a consulta.", "error");
+        showToast("Não foi possível excluir.", "error");
       }
     }
   };
@@ -233,7 +344,68 @@ export default function AgendaPage() {
     }
   };
 
+  const handleSaveSublocacao = async () => {
+    if (!modalData) return showToast("Informe a data.", "error");
+    if (modalProfissional === "") return showToast("Escolha o sublocatário.", "error");
+    if (marcadores.length > 0 && modalMarcador === "") return showToast("Escolha a sala.", "error");
+    const [ini, fim] = faixaModalidade(modalModalidade);
+    if (fim <= ini) return showToast("Horário inválido para essa modalidade.", "error");
+
+    // Datas: o dia escolhido ou, se fixo, toda semana até a data final (máx. 1 ano).
+    const datas: string[] = [modalData];
+    if (!modalId && modalRepetir) {
+      if (!modalRepetirAte || modalRepetirAte < modalData) return showToast("Informe até quando repete.", "error");
+      for (let d = somaDias(modalData, 7); d <= modalRepetirAte && datas.length < 53; d = somaDias(d, 7)) datas.push(d);
+    }
+
+    const salaId = modalMarcador === "" ? undefined : Number(modalMarcador);
+    const profId = Number(modalProfissional);
+    const batem = conflitos(new Set(datas), ini, fim, salaId, profId, new Set(modalId ? [Number(modalId)] : []));
+    if (batem.length > 0) {
+      const lista = batem.slice(0, 6).map(descreveConflito).join("\n");
+      const mais = batem.length > 6 ? `\n…e mais ${batem.length - 6}.` : "";
+      if (!(await confirm(`Esse horário já está ocupado:\n${lista}${mais}\n\nSalvar mesmo assim?`, { okLabel: "Salvar assim" }))) return;
+    }
+
+    const base: Agendamento = {
+      paciente: "",
+      proc: MODALIDADE_LABEL[modalModalidade],
+      data: modalData,
+      hora: Math.floor(ini / 60),
+      min: ini % 60,
+      dur: fim - ini,
+      status: "sublocacao",
+      sublocacaoModalidade: modalModalidade === "manha" || modalModalidade === "tarde" ? "turno" : modalModalidade,
+      serieId: modalSerieId,
+      profissionalId: profId,
+      marcadorId: salaId,
+      presenca: "agendado",
+      obs: modalObs,
+    };
+
+    try {
+      if (modalId) {
+        const atual = appointments.find((a) => a.id === Number(modalId));
+        await DB.agendamentos.save({ ...atual, ...base, id: Number(modalId) });
+      } else if (datas.length === 1) {
+        await DB.agendamentos.save(base);
+      } else {
+        const serieId = crypto.randomUUID();
+        await DB.agendamentos.inserirVarios(datas.map((data) => ({ ...base, data, serieId })));
+      }
+      setIsModalOpen(false);
+      await loadData();
+      showToast(
+        modalId ? "Reserva atualizada." : datas.length > 1 ? `Reserva fixa criada: ${datas.length} semanas.` : "Sala reservada.",
+        "success",
+      );
+    } catch {
+      showToast("Não foi possível salvar a reserva.", "error");
+    }
+  };
+
   const handleSave = async () => {
+    if (modalTipo === "sublocacao") return handleSaveSublocacao();
     const ehBloqueio = modalTipo === "bloqueio";
     if (!modalData || !modalHorario || (!ehBloqueio && (!modalPaciente.trim() || !modalProcedimento))) {
       showToast(ehBloqueio ? "Informe data e horário do bloqueio." : "Preencha todos os campos obrigatórios.", "error");
@@ -265,6 +437,15 @@ export default function AgendaPage() {
       obs: modalObs,
     };
 
+    // Consulta numa sala que está sublocada nesse horário: avisa antes de salvar.
+    if (!ehBloqueio && appt.marcadorId != null) {
+      const [ini, fim] = faixa(appt);
+      const batem = conflitos(new Set([appt.data]), ini, fim, appt.marcadorId, undefined, new Set(appt.id ? [appt.id] : []), true);
+      if (batem.length > 0) {
+        if (!(await confirm(`Essa sala está sublocada nesse horário:\n${batem.map(descreveConflito).join("\n")}\n\nSalvar mesmo assim?`, { okLabel: "Salvar assim" }))) return;
+      }
+    }
+
     try {
       await DB.agendamentos.save(appt);
       setIsModalOpen(false);
@@ -280,6 +461,223 @@ export default function AgendaPage() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  // Célula de meia hora da grade. Mostra o que começa nela; se nada começa,
+  // mas uma sala sublocada cobre esse horário, mostra a continuação da reserva.
+  const renderCelula = (d: Date, di: number, h: number, meia: 0 | 30) => {
+    const dKey = ymd(d);
+    const appt = visiveis.find((a) => a.data === dKey && a.hora === h && (meia === 0 ? a.min < 30 : a.min >= 30));
+    if (!appt) {
+      const slot = h * 60 + meia;
+      const cobre = visiveis.find((a) => {
+        if (a.status !== "sublocacao" || a.data !== dKey) return false;
+        const [i, f] = faixa(a);
+        return i < slot && f > slot;
+      });
+      if (cobre) {
+        return (
+          <td key={di} style={{ padding: "0 3px" }} className="clickable" onClick={() => openEditModal(cobre)}>
+            <div
+              className="appt-block sublocacao cont"
+              title={`Sala sublocada — ${nomeProf(cobre.profissionalId) ?? ""}`}
+              style={{ "--sub": corProf(cobre.profissionalId) ?? "#0f766e" } as React.CSSProperties}
+            />
+          </td>
+        );
+      }
+      return <td key={di} className="clickable" onClick={() => openNewModal(di, h, meia)}></td>;
+    }
+    if (appt.status === "sublocacao") {
+      const [i, f] = faixa(appt);
+      const sala = marcadorDe(appt.marcadorId)?.nome;
+      return (
+        <td key={di} style={{ padding: "3px 3px 0" }} className="clickable" onClick={() => openEditModal(appt)}>
+          <div
+            className="appt-block sublocacao"
+            title={`Sala sublocada — ${nomeProf(appt.profissionalId) ?? ""} · ${appt.proc} · ${hhmm(i)}–${hhmm(f)}${sala ? " · " + sala : ""}`}
+            style={{ "--sub": corProf(appt.profissionalId) ?? "#0f766e", borderRadius: "6px 6px 0 0" } as React.CSSProperties}
+          >
+            <span style={{ fontSize: 10, fontWeight: 700 }}>
+              {appt.serieId ? "↻ " : ""}{nomeProf(appt.profissionalId) ?? "Sublocação"}
+            </span>
+            <span style={{ fontSize: 9, opacity: 0.85 }}>
+              {sala ? `${sala} · ` : ""}{hhmm(i)}–{hhmm(f)}
+            </span>
+          </div>
+        </td>
+      );
+    }
+    return (
+      <td key={di} style={{ padding: 3 }} className="clickable" onClick={() => openEditModal(appt)}>
+        <div
+          className={`appt-block ${appt.status}`}
+          title={`${appt.paciente} — ${appt.proc}${nomeProf(appt.profissionalId) ? " · " + nomeProf(appt.profissionalId) : ""}${appt.presenca === "compareceu" ? " (compareceu)" : appt.presenca === "faltou" ? " (faltou)" : ""}`}
+          style={{
+            ...(appt.status !== "bloqueado" && corProf(appt.profissionalId) ? { borderLeft: `4px solid ${corProf(appt.profissionalId)}` } : {}),
+            ...(appt.presenca === "faltou" ? { opacity: 0.5 } : {}),
+          }}
+        >
+          <span style={{ fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", gap: 3 }}>
+            {appt.presenca === "compareceu" && <span aria-hidden>✓</span>}
+            {appt.presenca === "faltou" && <span aria-hidden>✕</span>}
+            {marcadorDe(appt.marcadorId) && (
+              <span aria-hidden title={marcadorDe(appt.marcadorId)!.nome} style={{ width: 7, height: 7, borderRadius: "50%", background: marcadorDe(appt.marcadorId)!.cor, flexShrink: 0 }} />
+            )}
+            {appt.proc}
+          </span>
+          <span style={{ fontSize: 9, opacity: 0.85 }}>{appt.paciente}</span>
+        </div>
+      </td>
+    );
+  };
+
+  // Formulário da reserva de sala (sublocação).
+  const renderFormSublocacao = () => {
+    const [ini, fim] = faixaModalidade(modalModalidade);
+    const horasTotais = (fim - ini) / 60;
+    const semanas = (() => {
+      if (!modalRepetir || !modalRepetirAte || modalRepetirAte < modalData) return 1;
+      let n = 1;
+      for (let d = somaDias(modalData, 7); d <= modalRepetirAte && n < 53; d = somaDias(d, 7)) n++;
+      return n;
+    })();
+    const diaSemana = modalData ? DAYS_SHORT[new Date(`${modalData}T12:00:00`).getDay()] : "";
+    return (
+      <>
+        <p style={{ fontSize: 13, color: "var(--text-muted)", margin: "0 0 12px" }}>
+          Sala alugada a dentista de fora, com pacientes próprios. Aqui é só o controle de horário.
+        </p>
+        {sublocatarios.length === 0 && (
+          <div className="alert" style={{ fontSize: 13, background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 8, padding: "10px 12px", marginBottom: 12 }}>
+            Nenhum sublocatário cadastrado. Cadastre em <a href="/admin/config" style={{ color: "var(--primary)", fontWeight: 600 }}>Configurações → Profissionais</a> com vínculo <strong>Sublocatário</strong>.
+          </div>
+        )}
+        <div className="form-row form-row-2">
+          <div className="form-group">
+            <label className="form-label">Sublocatário *</label>
+            <select
+              className="form-control"
+              value={modalProfissional}
+              onChange={(e) => setModalProfissional(e.target.value === "" ? "" : Number(e.target.value))}
+            >
+              <option value="">Selecionar…</option>
+              {profissionais
+                .filter((p) => p.tipo === "sublocatario" || p.id === modalProfissional)
+                .map((p) => (
+                  <option key={p.id} value={p.id}>{p.nome}</option>
+                ))}
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Sala{marcadores.length > 0 ? " *" : ""}</label>
+            <select
+              className="form-control"
+              value={modalMarcador}
+              onChange={(e) => setModalMarcador(e.target.value === "" ? "" : Number(e.target.value))}
+              disabled={marcadores.length === 0}
+            >
+              <option value="">{marcadores.length === 0 ? "Sem salas cadastradas" : "Selecionar…"}</option>
+              {marcadores.map((m) => (
+                <option key={m.id} value={m.id}>{m.nome}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="form-group">
+          <label className="form-label">Modalidade</label>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {(Object.keys(MODALIDADE_LABEL) as ModalidadeUI[]).map((m) => {
+              const ativo = modalModalidade === m;
+              const [a, b] = m === "hora" ? [null, null] : faixaModalidade(m);
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  className="btn btn-sm"
+                  onClick={() => setModalModalidade(m)}
+                  style={{
+                    background: ativo ? "var(--primary)" : "var(--bg2)",
+                    color: ativo ? "#fff" : "var(--text-muted)",
+                    border: `1px solid ${ativo ? "var(--primary)" : "var(--border)"}`,
+                  }}
+                >
+                  {MODALIDADE_LABEL[m]}
+                  {a != null && b != null && <span style={{ opacity: 0.8, fontWeight: 400 }}>&nbsp;{hhmm(a)}–{hhmm(b)}</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <div className={`form-row ${modalModalidade === "hora" ? "form-row-3" : "form-row-2"}`}>
+          <div className="form-group">
+            <label className="form-label">Data *</label>
+            <input type="date" className="form-control" value={modalData} onChange={(e) => setModalData(e.target.value)} />
+          </div>
+          {modalModalidade === "hora" ? (
+            <>
+              <div className="form-group">
+                <label className="form-label">Início *</label>
+                <select className="form-control" value={modalHorario} onChange={(e) => setModalHorario(e.target.value)}>
+                  {timeSlots.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Horas</label>
+                <select className="form-control" value={modalHoras} onChange={(e) => setModalHoras(Number(e.target.value))}>
+                  {Array.from({ length: Math.max(1, horaFim - horaInicio) }, (_, i) => i + 1).map((n) => (
+                    <option key={n} value={n}>{n}h</option>
+                  ))}
+                </select>
+              </div>
+            </>
+          ) : (
+            <div className="form-group">
+              <label className="form-label">Horário</label>
+              <input className="form-control" value={`${hhmm(ini)} – ${hhmm(fim)}`} disabled />
+            </div>
+          )}
+        </div>
+        <div style={{ fontSize: 12, color: "var(--text-muted)", margin: "-4px 0 12px" }}>
+          {hhmm(ini)}–{hhmm(fim)} · {horasTotais.toLocaleString("pt-BR")}h
+          {modalModalidade === "hora" && <> · R$ {(horasTotais * 50).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} (R$ 50/h)</>}
+          {modalModalidade === "diaria" && almocoInicio != null && almocoFim != null && <> · inclui o intervalo de almoço</>}
+        </div>
+        {!modalId && (
+          <div className="form-group">
+            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 14 }}>
+              <input type="checkbox" checked={modalRepetir} onChange={(e) => setModalRepetir(e.target.checked)} />
+              <strong>Fixo: repetir toda {diaSemana ? diaSemana.toLowerCase() : "semana"}</strong>
+            </label>
+            {modalRepetir && (
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8, flexWrap: "wrap" }}>
+                <label className="form-label" style={{ margin: 0 }}>Até</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  style={{ width: "auto" }}
+                  value={modalRepetirAte}
+                  min={modalData}
+                  onChange={(e) => setModalRepetirAte(e.target.value)}
+                />
+                <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{semanas} {semanas === 1 ? "semana" : "semanas"}{semanas >= 53 ? " (máx. 1 ano)" : ""}</span>
+              </div>
+            )}
+          </div>
+        )}
+        {modalId && modalSerieId && (
+          <p style={{ fontSize: 12, color: "var(--text-muted)", margin: "0 0 12px" }}>
+            ↻ Faz parte de uma reserva fixa semanal. Alterar aqui muda só este dia.
+          </p>
+        )}
+        <div className="form-group">
+          <label className="form-label">Observações</label>
+          <textarea className="form-control" rows={2} value={modalObs} onChange={(e) => setModalObs(e.target.value)} placeholder="Ex.: traz o próprio material" />
+        </div>
+      </>
+    );
+  };
+
   return (
     <>
       <Topbar title="Agenda">
@@ -289,6 +687,13 @@ export default function AgendaPage() {
             <path d="M5.6 5.6l12.8 12.8" />
           </svg>
           Bloquear horário
+        </button>
+        <button className="btn btn-outline" onClick={() => openNewModal(undefined, undefined, undefined, "sublocacao")}>
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: 15, height: 15 }}>
+            <path d="M3 21V8l9-5 9 5v13" />
+            <path d="M9 21v-7h6v7" />
+          </svg>
+          Sublocar sala
         </button>
         <button className="btn btn-primary" onClick={() => openNewModal()}>
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}>
@@ -446,73 +851,11 @@ export default function AgendaPage() {
                       <td className="time-cell" rowSpan={2}>
                         {String(h).padStart(2, "0")}:00
                       </td>
-                      {days.map((d, di) => {
-                        const dKey = ymd(d);
-                        const appt = visiveis.find((a) => a.data === dKey && a.hora === h && a.min < 30);
-                        if (appt) {
-                          return (
-                            <td key={di} style={{ padding: 3 }} className="clickable" onClick={() => openEditModal(appt)}>
-                              <div
-                                className={`appt-block ${appt.status}`}
-                                title={`${appt.paciente} — ${appt.proc}${nomeProf(appt.profissionalId) ? " · " + nomeProf(appt.profissionalId) : ""}${appt.presenca === "compareceu" ? " (compareceu)" : appt.presenca === "faltou" ? " (faltou)" : ""}`}
-                                style={{
-                                  ...(appt.status !== "bloqueado" && corProf(appt.profissionalId) ? { borderLeft: `4px solid ${corProf(appt.profissionalId)}` } : {}),
-                                  ...(appt.presenca === "faltou" ? { opacity: 0.5 } : {}),
-                                }}
-                              >
-                                <span style={{ fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", gap: 3 }}>
-                                  {appt.presenca === "compareceu" && <span aria-hidden>✓</span>}
-                                  {appt.presenca === "faltou" && <span aria-hidden>✕</span>}
-                                  {marcadorDe(appt.marcadorId) && (
-                                    <span aria-hidden title={marcadorDe(appt.marcadorId)!.nome} style={{ width: 7, height: 7, borderRadius: "50%", background: marcadorDe(appt.marcadorId)!.cor, flexShrink: 0 }} />
-                                  )}
-                                  {appt.proc}
-                                </span>
-                                <span style={{ fontSize: 9, opacity: 0.85 }}>{appt.paciente}</span>
-                              </div>
-                            </td>
-                          );
-                        } else {
-                          return (
-                            <td key={di} className="clickable" onClick={() => openNewModal(di, h, 0)}></td>
-                          );
-                        }
-                      })}
+                      {days.map((d, di) => renderCelula(d, di, h, 0))}
                     </tr>
                     {/* Slot de :30 */}
                     <tr>
-                      {days.map((d, di) => {
-                        const dKey = ymd(d);
-                        const appt = visiveis.find((a) => a.data === dKey && a.hora === h && a.min >= 30);
-                        if (appt) {
-                          return (
-                            <td key={di} style={{ padding: 3 }} className="clickable" onClick={() => openEditModal(appt)}>
-                              <div
-                                className={`appt-block ${appt.status}`}
-                                title={`${appt.paciente} — ${appt.proc}${nomeProf(appt.profissionalId) ? " · " + nomeProf(appt.profissionalId) : ""}${appt.presenca === "compareceu" ? " (compareceu)" : appt.presenca === "faltou" ? " (faltou)" : ""}`}
-                                style={{
-                                  ...(appt.status !== "bloqueado" && corProf(appt.profissionalId) ? { borderLeft: `4px solid ${corProf(appt.profissionalId)}` } : {}),
-                                  ...(appt.presenca === "faltou" ? { opacity: 0.5 } : {}),
-                                }}
-                              >
-                                <span style={{ fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", gap: 3 }}>
-                                  {appt.presenca === "compareceu" && <span aria-hidden>✓</span>}
-                                  {appt.presenca === "faltou" && <span aria-hidden>✕</span>}
-                                  {marcadorDe(appt.marcadorId) && (
-                                    <span aria-hidden title={marcadorDe(appt.marcadorId)!.nome} style={{ width: 7, height: 7, borderRadius: "50%", background: marcadorDe(appt.marcadorId)!.cor, flexShrink: 0 }} />
-                                  )}
-                                  {appt.proc}
-                                </span>
-                                <span style={{ fontSize: 9, opacity: 0.85 }}>{appt.paciente}</span>
-                              </div>
-                            </td>
-                          );
-                        } else {
-                          return (
-                            <td key={di} className="clickable" onClick={() => openNewModal(di, h, 30)}></td>
-                          );
-                        }
-                      })}
+                      {days.map((d, di) => renderCelula(d, di, h, 30))}
                     </tr>
                   </React.Fragment>
                 );
@@ -534,6 +877,9 @@ export default function AgendaPage() {
           <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
             <span style={{ width: 12, height: 12, borderRadius: 3, background: "#CBD5E1", display: "inline-block" }}></span> Bloqueado
           </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+            <span className="appt-block sublocacao" style={{ width: 12, height: 12, padding: 0, borderRadius: 3, borderLeftWidth: 3, display: "inline-block" }}></span> Sala sublocada (↻ = fixa)
+          </div>
         </div>
 
         {/* Modal Novo/Editar Agendamento */}
@@ -544,6 +890,8 @@ export default function AgendaPage() {
                 <span className="modal-title">
                   {modalTipo === "bloqueio"
                     ? (modalId ? "Editar bloqueio" : "Bloquear horário")
+                    : modalTipo === "sublocacao"
+                    ? (modalId ? "Editar reserva de sala" : "Sublocar sala")
                     : (modalId ? "Editar Consulta" : "Nova Consulta")}
                 </span>
                 <button className="modal-close" onClick={() => setIsModalOpen(false)}>
@@ -551,6 +899,8 @@ export default function AgendaPage() {
                 </button>
               </div>
               <div className="modal-body">
+                {modalTipo === "sublocacao" && renderFormSublocacao()}
+                {modalTipo !== "sublocacao" && (<>
                 {modalTipo === "bloqueio" && (
                   <p style={{ fontSize: 13, color: "var(--text-muted)", margin: "0 0 12px" }}>
                     Reserva um horário como indisponível (almoço, reunião, férias…). Não precisa de paciente.
@@ -611,9 +961,11 @@ export default function AgendaPage() {
                       onChange={(e) => setModalProfissional(e.target.value === "" ? "" : Number(e.target.value))}
                     >
                       <option value="">Sem profissional</option>
-                      {profissionais.map((p) => (
-                        <option key={p.id} value={p.id}>{p.nome}</option>
-                      ))}
+                      {profissionais
+                        .filter((p) => p.tipo !== "sublocatario" || p.id === modalProfissional)
+                        .map((p) => (
+                          <option key={p.id} value={p.id}>{p.nome}</option>
+                        ))}
                     </select>
                   </div>
                   {modalTipo === "consulta" && marcadores.length > 0 && (
@@ -752,12 +1104,18 @@ export default function AgendaPage() {
                     onChange={(e) => setModalObs(e.target.value)}
                   ></textarea>
                 </div>
+                </>)}
               </div>
               <div className="modal-footer" style={{ justifyContent: "space-between" }}>
                 <div style={{ display: "flex", gap: 8 }}>
                   {modalId && (
                     <button className="btn btn-danger" onClick={handleDelete}>
-                      Excluir
+                      {modalSerieId && modalTipo === "sublocacao" ? "Excluir só este dia" : "Excluir"}
+                    </button>
+                  )}
+                  {modalId && modalTipo === "sublocacao" && modalSerieId && (
+                    <button className="btn btn-outline" onClick={handleCancelarSerie} title="Apaga esta e as próximas reservas da série">
+                      Cancelar série daqui pra frente
                     </button>
                   )}
                   {modalId && modalTipo === "consulta" && (

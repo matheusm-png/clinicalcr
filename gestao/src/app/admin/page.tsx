@@ -172,13 +172,13 @@ export default function DashboardPage() {
     });
 
     // ── Comparecimento (mês atual)
-    const agMes = agendamentos.filter((a) => a.status !== "bloqueado" && noMes(a.data, ymAtual));
+    const agMes = agendamentos.filter((a) => a.status !== "bloqueado" && a.status !== "sublocacao" && noMes(a.data, ymAtual));
     const compareceu = agMes.filter((a) => a.presenca === "compareceu").length;
     const faltou = agMes.filter((a) => a.presenca === "faltou").length;
     const baseComp = compareceu + faltou;
     const taxaComp = baseComp > 0 ? (compareceu / baseComp) * 100 : 0;
     const compAnt = (() => {
-      const prev = agendamentos.filter((a) => a.status !== "bloqueado" && noMes(a.data, ymAnterior));
+      const prev = agendamentos.filter((a) => a.status !== "bloqueado" && a.status !== "sublocacao" && noMes(a.data, ymAnterior));
       const c = prev.filter((a) => a.presenca === "compareceu").length;
       const f = prev.filter((a) => a.presenca === "faltou").length;
       return c + f > 0 ? (c / (c + f)) * 100 : 0;
@@ -191,7 +191,7 @@ export default function DashboardPage() {
     const DOW = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
     const porDia = semana.map((data, i) => ({
       dow: DOW[i], data,
-      total: agendamentos.filter((a) => a.status !== "bloqueado" && a.data === data).length,
+      total: agendamentos.filter((a) => a.status !== "bloqueado" && a.status !== "sublocacao" && a.data === data).length,
       hoje: data === hojeIso,
     }));
     const agSemana = porDia.reduce((s, d) => s + d.total, 0);

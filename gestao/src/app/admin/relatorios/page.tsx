@@ -181,7 +181,7 @@ export default function RelatoriosPage() {
       setFinanceiro(fin);
       setContas(cts);
       setAgendamentos(ag);
-      setProfissionais(prof);
+      setProfissionais(prof.filter((p) => p.tipo !== "sublocatario"));
       setClinica(cli);
       setCarregando(false);
     })();
@@ -253,7 +253,7 @@ export default function RelatoriosPage() {
     const procPendentes = procedimentos.filter((p) => p.status === "Pendente").length;
 
     // Comparecimento no período (agenda agora guarda data absoluta — F1).
-    const agValidos = agendamentos.filter((a) => a.status !== "bloqueado" && noPeriodo(a.data, de, ate));
+    const agValidos = agendamentos.filter((a) => a.status !== "bloqueado" && a.status !== "sublocacao" && noPeriodo(a.data, de, ate));
     const compareceu = agValidos.filter((a) => a.presenca === "compareceu").length;
     const faltou = agValidos.filter((a) => a.presenca === "faltou").length;
     const agendado = agValidos.filter((a) => (a.presenca ?? "agendado") === "agendado").length;

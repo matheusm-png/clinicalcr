@@ -246,6 +246,8 @@ const fromAgendamento = (r: any): Agendamento => ({
   min: r.min,
   dur: r.dur,
   status: r.status,
+  sublocacaoModalidade: r.sublocacao_modalidade ?? undefined,
+  serieId: r.serie_id ?? undefined,
   profissionalId: r.profissional_id ?? undefined,
   marcadorId: r.marcador_id ?? undefined,
   presenca: r.presenca ?? "agendado",
@@ -264,6 +266,11 @@ const toAgendamento = (a: Agendamento) => ({
   min: a.min,
   dur: a.dur,
   status: a.status,
+  // Só manda as colunas novas quando é sublocação: assim consulta comum
+  // continua salvando mesmo antes da migration 0039 rodar.
+  ...(a.status === "sublocacao"
+    ? { sublocacao_modalidade: a.sublocacaoModalidade ?? null, serie_id: a.serieId ?? null }
+    : {}),
   profissional_id: a.profissionalId ?? null,
   marcador_id: a.marcadorId ?? null,
   presenca: a.presenca ?? "agendado",
@@ -280,6 +287,7 @@ const fromProfissional = (r: any): Profissional => ({
   cor: r.cor ?? "#0f766e",
   ativo: r.ativo,
   comissaoPercentual: r.comissao_percentual != null ? Number(r.comissao_percentual) : 0,
+  tipo: r.tipo === "sublocatario" ? "sublocatario" : "clinica",
   criadoEm: r.created_at,
 });
 const toProfissional = (p: Profissional) => ({
@@ -289,6 +297,7 @@ const toProfissional = (p: Profissional) => ({
   cor: p.cor,
   ativo: p.ativo ?? true,
   comissao_percentual: p.comissaoPercentual ?? 0,
+  ...(p.tipo ? { tipo: p.tipo } : {}),
 });
 
 const fromEstoque = (r: any): ItemEstoque => ({
@@ -759,6 +768,27 @@ export const DB = {
     save: (a: Agendamento) =>
       saveTable<Agendamento>("agendamentos", toAgendamento, fromAgendamento, a),
     remove: (id: number | string) => removeTable("agendamentos", id),
+    // Reservas de sala fixas (sublocação): insere a série inteira de uma vez.
+    async inserirVarios(lista: Agendamento[]): Promise<number> {
+      if (semBackend()) throw new Error("Supabase não configurado.");
+      if (!lista.length) return 0;
+      const { data, error } = await sb().from("agendamentos").insert(lista.map(toAgendamento)).select("id");
+      if (error) throw error;
+      return (data ?? []).length;
+    },
+    // Cancela a série a partir de uma data (inclusive). Datas anteriores ficam
+    // como histórico do que foi usado.
+    async removerSerieAPartir(serieId: string, data: string): Promise<number> {
+      if (semBackend()) throw new Error("Supabase não configurado.");
+      const { data: rows, error } = await sb()
+        .from("agendamentos")
+        .delete()
+        .eq("serie_id", serieId)
+        .gte("data", data)
+        .select("id");
+      if (error) throw error;
+      return (rows ?? []).length;
+    },
     // Import em lote (migração). clinica_id carimbado pelo banco.
     async importar(lista: Agendamento[]): Promise<number> {
       if (semBackend()) throw new Error("Supabase não configurado.");

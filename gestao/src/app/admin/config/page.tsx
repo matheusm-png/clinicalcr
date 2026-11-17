@@ -49,6 +49,7 @@ export default function ConfigPage() {
   const [pCor, setPCor] = useState(CORES[0]);
   const [pAtivo, setPAtivo] = useState(true);
   const [pComissao, setPComissao] = useState("");
+  const [pTipo, setPTipo] = useState<"clinica" | "sublocatario">("clinica");
   const [salvandoP, setSalvandoP] = useState(false);
 
   // Modal novo usuário
@@ -161,12 +162,12 @@ export default function ConfigPage() {
   };
 
   const abrirNovoProf = () => {
-    setPId(null); setPNome(""); setPEsp(""); setPCro(""); setPCor(CORES[0]); setPAtivo(true); setPComissao("");
+    setPId(null); setPNome(""); setPEsp(""); setPCro(""); setPCor(CORES[0]); setPAtivo(true); setPComissao(""); setPTipo("clinica");
     setProfOpen(true);
   };
   const abrirEditarProf = (p: Profissional) => {
     setPId(p.id!); setPNome(p.nome); setPEsp(p.especialidade || ""); setPCro(p.cro || "");
-    setPCor(p.cor); setPAtivo(p.ativo); setPComissao(p.comissaoPercentual ? String(p.comissaoPercentual) : ""); setProfOpen(true);
+    setPCor(p.cor); setPAtivo(p.ativo); setPComissao(p.comissaoPercentual ? String(p.comissaoPercentual) : ""); setPTipo(p.tipo ?? "clinica"); setProfOpen(true);
   };
   const salvarProfissional = async () => {
     if (!pNome.trim()) return showToast("Informe o nome do profissional.", "error");
@@ -176,7 +177,10 @@ export default function ConfigPage() {
     try {
       await DB.profissionais.save({
         ...(pId ? { id: pId } : {}),
-        nome: pNome.trim(), especialidade: pEsp, cro: pCro, cor: pCor, ativo: pAtivo, comissaoPercentual: comissao,
+        nome: pNome.trim(), especialidade: pEsp, cro: pCro, cor: pCor, ativo: pAtivo,
+        // Sublocatário não tem comissão: o paciente é dele, a clínica só aluga a sala.
+        comissaoPercentual: pTipo === "sublocatario" ? 0 : comissao,
+        tipo: pTipo,
       });
       setProfOpen(false);
       await load();
@@ -596,7 +600,7 @@ export default function ConfigPage() {
               <div className="table-wrapper">
                 <table>
                   <thead>
-                    <tr><th>Profissional</th><th>Especialidade</th><th>CRO</th><th>Comissão</th><th>Status</th><th>Ações</th></tr>
+                    <tr><th>Profissional</th><th>Vínculo</th><th>Especialidade</th><th>CRO</th><th>Comissão</th><th>Status</th><th>Ações</th></tr>
                   </thead>
                   <tbody>
                     {profissionais.map((p) => (
@@ -605,6 +609,11 @@ export default function ConfigPage() {
                           <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                             <span style={{ width: 12, height: 12, borderRadius: "50%", background: p.cor, display: "inline-block", flexShrink: 0 }} />
                             <strong>{p.nome}</strong>
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`badge ${p.tipo === "sublocatario" ? "badge-warning" : "badge-info"}`}>
+                            {p.tipo === "sublocatario" ? "Sublocatário" : "Equipe"}
                           </span>
                         </td>
                         <td>{p.especialidade || "—"}</td>
@@ -778,6 +787,19 @@ export default function ConfigPage() {
                   </div>
                 </div>
                 <div className="form-group">
+                  <label className="form-label">Vínculo</label>
+                  <select className="form-control" value={pTipo} onChange={(e) => setPTipo(e.target.value as "clinica" | "sublocatario")}>
+                    <option value="clinica">Equipe da clínica</option>
+                    <option value="sublocatario">Sublocatário (aluga sala, pacientes próprios)</option>
+                  </select>
+                  {pTipo === "sublocatario" && (
+                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                      Aparece só nas reservas de sala da Agenda (Sublocar sala). Fica fora de comissões, procedimentos e agendamento online.
+                    </span>
+                  )}
+                </div>
+                {pTipo === "clinica" && (
+                <div className="form-group">
                   <label className="form-label">Comissão (%)</label>
                   <input
                     className="form-control"
@@ -791,6 +813,7 @@ export default function ConfigPage() {
                   />
                   <span style={{ fontSize: 11, color: "var(--text-muted)" }}>% sobre a produção realizada (procedimentos concluídos atribuídos ao profissional). Use o relatório de Comissões para apurar.</span>
                 </div>
+                )}
                 <div className="form-group">
                   <label className="form-label">Cor na agenda</label>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
