@@ -39,7 +39,6 @@
   const WA_MSGS = {
     geral:             'Olá! Vim pelo site da Clínica LCR e quero agendar uma consulta.',
     criancas:          'Olá! Vim pelo site da Clínica LCR e quero agendar uma consulta pro meu filho(a).',
-    adolescentes:      'Olá! Vim pelo site da Clínica LCR e quero agendar uma avaliação ortodôntica.',
     adultos:           'Olá! Vim pelo site da Clínica LCR e quero agendar uma consulta pra mim.',
     'primeira-consulta': 'Olá! Vim pelo site da Clínica LCR e quero agendar a primeira consulta do meu filho(a).',
     emergencia:        'Olá! URGÊNCIA: meu filho(a) bateu a boca/machucou um dente e preciso de orientação da Clínica LCR.',
@@ -167,7 +166,7 @@
       { q: 'tratamento', bot: ['Que ótimo! O atendimento é pra quem?'],
         opts: [ { t: 'Pro meu filho(a) 🧒', s: 'criancas' }, { t: 'Pra mim', s: 'adultos' }, { t: 'Pra família toda', s: 'geral' } ], next: 2 },
       { q: 'interesse', bot: ['E o que você está procurando?'],
-        opts: [ { t: 'Limpeza / prevenção' }, { t: 'Primeira consulta', s: 'primeira-consulta' }, { t: 'Aparelho / ortodontia', s: 'adolescentes' }, { t: 'Está doendo 😣' }, { t: 'Outro' } ], next: 3 },
+        opts: [ { t: 'Limpeza / prevenção' }, { t: 'Primeira consulta', s: 'primeira-consulta' }, { t: 'Restauração / clareamento' }, { t: 'Está doendo 😣' }, { t: 'Outro' } ], next: 3 },
       { q: 'quando', bot: ['Perfeito! E quando você prefere ser atendido?'],
         opts: [ { t: 'Essa semana' }, { t: 'Próxima semana' }, { t: 'Ainda estou decidindo' } ], next: 4 },
       { final: true, bot: ['Prontinho! 💚 Já anotei tudo aqui.', 'É só continuar no WhatsApp que a equipe te responde rapidinho.'] }

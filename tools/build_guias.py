@@ -65,7 +65,6 @@ def header(base):
       </a>
       <nav class="site-nav" id="site-nav" aria-label="Seções do site">
         <a href="{base}#criancas">Crianças</a>
-        <a href="{base}#adolescentes">Adolescentes</a>
         <a href="{base}#adultos">Adultos</a>
         <a href="{base}guias/" aria-current="page">Guias</a>
         <a href="{base}#clinica">Clínica</a>
@@ -91,7 +90,7 @@ def footer(base):
               <div class="footer-brand-sub">Odontologia pra toda a família</div>
             </div>
           </div>
-          <p>Prevenção, atendimento infantil e especialidades odontológicas em Irecê - BA, com acompanhamento de longo prazo pra sua família.</p>
+          <p>Prevenção, atendimento infantil e clínica geral em Irecê - BA, com acompanhamento de longo prazo pra sua família.</p>
           <p><a href="{base}guias/" style="color:var(--aqua-400);font-weight:700">Guias gratuitos</a> · <a href="{base}#clinica" style="color:var(--aqua-400);font-weight:700">A clínica</a></p>
         </div>
         <div class="footer-col">
@@ -153,9 +152,9 @@ def head(base, title, desc, url, extra_ld=None, og_type='website'):
   <meta name="twitter:card" content="summary_large_image">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=swap" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=swap"></noscript>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..800,0..100&family=Figtree:ital,wght@0,300..800;1,300..800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..800,0..100&family=Figtree:ital,wght@0,300..800;1,300..800&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..800,0..100&family=Figtree:ital,wght@0,300..800;1,300..800&display=swap"></noscript>
   <link rel="stylesheet" href="{base}css/site.css">
 {ld}</head>
 '''
@@ -320,11 +319,11 @@ def build_hub(data):
         "@type": "CollectionPage",
         "name": "Guias gratuitos da Clínica LCR",
         "url": url,
-        "description": "Guias gratuitos de saúde bucal pra cada fase do sorriso: bebê, troca dos dentes, aparelho, clareamento e emergências.",
+        "description": "Guias gratuitos de saúde bucal pra cada fase do sorriso: bebê, troca dos dentes, clareamento e emergências.",
         "publisher": {"@type": "Dentist", "name": "Clínica LCR Odontologia", "url": SITE + '/'}
     }
     page = head(base, 'Guias gratuitos de saúde bucal pra cada fase | Clínica LCR',
-                'Guias gratuitos da Clínica LCR, em Irecê-BA: primeiro dentinho, primeira consulta, troca dos dentes, trauma, aparelho fixo, clareamento e pós-extração. Leia no site ou baixe em PDF.',
+                'Guias gratuitos da Clínica LCR, em Irecê-BA: primeiro dentinho, primeira consulta, troca dos dentes, trauma, clareamento e pós-extração. Leia no site ou baixe em PDF.',
                 url, ld) + f'''<body class="page-hub">
 {header(base)}
   <main>

@@ -257,7 +257,22 @@
     Array.from(h2.childNodes).forEach(node => {
       if (node.nodeType === 3) {
         const frag = document.createDocumentFragment();
-        node.textContent.split(/(\s+)/).forEach(part => {
+        const parts = node.textContent.split(/(\s+)/);
+        // pontuação colada num elemento anterior (", do bebê" depois do rabisco):
+        // embrulha os dois num nowrap pra vírgula não cair sozinha na linha de baixo
+        const prev = node.previousSibling;
+        if (parts[0] && prev && prev.nodeType === 1) {
+          const glue = document.createElement('span');
+          glue.style.whiteSpace = 'nowrap';
+          h2.insertBefore(glue, prev);
+          glue.appendChild(prev);
+          const w = document.createElement('span');
+          w.className = 'w';
+          w.style.setProperty('--wi', idx++);
+          w.textContent = parts.shift();
+          glue.appendChild(w);
+        }
+        parts.forEach(part => {
           if (!part) return;
           if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(part)); return; }
           const w = document.createElement('span');
@@ -273,24 +288,41 @@
       }
     });
   }
-  function setupChoreo(container, titleSel, subSels) {
-    if (!container) return;
-    const h2 = container.querySelector(titleSel);
-    if (h2) { splitTitleWords(h2); h2.classList.add('choreo-title'); }
-    (subSels || []).forEach((sel, i) => {
-      const el = container.querySelector(sel);
-      if (el) { el.classList.add('choreo-sub'); el.style.setProperty('--ci', i); }
-    });
-    container.classList.add('choreo');
+  function onEnter(el, threshold, fn) {
     const io = new IntersectionObserver((entries) => {
-      entries.forEach(en => {
-        if (en.isIntersecting) { container.classList.add('in-view'); io.disconnect(); }
-      });
-    }, { threshold: 0.2 });
-    io.observe(container);
+      entries.forEach(en => { if (en.isIntersecting) { fn(); io.disconnect(); } });
+    }, { threshold: threshold, rootMargin: '0px 0px -8% 0px' });
+    io.observe(el);
   }
-  setupChoreo(document.querySelector('.visit-panel'), '.section-header h2',
-    ['.section-header p', '.visit-note']);
-  setupChoreo(document.querySelector('.doctor-grid'), '.doctor-info h2',
-    ['.doctor-cro', '.doctor-info p:nth-of-type(1)', '.doctor-info p:nth-of-type(2)']);
+
+  // Direção B: todo título de seção com rabisco ganha a coreografia
+  // (chip → palavras → rabisco desenhando → texto/botões em sequência)
+  document.querySelectorAll('h2 .squiggle').forEach(sq => {
+    const h2 = sq.closest('h2');
+    const box = h2.parentElement;
+    if (box.classList.contains('choreo')) return;
+    box.classList.remove('reveal'); // o reveal genérico do site.js brigaria com a coreografia
+    splitTitleWords(h2); h2.classList.add('choreo-title');
+    let el = h2.nextElementSibling, i = 0;
+    while (el) { el.classList.add('choreo-sub'); el.style.setProperty('--ci', i++); el = el.nextElementSibling; }
+    box.classList.add('choreo');
+    onEnter(box, 0.25, () => {
+      box.classList.add('in-view');
+      // terminada a entrada, devolve hovers/transições normais aos elementos
+      setTimeout(() => box.classList.remove('choreo', 'in-view'), 2600);
+    });
+  });
+
+  // Blocos por público: a foto abre como cortina, o mascote salta em mola,
+  // e o texto entra em cascata (eyebrow → título → frase → pílulas → botão)
+  document.querySelectorAll('.pub').forEach(pub => {
+    const txt = pub.querySelector('.pub-txt');
+    if (txt) Array.from(txt.children).forEach((c, i) => c.style.setProperty('--ci', i));
+    pub.querySelectorAll('.pills li').forEach((li, i) => li.style.setProperty('--pi', i));
+    pub.classList.add('pub-anim');
+    onEnter(pub, 0.2, () => {
+      pub.classList.add('in-view');
+      setTimeout(() => pub.classList.remove('pub-anim', 'in-view'), 2600);
+    });
+  });
 })();

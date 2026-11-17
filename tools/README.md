@@ -48,14 +48,13 @@ ou `.photo-placeholder`. Buscar por `data-placeholder` no `index.html` antes de 
 - Depoimentos reais (seção `#depoimentos` está com `hidden`; modelo de card comentado dentro).
 - O que a criança leva pra casa no fim da 1ª consulta (passo 5).
 - Estacionamento e acessibilidade (bloco da clínica).
-- Fotos e frase pessoal do Dr. Welington, Dra. Talita e Dra. Paloma; frase da Dra. Lara.
-- Confirmar especialidades registradas no CRO-BA de cada profissional (só então usar "especialista em").
+- Frase pessoal da Dra. Lara (seção Equipe).
 - Inscrição da clínica no CRO-BA (rodapé).
-- Revisão clínica dos 7 guias pela Dra. Lara (etiqueta "Revisão clínica pendente"; depois, regenerar os PDFs).
+- Revisão clínica dos 6 guias pela Dra. Lara (etiqueta "Revisão clínica pendente"; depois, regenerar os PDFs).
 - ID do container GTM.
 
 ## Regras que o site segue
 
 - CFO: sem preço, sem forma de pagamento, sem antes e depois, sem promessa de resultado, CRO visível.
 - LGPD: nenhuma foto de criança sem autorização escrita dos pais; depoimentos só com inicial e sem nome de criança.
-- Nada inventado: números só os verificáveis (4 dentistas, +30 procedimentos do catálogo, horário, endereço).
+- Nada inventado: números só os verificáveis (horário, endereço, CRO). Desde nov/2026 a Dra. Lara atende sozinha: só clínica geral e infantil, sem ortodontia, canal, implante ou cirurgia.
