@@ -1,5 +1,6 @@
 import { createClient, isSupabaseConfigured } from "./supabase/client";
 import { facesDoJson } from "./faces";
+import { procedimentosDoOrcamento } from "./orcamentoAprovacao";
 import {
   Paciente,
   Procedimento,
@@ -86,6 +87,9 @@ const fromPaciente = (r: any): Paciente => ({
   consentimentoLgpdEm: r.consentimento_lgpd_em ?? "",
   consentimentoLgpdVersao: r.consentimento_lgpd_versao ?? "",
   consentimentoWhatsapp: r.consentimento_whatsapp ?? false,
+  // Só leitura aqui (toPaciente não grava): quem responde é o paciente, pelo link.
+  autorizaImagem: r.autoriza_imagem ?? undefined,
+  autorizaImagemEm: r.autoriza_imagem_em ?? undefined,
   criadoEm: r.created_at,
 });
 const toPaciente = (p: Paciente) => ({
@@ -180,6 +184,7 @@ const fromAnamnese = (r: any): Anamnese => ({
   pacienteNome: r.paciente_nome ?? "",
   respostas: r.respostas ?? {},
   assinatura: r.assinatura ?? "",
+  assinadaEm: r.assinada_em ?? undefined,
   data: r.data ?? "",
   status: r.status ?? "Assinado",
   criadoEm: r.created_at,
@@ -345,6 +350,8 @@ const fromOrcamento = (r: any): Orcamento => ({
   total: Number(r.total),
   observacoes: r.observacoes ?? "",
   aprovadoEm: r.aprovado_em ?? undefined,
+  aceiteEm: r.aceite_em ?? undefined,
+  aceiteAssinatura: r.aceite_assinatura ?? undefined,
   criadoEm: r.created_at,
 });
 const toOrcamento = (o: Orcamento) => ({
@@ -735,14 +742,7 @@ export const DB = {
       if (error) throw error;
       const orc = await this.get(id);
       if (orc && orc.itens && orc.itens.length) {
-        const procs = orc.itens.map((it) => ({
-          paciente_id: orc.pacienteId,
-          dente: it.dente || "",
-          procedimento: it.descricao,
-          custo: it.valorUnitario * (it.quantidade || 1),
-          status: "Pendente",
-          profissional_id: profissionalId ?? null,
-        }));
+        const procs = procedimentosDoOrcamento(orc, profissionalId);
         await sb().from("procedimentos").insert(procs);
       }
       return orc;
@@ -752,6 +752,31 @@ export const DB = {
       await sb().from("orcamentos").update({ status }).eq("id", id);
     },
     remove: (id: number | string) => removeTable("orcamentos", id),
+  },
+
+  // Link /p/<token> pro paciente aceitar orçamento / assinar anamnese (0034).
+  linksPaciente: {
+    async criar(l: { pacienteId: number; orcamentoId?: number; anamneseId?: number }): Promise<string> {
+      if (semBackend()) throw new Error("Supabase não configurado.");
+      const { data, error } = await sb()
+        .from("links_paciente")
+        .insert({
+          paciente_id: l.pacienteId,
+          orcamento_id: l.orcamentoId ?? null,
+          anamnese_id: l.anamneseId ?? null,
+        })
+        .select("token")
+        .single();
+      if (error) {
+        console.error("[DB] criar link do paciente:", error.message);
+        throw error;
+      }
+      // Orçamento que sai pro paciente deixa de ser rascunho.
+      if (l.orcamentoId) {
+        await sb().from("orcamentos").update({ status: "enviado" }).eq("id", l.orcamentoId).eq("status", "rascunho");
+      }
+      return data.token as string;
+    },
   },
 
   contas: {

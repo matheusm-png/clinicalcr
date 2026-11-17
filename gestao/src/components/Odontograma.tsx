@@ -57,6 +57,16 @@ const STATUS_COR: Record<string, string> = {
   Cancelado: "#F59E0B",
 };
 
+// O banco grava Pendente/Concluído/Cancelado; a legenda fala a-realizar/realizado/pré-existente
+// (mesmo de-para do prontuário).
+const ESTADO_DO_STATUS: Record<string, keyof typeof STATE_COLORS> = {
+  Pendente: "a-realizar",
+  "Concluído": "realizado",
+  Cancelado: "pre-existente",
+};
+const corEstado = (status: string) =>
+  STATE_COLORS[(ESTADO_DO_STATUS[status] ?? status) as keyof typeof STATE_COLORS];
+
 const STATE_COLORS = {
   "a-realizar": { fill: "#3B82F6", stroke: "#2563EB" },
   realizado: { fill: "#22C55E", stroke: "#16A34A" },
@@ -225,7 +235,7 @@ export default function Odontograma({
 
     if (procs.length > 0) {
       const last = procs[procs.length - 1];
-      const s = STATE_COLORS[last.status as keyof typeof STATE_COLORS] || STATE_COLORS.normal;
+      const s = corEstado(last.status) || STATE_COLORS.normal;
       baseColor = s.stroke;
       fillOpacity = "0.1";
     }
@@ -243,7 +253,7 @@ export default function Odontograma({
     let overlays = "";
     procs.forEach((p) => {
       const cat = catProc(p.procedimento);
-      const color = STATE_COLORS[p.status as keyof typeof STATE_COLORS]?.stroke || (cat ? CAT_COLOR[cat] : baseColor);
+      const color = corEstado(p.status)?.stroke || (cat ? CAT_COLOR[cat] : baseColor);
 
       if (cat === "extracao") {
         overlays += `<path d="M5,5 L20,30 M20,5 L5,30" stroke="${color}" stroke-width="3" stroke-linecap="round" />`;
