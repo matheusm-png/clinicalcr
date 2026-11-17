@@ -30,7 +30,20 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setErro("E-mail ou senha inválidos.");
+      // Só é "senha errada" quando o servidor responde isso. Falha de rede,
+      // bloqueio do navegador/antivírus ou excesso de tentativas têm outra causa.
+      const msg = (error.message || "").toLowerCase();
+      if (error.status === 400 && msg.includes("invalid login")) {
+        setErro("E-mail ou senha inválidos.");
+      } else if (msg.includes("email not confirmed")) {
+        setErro("E-mail ainda não confirmado.");
+      } else if (error.status === 429) {
+        setErro("Muitas tentativas. Aguarde alguns minutos e tente de novo.");
+      } else if (!error.status || msg.includes("fetch")) {
+        setErro("Sem conexão com o servidor de login. Verifique a internet ou se algum bloqueador/antivírus está barrando o site.");
+      } else {
+        setErro(`Não foi possível entrar (${error.status}: ${error.message}).`);
+      }
       setLoading(false);
       return;
     }
