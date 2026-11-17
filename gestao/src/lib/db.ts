@@ -239,6 +239,7 @@ const fromAgendamento = (r: any): Agendamento => ({
   status: r.status,
   profissionalId: r.profissional_id ?? undefined,
   marcadorId: r.marcador_id ?? undefined,
+  telefone: r.telefone ?? "",
   presenca: r.presenca ?? "agendado",
   recuperacao: r.recuperacao ?? undefined,
   cancelado: r.cancelado ?? false,
@@ -256,6 +257,7 @@ const toAgendamento = (a: Agendamento) => ({
   status: a.status,
   profissional_id: a.profissionalId ?? null,
   marcador_id: a.marcadorId ?? null,
+  telefone: orNull(a.telefone),
   presenca: a.presenca ?? "agendado",
   recuperacao: a.recuperacao ?? null,
   cancelado: a.cancelado ?? false,
@@ -1124,6 +1126,7 @@ export const DB = {
       listTable<ModeloAnamnese>(
         "modelos_anamnese",
         (r: any) => ({ id: r.id, nome: r.nome, estrutura: Array.isArray(r.estrutura) ? r.estrutura : [], ativo: r.ativo, criadoEm: r.created_at }),
+          telefone: sol.telefone || null,
       ),
     get: (id: number | string) =>
       getTable<ModeloAnamnese>(

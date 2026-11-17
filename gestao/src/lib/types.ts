@@ -95,6 +95,7 @@ export interface Agendamento {
   pacienteId?: number;
   proc: string;
   data: string; // data absoluta 'yyyy-mm-dd'
+  telefone?: string; // contato informado no agendamento (paciente novo não tem cadastro)
   hora: number; // hora (ex: 8, 9, 10...)
   min: number;  // minutos (ex: 0, 30)
   dur: number;  // duração em minutos (ex: 30, 45, 60...)

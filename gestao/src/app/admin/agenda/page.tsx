@@ -33,6 +33,7 @@ export default function AgendaPage() {
   // Form State
   const [modalId, setModalId] = useState<string>("");
   const [modalPaciente, setModalPaciente] = useState<string>("");
+  const [modalTelefone, setModalTelefone] = useState<string>("");
   const [modalProcedimento, setModalProcedimento] = useState<string>("");
   const [modalProfissional, setModalProfissional] = useState<number | "">("");
   const [modalMarcador, setModalMarcador] = useState<number | "">("");
@@ -161,6 +162,7 @@ export default function AgendaPage() {
   const openNewModal = (dia?: number, hora?: number, min?: number, tipo: "consulta" | "bloqueio" = "consulta") => {
     setModalId("");
     setModalPaciente("");
+    setModalTelefone("");
     setModalProcedimento("");
     setModalObs("");
     setModalTipo(tipo);
@@ -185,6 +187,7 @@ export default function AgendaPage() {
   const openEditModal = (appt: Agendamento) => {
     setModalId(String(appt.id));
     setModalPaciente(appt.paciente);
+    setModalTelefone(appt.telefone || "");
     setModalProcedimento(appt.proc);
     setModalTipo(appt.status === "bloqueado" ? "bloqueio" : "consulta");
     setModalStatus(appt.status);
@@ -232,7 +235,7 @@ export default function AgendaPage() {
 
   const handleSave = async () => {
     const ehBloqueio = modalTipo === "bloqueio";
-    if (!modalData || !modalHorario || (!ehBloqueio && (!modalPaciente || !modalProcedimento))) {
+    if (!modalData || !modalHorario || (!ehBloqueio && (!modalPaciente.trim() || !modalProcedimento))) {
       showToast(ehBloqueio ? "Informe data e horário do bloqueio." : "Preencha todos os campos obrigatórios.", "error");
       return;
     }
@@ -247,8 +250,9 @@ export default function AgendaPage() {
 
     const appt: Agendamento = {
       ...(modalId ? { id: Number(modalId) } : {}),
-      paciente: ehBloqueio ? "" : modalPaciente,
+      paciente: ehBloqueio ? "" : (patientObj ? patientObj.nome : modalPaciente.trim().replace(/\s+/g, " ")),
       pacienteId: ehBloqueio ? undefined : (patientObj ? patientObj.id : undefined),
+      telefone: ehBloqueio ? undefined : modalTelefone.trim(),
       proc: ehBloqueio ? (modalObs || "Bloqueio") : modalProcedimento,
       data: modalData,
       hora: h,
@@ -555,18 +559,47 @@ export default function AgendaPage() {
                 {modalTipo === "consulta" && (
                   <div className="form-group">
                     <label className="form-label">Paciente *</label>
-                    <select
+                    {/* Campo livre com sugestões: paciente cadastrado é vinculado
+                        pelo nome; paciente novo entra só com o nome (o cadastro
+                        completo vem depois, na anamnese). */}
+                    <input
                       className="form-control"
+                      list="agenda-pacientes"
+                      placeholder="Digite o nome (cadastrado ou paciente novo)"
                       value={modalPaciente}
-                      onChange={(e) => setModalPaciente(e.target.value)}
-                    >
-                      <option value="">Selecionar paciente...</option>
+                      onChange={(e) => {
+                        const nome = e.target.value;
+                        setModalPaciente(nome);
+                        // Paciente cadastrado: puxa o telefone da ficha se o campo estiver vazio.
+                        const cad = patients.find((p) => nomeNormalizado(p.nome) === nomeNormalizado(nome));
+                        if (cad?.tel && !modalTelefone.trim()) setModalTelefone(cad.tel);
+                      }}
+                      autoComplete="off"
+                    />
+                    <datalist id="agenda-pacientes">
                       {patients.map((p) => (
-                        <option key={p.id} value={p.nome}>
-                          {p.nome}
-                        </option>
+                        <option key={p.id} value={p.nome} />
                       ))}
-                    </select>
+                    </datalist>
+                    {modalPaciente.trim() !== "" &&
+                      !patients.some((p) => nomeNormalizado(p.nome) === nomeNormalizado(modalPaciente)) && (
+                        <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
+                          Paciente novo — ainda sem cadastro. Ao cadastrar com o mesmo nome, a consulta é ligada à ficha.
+                        </div>
+                      )}
+                  </div>
+                )}
+                {modalTipo === "consulta" && (
+                  <div className="form-group">
+                    <label className="form-label">Telefone</label>
+                    <input
+                      className="form-control"
+                      type="tel"
+                      inputMode="tel"
+                      placeholder="(00) 00000-0000"
+                      value={modalTelefone}
+                      onChange={(e) => setModalTelefone(e.target.value)}
+                    />
                   </div>
                 )}
                 <div className="form-row form-row-2">
